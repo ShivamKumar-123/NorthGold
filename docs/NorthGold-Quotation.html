@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>NorthGold — Project Quotation</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 14mm 15mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --gold: #A87516;
+    --gold-bright: #D9A62E;
+    --ink: #16150f;
+    --muted: #5b574c;
+    --rule: #e4dfd3;
+    --wash: #faf8f3;
+    --green: #3f7d3f;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font: 10.2pt/1.5 "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif; color: var(--ink); }
+
+  h1, h2, h3, h4 { line-height: 1.2; margin: 0; font-weight: 650; }
+  h2 { font-size: 16pt; margin: 0 0 3.5mm; padding-bottom: 2.2mm; border-bottom: 2px solid var(--gold); }
+  h3 { font-size: 11.6pt; margin: 6mm 0 2mm; color: var(--gold); }
+  h4 { font-size: 10.2pt; margin: 4mm 0 1.2mm; }
+  h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 2.6mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 3.5mm; font-size: 9.3pt; page-break-inside: avoid; }
+  th, td { text-align: left; padding: 1.9mm 2.4mm; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--wash); font-weight: 650; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.sub td { background: #fdfcf9; font-weight: 650; }
+  tr.total td { background: var(--wash); font-weight: 700; border-top: 2px solid var(--gold); border-bottom: 0; font-size: 10pt; }
+  td.desc { color: var(--muted); font-size: 8.8pt; }
+
+  .page { page-break-after: always; }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* ── Cover ─────────────────────────────────────────────────────────── */
+  .cover { height: 297mm; padding: 30mm 24mm 18mm; background: #0b0b0a; color: #f3efe4; display: flex; flex-direction: column; }
+  .cover .mark { width: 24mm; height: 24mm; margin-bottom: 10mm; }
+  .cover .kicker { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .2em; color: var(--gold-bright); margin-bottom: 4mm; }
+  .cover h1 { font-size: 32pt; letter-spacing: -0.02em; }
+  .cover h1 span { color: var(--gold-bright); }
+  .cover .rule { width: 40mm; height: 2px; background: linear-gradient(90deg, var(--gold-bright), transparent); margin: 9mm 0; }
+  .cover .sub { font-size: 12pt; color: #b8b2a3; max-width: 122mm; line-height: 1.5; }
+  .cover .headline {
+    margin: 12mm 0 0; padding: 6mm 7mm; border: 1px solid rgba(217,166,46,.32); border-radius: 5px;
+    background: rgba(217,166,46,.07);
+  }
+  .cover .headline .label { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .16em; color: #9a948a; }
+  .cover .headline .amount { font-size: 26pt; font-weight: 700; color: var(--gold-bright); margin-top: 2mm; }
+  .cover .headline .note { font-size: 9pt; color: #9a948a; margin-top: 2mm; }
+  .cover dl { margin: auto 0 0; display: grid; grid-template-columns: 34mm 1fr; gap: 2.2mm 4mm; font-size: 9.3pt; }
+  .cover dt { color: #7e796d; text-transform: uppercase; letter-spacing: .1em; font-size: 7.8pt; padding-top: .6mm; }
+  .cover dd { margin: 0; color: #ded8c9; }
+
+  /* ── Callouts ──────────────────────────────────────────────────────── */
+  .note, .warn, .key { padding: 2.8mm 3.6mm; border-radius: 4px; margin: 0 0 3.5mm; font-size: 9.4pt; page-break-inside: avoid; }
+  .note { background: var(--wash); border-left: 3px solid var(--gold); }
+  .warn { background: #fdf4ec; border-left: 3px solid #c2610a; }
+  .key { background: #f7f9f5; border-left: 3px solid var(--green); }
+  .note strong, .warn strong, .key strong { display: block; margin-bottom: 1mm; }
+
+  .lede { font-size: 11pt; color: var(--muted); margin-bottom: 4mm; }
+  .small { font-size: 9pt; color: var(--muted); }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm; }
+  .card { border: 1px solid var(--rule); border-top: 3px solid var(--gold); border-radius: 4px; padding: 4mm; page-break-inside: avoid; }
+  .card .label { font-size: 8.2pt; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .card .amount { font-size: 17pt; font-weight: 700; margin-top: 1.5mm; }
+  .card .note { font-size: 8.8pt; color: var(--muted); margin-top: 1.5mm; }
+
+  .milestones { counter-reset: ms; list-style: none; padding: 0; }
+  .milestones li { position: relative; padding-left: 9mm; margin-bottom: 2.6mm; page-break-inside: avoid; }
+  .milestones li::before {
+    counter-increment: ms; content: counter(ms);
+    position: absolute; left: 0; top: .3mm; width: 6mm; height: 6mm; border-radius: 50%;
+    background: var(--gold); color: #fff; font-size: 8pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .sig { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; margin-top: 12mm; }
+  .sig div { border-top: 1px solid var(--ink); padding-top: 2mm; font-size: 9pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══ Cover ══════════════════════════════════════════════════════════ -->
+<section class="cover page">
+  <img class="mark" src="../frontend/user-app/public/icons/icon-192.png" alt="" />
+  <p class="kicker">Commercial Proposal</p>
+  <h1>NorthGold<br /><span>Project Quotation</span></h1>
+  <div class="rule"></div>
+  <p class="sub">
+    Investment platform with member website, administrator panel, mobile
+    applications, and the infrastructure to run all of it.
+  </p>
+
+  <div class="headline">
+    <div class="label">Total one-time development, inclusive of GST</div>
+    <div class="amount">₹12,21,300</div>
+    <div class="note">Plus ₹1,26,968 for the first year of infrastructure and services. Full breakdown inside.</div>
+  </div>
+
+  <dl>
+    <dt>Prepared for</dt><dd>________________________________</dd>
+    <dt>Prepared by</dt><dd>________________________________</dd>
+    <dt>Date</dt><dd>________________________________</dd>
+    <dt>Valid until</dt><dd>30 days from the date above</dd>
+  </dl>
+</section>
+
+<!-- ══ Summary ════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>1 · Summary</h2>
+  <p class="lede">
+    This proposal covers a complete investment platform: a public website and
+    member portal, a staff administration panel, Android and iOS applications,
+    and the servers and services that keep them running.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">One-time development</div>
+      <div class="amount">₹10,35,000</div>
+      <div class="note">Design, web platform, mobile apps, testing and launch. Before GST.</div>
+    </div>
+    <div class="card">
+      <div class="label">First-year running cost</div>
+      <div class="amount">₹1,07,600</div>
+      <div class="note">Servers, database, domain, messaging and store fees. Before GST.</div>
+    </div>
+  </div>
+
+  <h3>What the total is made of</h3>
+  <table>
+    <thead>
+      <tr><th>Part</th><th>What it covers</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>A · Web platform</strong></td>
+        <td class="desc">Design system, backend and business logic, member website, administrator panel, testing</td>
+        <td class="num">₹6,40,000</td>
+      </tr>
+      <tr>
+        <td><strong>B · Mobile applications</strong></td>
+        <td class="desc">App design, Android and iOS build from one codebase, push notifications, store submission</td>
+        <td class="num">₹3,95,000</td>
+      </tr>
+      <tr class="sub">
+        <td colspan="2">One-time development, before GST</td>
+        <td class="num">₹10,35,000</td>
+      </tr>
+      <tr>
+        <td>GST</td>
+        <td class="desc">At 18% on services</td>
+        <td class="num">₹1,86,300</td>
+      </tr>
+      <tr class="total">
+        <td colspan="2">One-time development, payable</td>
+        <td class="num">₹12,21,300</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr><th>Recurring</th><th>What it covers</th><th class="num">First year</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>C · Infrastructure</strong></td>
+        <td class="desc">Application server, database, cache, storage, backups, domain</td>
+        <td class="num">₹75,600</td>
+      </tr>
+      <tr>
+        <td><strong>D · Services &amp; stores</strong></td>
+        <td class="desc">WhatsApp, email, SMS, Play Console, Apple Developer Program</td>
+        <td class="num">₹32,000</td>
+      </tr>
+      <tr class="sub"><td colspan="2">Running cost, before GST</td><td class="num">₹1,07,600</td></tr>
+      <tr><td>GST</td><td class="desc">At 18%</td><td class="num">₹19,368</td></tr>
+      <tr class="total"><td colspan="2">First-year running cost, payable</td><td class="num">₹1,26,968</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Maintenance is quoted separately and is optional</strong>
+    An annual support contract is set out in section 6. It is not included in
+    either figure above, so the totals here are what it costs to build and to
+    keep the lights on — nothing more.
+  </div>
+</section>
+
+<!-- ══ Part A ═════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>2 · Part A — Web platform</h2>
+  <p class="lede">
+    Everything a member and your staff use from a browser, and the system
+    underneath that does the calculating.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Included</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Design</strong></td>
+        <td class="desc">
+          Complete visual identity, colour and type system, light and dark
+          themes, and every screen designed for desktop and mobile before a line
+          is built.
+        </td>
+        <td class="num">₹85,000</td>
+      </tr>
+      <tr>
+        <td><strong>Backend &amp; business logic</strong></td>
+        <td class="desc">
+          Accounts and authentication, the investment plan engine, the monthly
+          payout schedule, the wallet and its permanent transaction record,
+          deposit and withdrawal approval, the five-level referral calculation,
+          and the administrator interfaces behind every screen.
+        </td>
+        <td class="num">₹2,25,000</td>
+      </tr>
+      <tr>
+        <td><strong>Member website</strong></td>
+        <td class="desc">
+          Public landing page with plan comparison and returns calculator, about
+          and contact pages, sign-up and sign-in, member dashboard, wallet,
+          investments, referral network with a visual tree, and profile with
+          document upload.
+        </td>
+        <td class="num">₹1,75,000</td>
+      </tr>
+      <tr>
+        <td><strong>Administrator panel</strong></td>
+        <td class="desc">
+          Deposit and withdrawal approval queues, platform-wide dashboard, plan
+          and rate editor, referral level configuration, member directory with
+          network view, identity verification queue, and settings.
+        </td>
+        <td class="num">₹1,10,000</td>
+      </tr>
+      <tr>
+        <td><strong>Testing &amp; handover</strong></td>
+        <td class="desc">
+          Automated tests over the money calculations, cross-browser and mobile
+          checking, deployment to your server, and a walkthrough with your team.
+        </td>
+        <td class="num">₹45,000</td>
+      </tr>
+      <tr class="total"><td colspan="2">Part A subtotal</td><td class="num">₹6,40,000</td></tr>
+    </tbody>
+  </table>
+
+  <div class="key">
+    <strong>Why the backend is the largest single line</strong>
+    Most of the value is not what you can see. Slab-matched plans, schedules
+    that cannot be altered after a member invests, payments that can never run
+    twice, funds held the moment a withdrawal is requested, and commission that
+    walks five levels up a referral chain — all of it has to be right the first
+    time, because errors here are errors in somebody's money.
+  </div>
+</section>
+
+<!-- ══ Part B ═════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>3 · Part B — Mobile applications</h2>
+  <p class="lede">
+    Android and iOS applications built from a single shared codebase, so a
+    change is made once and appears on both.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Included</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>App design</strong></td>
+        <td class="desc">
+          Every screen designed for phone use rather than shrunk from the
+          website, following the same identity so both feel like one product.
+        </td>
+        <td class="num">₹55,000</td>
+      </tr>
+      <tr>
+        <td><strong>Android &amp; iOS build</strong></td>
+        <td class="desc">
+          Sign-up and sign-in, dashboard, wallet with deposit and withdrawal
+          requests, investments with full schedules, referral network and
+          sharing, profile and document upload — connected to the same system
+          as the website, so figures always agree.
+        </td>
+        <td class="num">₹2,80,000</td>
+      </tr>
+      <tr>
+        <td><strong>Push notifications</strong></td>
+        <td class="desc">
+          Alerts when a deposit is approved, when a monthly payment arrives,
+          when a referral earns, and when a withdrawal is ready to collect.
+        </td>
+        <td class="num">₹35,000</td>
+      </tr>
+      <tr>
+        <td><strong>Store submission</strong></td>
+        <td class="desc">
+          Store listing, screenshots, privacy policy, data-safety declarations,
+          and handling the review process for both stores until the apps are
+          live.
+        </td>
+        <td class="num">₹25,000</td>
+      </tr>
+      <tr class="total"><td colspan="2">Part B subtotal</td><td class="num">₹3,95,000</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    <strong>App store review is the one date nobody controls</strong>
+    Google typically reviews in a few days; Apple can take longer and is
+    stricter with financial applications. Both may ask for changes — business
+    registration, a published privacy policy, or proof of the right to offer
+    investment products. The submission fee above covers responding to those
+    requests, but the approval date itself is theirs, not ours.
+  </div>
+</section>
+
+<!-- ══ Part C & D ═════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>4 · Parts C and D — Running the platform</h2>
+  <p class="lede">
+    These are ongoing costs, billed by the providers rather than by us. They
+    are listed at current market rates so you can see the real cost of running
+    the platform.
+  </p>
+
+  <h3>C · Servers and infrastructure</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Specification</th><th class="num">Monthly</th><th class="num">Yearly</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Application server</strong></td><td class="desc">4 vCPU, 8 GB RAM, 160 GB SSD. Runs the website, the panel and the app's backend.</td><td class="num">₹2,500</td><td class="num">₹30,000</td></tr>
+      <tr><td><strong>Database</strong></td><td class="desc">Managed PostgreSQL with automatic failover.</td><td class="num">₹1,800</td><td class="num">₹21,600</td></tr>
+      <tr><td><strong>Cache &amp; job queue</strong></td><td class="desc">Redis. Runs the monthly payout schedule and live price updates.</td><td class="num">₹800</td><td class="num">₹9,600</td></tr>
+      <tr><td><strong>File storage &amp; delivery</strong></td><td class="desc">Receipts, identity documents and images, served from a content network.</td><td class="num">₹600</td><td class="num">₹7,200</td></tr>
+      <tr><td><strong>Backups</strong></td><td class="desc">Daily database snapshots kept for 30 days.</td><td class="num">₹500</td><td class="num">₹6,000</td></tr>
+      <tr><td><strong>Domain</strong></td><td class="desc">One .com domain. Security certificate included at no cost.</td><td class="num">₹100</td><td class="num">₹1,200</td></tr>
+      <tr class="total"><td colspan="3">Part C subtotal, per year</td><td class="num">₹75,600</td></tr>
+    </tbody>
+  </table>
+
+  <h3>D · Services and store fees</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Notes</th><th class="num">First year</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>WhatsApp Business</strong></td><td class="desc">For the support button and member messages. Charged per conversation; estimate at moderate volume.</td><td class="num">₹6,000</td></tr>
+      <tr><td><strong>Transactional email</strong></td><td class="desc">Sign-up confirmation, approvals, payment notices. Up to roughly 50,000 emails a year.</td><td class="num">₹3,600</td></tr>
+      <tr><td><strong>SMS and OTP</strong></td><td class="desc">Charged per message. Estimate at roughly 40,000 messages a year.</td><td class="num">₹12,000</td></tr>
+      <tr><td><strong>Google Play Console</strong></td><td class="desc">One-time registration, never charged again.</td><td class="num">₹2,100</td></tr>
+      <tr><td><strong>Apple Developer Program</strong></td><td class="desc">Charged every year. Required to keep the iOS app published.</td><td class="num">₹8,300</td></tr>
+      <tr class="total"><td colspan="2">Part D subtotal, first year</td><td class="num">₹32,000</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Three of these rise with usage, and one falls</strong>
+    WhatsApp, email and SMS are charged per message — at ten times the members,
+    expect roughly ten times those three lines. Server, database and storage
+    hold steady until traffic grows enough to need a larger machine. The Play
+    Console fee is one-time, so year two is about ₹2,100 cheaper.
+  </div>
+</section>
+
+<!-- ══ Payment & timeline ═════════════════════════════════════════════ -->
+<section class="page">
+  <h2>5 · Payment schedule and timeline</h2>
+
+  <h3>Payment in four stages</h3>
+  <table>
+    <thead>
+      <tr><th>Stage</th><th>Due when</th><th class="num">Share</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1 · Advance</strong></td><td class="desc">On signing, before work begins</td><td class="num">25%</td><td class="num">₹2,58,750</td></tr>
+      <tr><td><strong>2 · Design &amp; backend</strong></td><td class="desc">On approval of the designs and the working calculation engine</td><td class="num">25%</td><td class="num">₹2,58,750</td></tr>
+      <tr><td><strong>3 · Web delivery</strong></td><td class="desc">On the member website and administrator panel going live</td><td class="num">25%</td><td class="num">₹2,58,750</td></tr>
+      <tr><td><strong>4 · App delivery</strong></td><td class="desc">On both applications being published to the stores</td><td class="num">25%</td><td class="num">₹2,58,750</td></tr>
+      <tr class="total"><td colspan="3">Total, before GST</td><td class="num">₹10,35,000</td></tr>
+    </tbody>
+  </table>
+  <p class="small">GST is added to each invoice at the prevailing rate.</p>
+
+  <h3>Indicative timeline</h3>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Work</th><th class="num">Weeks</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td class="desc">Requirements confirmed, design of every web screen</td><td class="num">3</td></tr>
+      <tr><td>2</td><td class="desc">Backend, calculation engine, administrator interfaces</td><td class="num">5</td></tr>
+      <tr><td>3</td><td class="desc">Member website and administrator panel</td><td class="num">5</td></tr>
+      <tr><td>4</td><td class="desc">App design and build for both platforms</td><td class="num">6</td></tr>
+      <tr><td>5</td><td class="desc">Testing, deployment, store submission and handover</td><td class="num">3</td></tr>
+      <tr class="total"><td colspan="2">Total, with phases 3 and 4 partly overlapping</td><td class="num">18–20</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    <strong>What moves this date</strong>
+    Two things, and both sit on your side: how quickly designs and each stage
+    are approved, and how quickly the content, business details and any
+    licences are supplied. Store review, as noted earlier, is the third — and
+    it belongs to Google and Apple.
+  </div>
+</section>
+
+<!-- ══ Terms ══════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>6 · What is and is not included</h2>
+
+  <h3>Included in the quoted price</h3>
+  <ul>
+    <li>All source code, handed over and owned by you outright</li>
+    <li>Two rounds of revisions at each design stage</li>
+    <li>Deployment to your server and publication to both app stores</li>
+    <li>Training for your staff on the administrator panel</li>
+    <li><strong>60 days of free bug fixing</strong> after handover — anything that does not work as specified is corrected at no charge</li>
+  </ul>
+
+  <h3>Not included</h3>
+  <ul>
+    <li>The infrastructure and service costs in parts C and D, which are billed by the providers</li>
+    <li>Content: written copy, photography, and any legal text such as terms or a privacy policy</li>
+    <li>Business registration, financial licences, or regulatory approvals</li>
+    <li>Payment gateway integration — the platform settles in cash by design. Quoted separately if you add online payments later.</li>
+    <li>New features requested after the scope in this document is agreed</li>
+  </ul>
+
+  <h3>Optional — annual maintenance</h3>
+  <table>
+    <thead><tr><th>Plan</th><th>Covers</th><th class="num">Monthly</th><th class="num">Yearly</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Support &amp; maintenance</strong></td>
+        <td class="desc">
+          Security updates, server monitoring, backup verification, bug fixes,
+          store compliance updates when Google or Apple change their rules, and
+          up to 8 hours of small changes each month.
+        </td>
+        <td class="num">₹18,000</td>
+        <td class="num">₹2,16,000</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small">
+    Optional, and can start after the 60-day free period ends. Without it,
+    later work is charged at an hourly rate.
+  </p>
+
+  <h3>Terms</h3>
+  <ul>
+    <li>This quotation is valid for <strong>30 days</strong> from its date.</li>
+    <li>Prices are in Indian Rupees. GST is charged additionally at the prevailing rate.</li>
+    <li>Work begins once the advance is received and the scope is signed.</li>
+    <li>Source code and ownership transfer on receipt of the final payment.</li>
+    <li>Third-party services are billed directly to you by their providers; those figures are estimates at today's rates.</li>
+    <li>Anything outside the scope in this document is quoted before work on it starts, never invoiced as a surprise.</li>
+  </ul>
+
+  <div class="sig">
+    <div>Client signature and date</div>
+    <div>For and on behalf of the developer</div>
+  </div>
+
+  <hr style="border:0;border-top:1px solid var(--rule);margin:8mm 0 3mm" />
+  <p class="small">
+    NorthGold · Project Quotation · page 6 of 6. A separate document,
+    <em>NorthGold — How It Works</em>, explains the platform in detail.
+  </p>
+</section>
+
+</body>
+</html>
