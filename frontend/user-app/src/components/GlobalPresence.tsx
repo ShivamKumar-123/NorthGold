@@ -69,7 +69,12 @@ export default function GlobalPresence() {
           <Reveal delay={120}>
             {/* The wrapper keeps the image's exact aspect so the absolutely
                 placed pins stay on their coordinates at every width. */}
-            <Tilt max={7} lift={16} perspective={1500} sheen={false}>
+            {/* Gentler than the other images on purpose. The tilt moves
+                the map under the pointer, and the pins are hover targets
+                sitting on it — at the tilt used elsewhere the pin slides out
+                from under the cursor before its label can appear. A few
+                degrees keeps the depth without fighting the pins. */}
+            <Tilt max={3} lift={6} perspective={2000} sheen={false}>
               <div className="relative w-full" style={{ aspectRatio: '1856 / 728' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -85,13 +90,17 @@ export default function GlobalPresence() {
               {MARKERS.map((marker, i) => (
                 <span
                   key={marker.city}
-                  className="group absolute -translate-x-1/2 -translate-y-1/2"
+                  // The hit area is 28px, not the 10px of the dot itself. The
+                  // dot's glow makes it look far bigger than it is, so a
+                  // target the size of the dot means the pointer lands next to
+                  // the pin, on nothing, and no label ever appears.
+                  className="group absolute z-10 grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center"
                   style={place(marker.lat, marker.lon)}
                 >
                   {/* The halo is a separate element from the dot: the ping
                       animation drives `transform`, which would otherwise wipe
                       out the centring translate on the dot itself. */}
-                  <span className="relative grid h-3 w-3 cursor-default place-items-center">
+                  <span className="pointer-events-none relative grid h-3 w-3 place-items-center">
                     <span
                       className="absolute h-full w-full animate-ping rounded-full bg-accent/70"
                       style={{ animationDelay: `${i * 0.35}s`, animationDuration: '2.8s' }}
@@ -104,10 +113,10 @@ export default function GlobalPresence() {
                       tooltip, which takes about a second to appear — long
                       enough that most people have moved the pointer on. */}
                   <span
-                    className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 translate-y-1
+                    className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1 -translate-x-1/2
                                whitespace-nowrap rounded-lg border border-accent/30 bg-[#111110] px-2.5 py-1.5
-                               text-center opacity-0 shadow-e3 transition duration-200
-                               group-hover:translate-y-0 group-hover:opacity-100"
+                               text-center opacity-0 shadow-e3 transition-opacity duration-200
+                               group-hover:opacity-100"
                     role="tooltip"
                   >
                     <span className="block text-[11px] font-semibold leading-tight text-accent">

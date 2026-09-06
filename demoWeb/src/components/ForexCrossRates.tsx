@@ -28,8 +28,9 @@ export default function ForexCrossRates() {
             aria-hidden
           />
           <p className="mt-4 leading-relaxed text-text-muted" data-head="copy">
-            Every currency against every other, moving as the session moves.
-            Read a row to see how one currency is doing against the rest.
+            Every currency against every other, coloured by how far it has
+            moved this session — green up, red down. Read a row to see how one
+            currency is holding up against the rest.
           </p>
         </div>
 
@@ -40,11 +41,16 @@ export default function ForexCrossRates() {
             <div className="overflow-x-auto">
               <div className="min-w-[720px]">
                 <TradingViewWidget
-                  widget="forex-cross-rates"
+                  widget="forex-heat-map"
                   height={480}
-                  // Same rule as the mini charts — `autosize` on its own,
-                  // and light so the grid matches the quote cards above it
-                  // rather than changing register halfway down the page.
+                  // The heat map, not the cross-rates grid. Cross rates print
+                  // the raw exchange rate in every cell — a wall of numbers
+                  // with nothing to read at a glance. The heat map prints the
+                  // MOVE, and colours it, which is what makes a grid this size
+                  // worth looking at.
+                  //
+                  // `autosize` on its own, and light so it matches the quote
+                  // cards above rather than changing register halfway down.
                   config={{
                     currencies: ['EUR', 'USD', 'JPY', 'GBP', 'CHF', 'AUD', 'CAD', 'INR', 'AED', 'SGD'],
                     isTransparent: false,
