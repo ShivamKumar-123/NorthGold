@@ -136,7 +136,7 @@
   </p>
   <dl>
     <dt>Covers</dt><dd>Django API · Next.js user app · Next.js admin panel · Vite demo</dd>
-    <dt>Currency</dt><dd>Indian Rupee (₹), <code>en-IN</code> grouping throughout</dd>
+    <dt>Currency</dt><dd>US Dollar ($), <code>en-US</code> grouping throughout</dd>
     <dt>Repository</dt><dd>github.com/ShivamKumar-123/NorthGold</dd>
     <dt>Audience</dt><dd>Developers running, deploying or extending the platform</dd>
   </dl>
@@ -300,7 +300,7 @@
   </p>
   <div class="rule-box">
     <strong>Why</strong>
-    Rounding half-up gains a fraction of a paisa on roughly half of all
+    Rounding half-up gains a fraction of a cent on roughly half of all
     payments. Across twelve months and five commission levels, that is a
     systematic over-payment against a schedule that promised an exact figure.
   </div>
@@ -361,10 +361,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td><strong>Starter</strong></td><td>₹100 – ₹999</td><td class="num">1.00%</td><td class="num">1.50%</td><td class="num">13.90%</td></tr>
-      <tr><td><strong>Silver</strong></td><td>₹1,000 – ₹4,999</td><td class="num">1.00%</td><td class="num">2.50%</td><td class="num">19.75%</td></tr>
-      <tr><td><strong>Gold</strong></td><td>₹5,000 – ₹24,999</td><td class="num">1.50%</td><td class="num">3.00%</td><td class="num">25.00%</td></tr>
-      <tr><td><strong>Platinum</strong></td><td>₹25,000 and above</td><td class="num">2.00%</td><td class="num">3.50%</td><td class="num">31.75%</td></tr>
+      <tr><td><strong>Starter</strong></td><td>$100 – $999</td><td class="num">1.00%</td><td class="num">1.50%</td><td class="num">13.90%</td></tr>
+      <tr><td><strong>Silver</strong></td><td>$1,000 – $4,999</td><td class="num">1.00%</td><td class="num">2.50%</td><td class="num">19.75%</td></tr>
+      <tr><td><strong>Gold</strong></td><td>$5,000 – $24,999</td><td class="num">1.50%</td><td class="num">3.00%</td><td class="num">25.00%</td></tr>
+      <tr><td><strong>Platinum</strong></td><td>$25,000 and above</td><td class="num">2.00%</td><td class="num">3.50%</td><td class="num">31.75%</td></tr>
     </tbody>
   </table>
 
@@ -378,9 +378,9 @@
   <h3>What a month pays</h3>
   <pre><code>payout(month N) = floor2( principal × percent[N] / 100 )
 
-Example — ₹30,000 on Platinum, month 6 pays 2.50%
+Example — $30,000 on Platinum, month 6 pays 2.50%
          = floor2(30000 × 2.50 / 100)
-         = ₹750.00</code></pre>
+         = $750.00</code></pre>
   <p>
     The percentage always applies to the <strong>original principal</strong>.
     Returns are credited to the wallet as withdrawable balance and do not
@@ -488,15 +488,15 @@ Example — ₹30,000 on Platinum, month 6 pays 2.50%
 
   <h3>Worked example</h3>
   <pre><code>Chain:   Anita ← Rahul ← Priya          (Priya is at the top)
-Event:   Anita's ₹900 deposit is approved
+Event:   Anita's $900 deposit is approved
 
-  L1  Rahul   5.0% of 900  = ₹45.00   → paid
-  L2  Priya   3.0% of 900  = ₹27.00   → paid if Priya has ≥1 direct
+  L1  Rahul   5.0% of 900  = $45.00   → paid
+  L2  Priya   3.0% of 900  = $27.00   → paid if Priya has ≥1 direct
 
-Later, Anita's month-1 return of ₹9.00 is credited:
+Later, Anita's month-1 return of $9.00 is credited:
 
-  L1  Rahul  10.0% of 9    = ₹0.90    → paid
-  L2  Priya   5.0% of 9    = ₹0.45    → paid</code></pre>
+  L1  Rahul  10.0% of 9    = $0.90    → paid
+  L2  Priya   5.0% of 9    = $0.45    → paid</code></pre>
 
   <div class="note">
     <strong>Skipped payments are recorded, not discarded</strong>
@@ -714,7 +714,7 @@ python manage.py test        # 35 tests</code></pre>
     <tbody>
       <tr><td>Support email / phone / hours / address</td><td>Shown on the contact page and used by the contact form.</td></tr>
       <tr><td>WhatsApp number</td><td>Behind the support button. <strong>Digits only with the country code</strong> — <code>wa.me</code> rejects <code>+</code>, spaces and dashes.</td></tr>
-      <tr><td>Minimum deposit / withdrawal</td><td>Enforced before a request can be filed. Defaults: ₹100 and ₹10.</td></tr>
+      <tr><td>Minimum deposit / withdrawal</td><td>Enforced before a request can be filed. Defaults: $100 and $10.</td></tr>
       <tr><td>Auto-invest on deposit</td><td>An approved deposit immediately opens an investment. Off: the balance sits in the wallet until the member invests it.</td></tr>
       <tr><td>Pay commission on deposits</td><td>Cascade when a deposit is approved.</td></tr>
       <tr><td>Pay commission on returns</td><td>Cascade on every monthly payout. The larger of the two over a full term.</td></tr>

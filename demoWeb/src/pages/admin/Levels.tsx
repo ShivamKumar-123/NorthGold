@@ -98,9 +98,9 @@ export default function AdminLevels() {
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-text-muted">
-          A ₹10,000 deposit currently pays{' '}
+          A $10,000 deposit currently pays{' '}
           <span className="text-success">
-            ₹{num(levels.reduce((s, l) => s + (10000 * l.deposit_percent) / 100, 0), 2)}
+            ${num(levels.reduce((s, l) => s + (10000 * l.deposit_percent) / 100, 0), 2)}
           </span>{' '}
           across all {levels.length} levels.
         </p>

@@ -411,7 +411,7 @@ function DepositModal({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="input resize-none"
-            placeholder="e.g. Handed ₹80,000 in cash to Rakesh at the Andheri branch on Tuesday 14th, receipt no. 4471."
+            placeholder="e.g. Handed $80,000 in cash to Rakesh at the Andheri branch on Tuesday 14th, receipt no. 4471."
           />
           <p className="mt-1 text-xs text-warn">
             A cash payment leaves no bank trail, so this message is what the

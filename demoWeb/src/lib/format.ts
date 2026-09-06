@@ -1,10 +1,10 @@
-/** Display helpers. `en-IN` throughout: Indian grouping is 2-2-3 from the
- *  right, so a lakh is ₹1,00,000 and not ₹100,000. */
+/** Display helpers. `en-US` throughout, so grouping and currency match the
+ *  rest of the platform. */
 
-export function money(value: number | string | null | undefined, currency = 'INR'): string {
+export function money(value: number | string | null | undefined, currency = 'USD'): string {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return '—';
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
@@ -15,7 +15,7 @@ export function money(value: number | string | null | undefined, currency = 'INR
 export function num(value: number | string | null | undefined, digits = 2): string {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return '—';
-  return n.toLocaleString('en-IN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
 export function pct(value: number | string | null | undefined, digits = 2): string {
@@ -28,15 +28,15 @@ export function shortDate(value: string | null | undefined): string {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export function dateTime(value: string | null | undefined): string {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
-  return `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString(
-    'en-IN',
+  return `${d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}, ${d.toLocaleTimeString(
+    'en-US',
     { hour: '2-digit', minute: '2-digit' },
   )}`;
 }

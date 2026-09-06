@@ -95,7 +95,7 @@ export default function HeroScene({ plan }: { plan: RoiPlan | null }) {
             <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-text-dim">
               <Users size={11} /> Your network
             </p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-text">₹24,600</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-text">$24,600</p>
             <div className="mt-3 space-y-1.5">
               {[
                 ['L1', 'w-full', 'bg-accent'],
@@ -140,7 +140,7 @@ export default function HeroScene({ plan }: { plan: RoiPlan | null }) {
               <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-text-dim">
                 <Coins size={11} /> This month
               </p>
-              <p className="mt-1.5 text-2xl font-semibold tabular-nums text-success">+₹750</p>
+              <p className="mt-1.5 text-2xl font-semibold tabular-nums text-success">+$750</p>
               <p className="mt-1 flex items-center gap-1 text-[11px] text-success">
                 <TrendingUp size={11} /> credited on time
               </p>

@@ -19,7 +19,7 @@ export const ROI_PLANS: RoiPlan[] = [
   {
     id: 'plan-starter',
     name: 'Starter',
-    description: 'Entry tier for deposits from ₹100 to ₹999.',
+    description: 'Entry tier for deposits from $100 to $999.',
     min_amount: 100,
     max_amount: 999,
     tenure_months: 12,
@@ -30,7 +30,7 @@ export const ROI_PLANS: RoiPlan[] = [
   {
     id: 'plan-silver',
     name: 'Silver',
-    description: 'For deposits from ₹1,000 to ₹4,999.',
+    description: 'For deposits from $1,000 to $4,999.',
     min_amount: 1000,
     max_amount: 4999,
     tenure_months: 12,
@@ -41,7 +41,7 @@ export const ROI_PLANS: RoiPlan[] = [
   {
     id: 'plan-gold',
     name: 'Gold',
-    description: 'For deposits from ₹5,000 to ₹24,999.',
+    description: 'For deposits from $5,000 to $24,999.',
     min_amount: 5000,
     max_amount: 24999,
     tenure_months: 12,
@@ -52,7 +52,7 @@ export const ROI_PLANS: RoiPlan[] = [
   {
     id: 'plan-platinum',
     name: 'Platinum',
-    description: 'Open-ended top tier for deposits of ₹25,000 and above.',
+    description: 'Open-ended top tier for deposits of $25,000 and above.',
     min_amount: 25000,
     max_amount: null,
     tenure_months: 12,
@@ -72,31 +72,31 @@ export const INSTRUMENTS: Instrument[] = [
   {
     id: 'ins-1', symbol: 'MRD-FD12', name: 'Meridian 12-Month Fixed Deposit',
     issuer_name: 'Meridian Bank', category_label: 'Fixed Deposit', interest_rate: 8.4,
-    tenure_months: 12, min_investment: 1000, currency: 'INR', current_price: 100,
+    tenure_months: 12, min_investment: 1000, currency: 'USD', current_price: 100,
     change_percent: 0, price_source: 'manual', is_featured: true,
   },
   {
     id: 'ins-2', symbol: 'MRD-RD12', name: 'Meridian Recurring Deposit',
     issuer_name: 'Meridian Bank', category_label: 'Recurring Deposit', interest_rate: 7.2,
-    tenure_months: 12, min_investment: 100, currency: 'INR', current_price: 100,
+    tenure_months: 12, min_investment: 100, currency: 'USD', current_price: 100,
     change_percent: 0, price_source: 'manual', is_featured: false,
   },
   {
     id: 'ins-3', symbol: 'APX-BND24', name: 'Apex Corporate Bond Series A',
     issuer_name: 'Apex Financial', category_label: 'Bond', interest_rate: 9.75,
-    tenure_months: 12, min_investment: 5000, currency: 'INR', current_price: 1024.5,
+    tenure_months: 12, min_investment: 5000, currency: 'USD', current_price: 1024.5,
     change_percent: 0, price_source: 'feed', is_featured: true,
   },
   {
     id: 'ins-4', symbol: 'NGT-MF01', name: 'Northgate Balanced Fund',
     issuer_name: 'Northgate Trust', category_label: 'Mutual Fund', interest_rate: 11.2,
-    tenure_months: 12, min_investment: 25000, currency: 'INR', current_price: 486.25,
+    tenure_months: 12, min_investment: 25000, currency: 'USD', current_price: 486.25,
     change_percent: 0, price_source: 'feed', is_featured: true,
   },
   {
     id: 'ins-5', symbol: 'APX-ETF05', name: 'Apex Global Index ETF',
     issuer_name: 'Apex Financial', category_label: 'ETF', interest_rate: 10.5,
-    tenure_months: 12, min_investment: 5000, currency: 'INR', current_price: 212.8,
+    tenure_months: 12, min_investment: 5000, currency: 'USD', current_price: 212.8,
     change_percent: 0, price_source: 'feed', is_featured: false,
   },
 ];

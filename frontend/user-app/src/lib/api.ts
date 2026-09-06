@@ -187,13 +187,10 @@ export const api = {
 
 // ─── formatting ───────────────────────────────────────────────────────────
 
-// `en-IN`, not `en-US`: Indian grouping is 2-2-3 from the right, so a lakh is
-// ₹1,00,000 and not ₹100,000. Getting that wrong is immediately obvious to
-// every user this platform is built for.
-export function money(value: number | string | null | undefined, currency = 'INR'): string {
+export function money(value: number | string | null | undefined, currency = 'USD'): string {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return '—';
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
@@ -204,7 +201,7 @@ export function money(value: number | string | null | undefined, currency = 'INR
 export function num(value: number | string | null | undefined, digits = 2): string {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return '—';
-  return n.toLocaleString('en-IN', {
+  return n.toLocaleString('en-US', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   });

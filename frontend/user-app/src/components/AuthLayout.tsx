@@ -105,7 +105,7 @@ export default function AuthLayout({
             <span className="h-8 w-px bg-white/10" aria-hidden />
             <Stat value="5" label="Commission levels" />
             <span className="h-8 w-px bg-white/10" aria-hidden />
-            <Stat value="₹100" label="Minimum entry" />
+            <Stat value="$100" label="Minimum entry" />
           </div>
         </div>
       </aside>

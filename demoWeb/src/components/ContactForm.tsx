@@ -150,7 +150,7 @@ export default function ContactForm({
                 value={form.message}
                 onChange={(e) => set('message', e.target.value)}
                 className="input resize-none"
-                placeholder="I would like to deposit ₹50,000 in cash this week — which counter should I come to?"
+                placeholder="I would like to deposit $50,000 in cash this week — which counter should I come to?"
               />
             </div>
 

@@ -191,7 +191,7 @@ function seedInto(db: DB): DB {
       amount: person.deposit,
       method: 'cash',
       reference: `RCPT${Math.floor(100000 + Math.random() * 899999)}`,
-      user_message: `Handed ₹${person.deposit.toLocaleString('en-IN')} in cash at the head office counter.`,
+      user_message: `Handed $${person.deposit.toLocaleString('en-US')} in cash at the head office counter.`,
       status: 'pending',
       admin_note: '',
       created_at: at,
@@ -211,7 +211,7 @@ function seedInto(db: DB): DB {
     amount: 2500,
     method: 'cash',
     reference: 'RCPT774120',
-    user_message: 'Handed ₹2,500 to Rakesh at the Andheri counter on Tuesday, receipt 774120.',
+    user_message: 'Handed $2,500 to Rakesh at the Andheri counter on Tuesday, receipt 774120.',
     status: 'pending',
     admin_note: '',
     created_at: new Date(now - 2 * 86400_000).toISOString(),
@@ -373,7 +373,7 @@ function credit(db: DB, user: User, amount: number, kind: Transaction['kind'], n
 export function createDeposit(userId: string, amount: number, message: string, reference: string) {
   const db = load();
   if (amount < db.settings.deposit_min_amount) {
-    throw new Error(`The minimum deposit is ₹${db.settings.deposit_min_amount}.`);
+    throw new Error(`The minimum deposit is $${db.settings.deposit_min_amount}.`);
   }
   // Cash leaves no bank trail, so the member's description of the handover is
   // the only thing the administrator has to verify against.
@@ -481,7 +481,7 @@ export function invest(userId: string, amount: number, planId?: string) {
   const plan = planId ? db.plans.find((p) => p.id === planId) ?? null : planForAmount(amount);
   if (!plan) throw new Error('No plan covers that amount.');
   if (amount < plan.min_amount) {
-    throw new Error(`${plan.name} starts at ₹${plan.min_amount.toLocaleString('en-IN')}.`);
+    throw new Error(`${plan.name} starts at $${plan.min_amount.toLocaleString('en-US')}.`);
   }
 
   const investment = openInvestmentIn(db, user, amount, new Date().toISOString());
@@ -561,7 +561,7 @@ function requestWithdrawalIn(db: DB, userId: string, amount: number, message: st
   const user = db.users.find((u) => u.id === userId);
   if (!user) throw new Error('No such account.');
   if (amount < db.settings.withdrawal_min_amount) {
-    throw new Error(`The minimum withdrawal is ₹${db.settings.withdrawal_min_amount}.`);
+    throw new Error(`The minimum withdrawal is $${db.settings.withdrawal_min_amount}.`);
   }
   if (amount > user.wallet_balance) throw new Error('That is more than your available balance.');
   if (!message.trim()) throw new Error('Tell us where and when you want to collect the cash.');
@@ -608,7 +608,7 @@ export function approveWithdrawal(id: string, note = '') {
       kind: 'withdrawal',
       amount: 0,
       balance_after: user.wallet_balance,
-      note: `Cash withdrawal of ₹${w.amount.toLocaleString('en-IN')} handed over`,
+      note: `Cash withdrawal of $${w.amount.toLocaleString('en-US')} handed over`,
       created_at: w.reviewed_at,
     });
   }

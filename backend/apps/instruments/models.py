@@ -1,7 +1,7 @@
 """Bank instruments shown on the landing page.
 
 An instrument is the shop-front for a plan: "HDFC 12-Month Fixed Deposit,
-₹25,000 minimum, 8.4% p.a." Its `roi_plan` decides what an investment in it
+$25,000 minimum, 8.4% p.a." Its `roi_plan` decides what an investment in it
 actually pays, month by month.
 
 Prices come from either source, per instrument:
@@ -62,7 +62,7 @@ class Instrument(TimeStampedUUIDModel):
         max_length=30, choices=CATEGORY_CHOICES, default="fixed_deposit", db_index=True,
     )
     description = models.TextField(blank=True)
-    currency = models.CharField(max_length=10, default="INR")
+    currency = models.CharField(max_length=10, default="USD")
 
     # Headline rate quoted on the card, e.g. 8.400 for "8.4% p.a."
     interest_rate = models.DecimalField(

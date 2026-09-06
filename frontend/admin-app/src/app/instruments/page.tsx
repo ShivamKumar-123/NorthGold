@@ -73,7 +73,7 @@ export default function AdminInstrumentsPage() {
         <button
           onClick={() =>
             setDraft({
-              name: '', symbol: '', category: 'fixed_deposit', currency: 'INR',
+              name: '', symbol: '', category: 'fixed_deposit', currency: 'USD',
               interest_rate: '8.000', tenure_months: 12, min_investment: '1000',
               price_source: 'manual', current_price: '100.0000',
               is_active: true, is_featured: false, display_order: 0, description: '',
@@ -208,7 +208,7 @@ function InstrumentEditor({
       issuer: form.issuer || null,
       category: form.category,
       description: form.description ?? '',
-      currency: form.currency || 'INR',
+      currency: form.currency || 'USD',
       interest_rate: form.interest_rate || '0',
       tenure_months: form.tenure_months ?? 12,
       min_investment: form.min_investment || '0',
@@ -290,7 +290,7 @@ function InstrumentEditor({
         <Text label="Current price" value={form.current_price ?? ''} type="number"
               onChange={(v) => set('current_price', v)} />
 
-        <Text label="Currency" value={form.currency ?? 'INR'} onChange={(v) => set('currency', v)} />
+        <Text label="Currency" value={form.currency ?? 'USD'} onChange={(v) => set('currency', v)} />
         <Text label="Display order" value={String(form.display_order ?? 0)} type="number"
               onChange={(v) => set('display_order', Number(v))} />
 

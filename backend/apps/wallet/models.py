@@ -2,7 +2,7 @@
 
 Every deposit method — including CASH — is a request, not a credit. The user
 files it (with a free-text `user_message`, which is the whole point of the cash
-flow: "I handed ₹80,000 to Rakesh at the Andheri branch on Tuesday"), and an
+flow: "I handed $80,000 to Rakesh at the Andheri branch on Tuesday"), and an
 admin verifies it before a single unit of balance moves. Nothing here touches
 `User.wallet_balance` directly; that only happens in services.py, inside a
 transaction, against a row-locked user.
@@ -84,7 +84,7 @@ class Deposit(TimeStampedUUIDModel):
         max_digits=18, decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
-    currency = models.CharField(max_length=10, default="INR")
+    currency = models.CharField(max_length=10, default="USD")
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, db_index=True)
     channel = models.ForeignKey(
         PaymentChannel, null=True, blank=True, on_delete=models.SET_NULL,
@@ -128,7 +128,7 @@ class Withdrawal(TimeStampedUUIDModel):
         max_digits=18, decimal_places=2, default=Decimal("0"),
         help_text="What the user actually receives, after fee.",
     )
-    currency = models.CharField(max_length=10, default="INR")
+    currency = models.CharField(max_length=10, default="USD")
     method = models.CharField(max_length=20, choices=METHOD_CHOICES, db_index=True)
     # Where to send it — bank details, UPI id, wallet address, or cash pickup.
     payout_details = models.JSONField(default=dict, blank=True)
