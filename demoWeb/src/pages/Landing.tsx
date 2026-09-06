@@ -17,14 +17,13 @@ import SplitWords from '@/components/SplitWords';
 import Tilt from '@/components/Tilt';
 import WaveDivider from '@/components/WaveDivider';
 import { money, num } from '@/lib/format';
-import { getInstruments, getLevels, getPlans } from '@/lib/store';
+import { getLevels, getPlans } from '@/lib/store';
 import { totalReturnPercent, type RoiPlan } from '@/lib/types';
 
 export default function LandingPage() {
   // Read straight from the store. In the Django build these were four network
   // calls that had to degrade gracefully; here the data is already in memory,
   // so there is nothing to fail and nothing to wait for.
-  const instruments = getInstruments();
   const planList = getPlans();
   const levels = getLevels();
 
@@ -133,7 +132,7 @@ export default function LandingPage() {
             strip read as a border between two sections rather than as the
             closing band of the hero. */}
         <div className="relative pb-12 lg:pb-16">
-          <MarqueeTicker instruments={instruments} />
+          <MarqueeTicker />
         </div>
       </section>
 
@@ -405,8 +404,8 @@ export default function LandingPage() {
                   Open an account
                   <ArrowRight size={17} />
                 </Link>
-                <Link to="#instruments" className="btn-ghost px-7 py-3.5 text-base">
-                  Browse instruments
+                <Link to="#plans" className="btn-ghost px-7 py-3.5 text-base">
+                  Browse the plans
                 </Link>
               </div>
               <p className="mt-8 text-xs leading-relaxed text-text-dim">

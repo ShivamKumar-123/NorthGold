@@ -17,7 +17,7 @@ import WaveDivider from '@/components/WaveDivider';
 import ReturnsCalculator from '@/components/ReturnsCalculator';
 import Tilt from '@/components/Tilt';
 import { API_BASE, money, num } from '@/lib/api';
-import type { Instrument, MlmStructure, Paginated, RoiPlan } from '@/types';
+import type { MlmStructure, RoiPlan } from '@/types';
 
 // Rendered per request, NOT prerendered at build time: the API is not
 // reachable during `next build` (and certainly not during a Docker image
@@ -40,13 +40,11 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export default async function LandingPage() {
-  const [instrumentsRes, plans, structure] = await Promise.all([
-    fetchJson<Paginated<Instrument>>('/instruments/?per_page=9&ordering=display_order'),
+  const [plans, structure] = await Promise.all([
     fetchJson<RoiPlan[]>('/investments/plans/'),
     fetchJson<MlmStructure>('/mlm/structure/'),
   ]);
 
-  const instruments = instrumentsRes?.items ?? [];
   const planList = plans ?? [];
   const levels = structure?.levels ?? [];
 
@@ -157,7 +155,7 @@ export default async function LandingPage() {
             strip read as a border between two sections rather than as the
             closing band of the hero. */}
         <div className="relative pb-12 lg:pb-16">
-          <MarqueeTicker instruments={instruments} />
+          <MarqueeTicker />
         </div>
       </section>
 
@@ -431,8 +429,8 @@ export default async function LandingPage() {
                   Open an account
                   <ArrowRight size={17} />
                 </Link>
-                <Link href="#instruments" className="btn-ghost px-7 py-3.5 text-base">
-                  Browse instruments
+                <Link href="#plans" className="btn-ghost px-7 py-3.5 text-base">
+                  Browse the plans
                 </Link>
               </div>
               <p className="mt-8 text-xs leading-relaxed text-text-dim">

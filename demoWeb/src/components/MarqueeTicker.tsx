@@ -1,38 +1,35 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import { Radio, TrendingDown, TrendingUp } from 'lucide-react';
 
-import { useLivePrices } from '@/hooks/useLivePrices';
-import { num } from '@/lib/format';
-import type { Instrument } from '@/lib/types';
+import { useMarketPrices, type MarketQuote } from '@/hooks/useMarketPrices';
 
 /**
  * The rolling price strip under the hero.
  *
- * Built as a trading-terminal tape: a brand disc, the symbol, the price and
- * the move, separated by hairlines and running edge to edge. The cards this
- * replaced each opened a box the eye had to enter and leave; a tape is read
- * in one pass, which is the whole point of a strip that never stops moving.
+ * Small cards rather than a run of bare text: a plain ticker line reads as
+ * chrome and gets skipped, while a card gives each market a shape the eye can
+ * land on mid-scroll.
+ *
+ * What it quotes is real. Crypto streams live from Binance; the currency
+ * cards are the ECB's daily reference rates and say `daily` on their face,
+ * because a once-a-day number sliding past on a live strip would otherwise
+ * read as a tick.
  *
  * Driven by GSAP rather than a CSS keyframe. The old `animate-marquee` moved a
  * fixed -50%, which only lines up if both copies are exactly the same width —
- * true for text, not for rows whose width depends on the instrument name. A
- * tween to the measured width of one copy is correct whatever they render as,
- * and it can also be paused on hover and reversed for direction without
- * re-authoring keyframes.
+ * true for text, not for cards whose width depends on their content. A tween
+ * to the measured width of one copy is correct whatever they render as, and it
+ * can also be paused on hover without re-authoring keyframes.
  */
-export default function MarqueeTicker({ instruments }: { instruments: Instrument[] }) {
-  const symbols = useMemo(() => instruments.map((i) => i.symbol), [instruments]);
-  const { prices, connected } = useLivePrices(symbols);
+export default function MarqueeTicker() {
+  const { quotes, connected } = useMarketPrices();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
-  // Two identical copies: the second takes over the frame exactly as the first
-  // leaves it, so the loop has no gap.
-  const items = instruments.length ? instruments : [];
-
   useEffect(() => {
     const track = trackRef.current;
-    if (!track || !items.length) return;
+    if (!track || !quotes.length) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const ctx = gsap.context(() => {
@@ -48,7 +45,7 @@ export default function MarqueeTicker({ instruments }: { instruments: Instrument
         gsap.set(track, { x: 0 });
         tweenRef.current = gsap.to(track, {
           x: -distance,
-          duration: distance / 52, // ~52px per second, regardless of how many
+          duration: distance / 44, // ~44px per second, regardless of how many
           ease: 'none',
           repeat: -1,
         });
@@ -65,75 +62,41 @@ export default function MarqueeTicker({ instruments }: { instruments: Instrument
       tweenRef.current?.kill();
       ctx.revert();
     };
-  }, [items.length]);
+    // Only the count changes the geometry — price updates leave it alone,
+    // because the cards are a fixed width.
+  }, [quotes.length]);
 
-  if (!items.length) return null;
+  // Nothing to show until the first snapshot lands, and nothing to show at all
+  // if the market feed cannot be reached. The hero reads fine without it.
+  if (!quotes.length) return null;
 
   return (
-    <div className="on-dark relative border-y border-border bg-[#0d0d0f]">
-      <div className="flex items-stretch">
-        {/* Feed state, kept as part of the tape rather than as a pill beside
-            it — it is one more cell on the same rule, so it does not read as
-            a separate control. */}
-        <span className="flex shrink-0 items-center gap-2 border-r border-border px-4">
-          <span className="relative flex h-1.5 w-1.5">
-            {connected && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
-            )}
-            <span
-              className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                connected ? 'bg-success' : 'bg-text-dim'
-              }`}
-            />
-          </span>
-          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-text-dim sm:inline">
-            {connected ? 'Live' : 'Delayed'}
-          </span>
+    <div className="relative border-y border-border bg-bg-sunken/60 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-[1600px] items-center gap-4 px-4 py-4 sm:px-6">
+        <span
+          className={`hidden shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px]
+                      font-semibold uppercase tracking-[0.16em] sm:inline-flex ${
+                        connected
+                          ? 'border-success/35 bg-success-soft text-success'
+                          : 'border-border bg-white/[0.03] text-text-dim'
+                      }`}
+          title={connected ? 'Streaming live' : 'Reconnecting — refreshed every 15s'}
+        >
+          <Radio size={11} />
+          {connected ? 'Live' : 'Delayed'}
         </span>
 
         <div
-          className="relative flex-1 overflow-hidden"
+          className="fade-x relative flex-1 overflow-hidden"
           onMouseEnter={() => tweenRef.current?.pause()}
           onMouseLeave={() => tweenRef.current?.resume()}
         >
           <div ref={trackRef} className="flex w-max items-stretch">
             {[0, 1].map((copy) => (
-              <div key={copy} data-copy={copy} className="flex items-stretch" aria-hidden={copy === 1}>
-                {items.map((instrument) => {
-                  const tick = prices[instrument.symbol];
-                  const price = tick?.price ?? Number(instrument.current_price);
-                  const percent = tick?.change_percent ?? Number(instrument.change_percent);
-                  // The percent is quoted against the opening price, so the
-                  // absolute move has to be recovered from it rather than
-                  // guessed at — price − price / (1 + pct/100).
-                  const moved = price - price / (1 + percent / 100);
-                  const up = percent >= 0;
-                  const sign = up ? '+' : '−';
-                  const tone = percent === 0 ? 'text-text-dim' : up ? 'text-success' : 'text-danger';
-
-                  return (
-                    <span
-                      key={`${copy}-${instrument.id}`}
-                      className="flex shrink-0 items-center gap-2 border-r border-border px-4 py-2.5"
-                      title={`${instrument.name} · ${instrument.issuer_name}`}
-                    >
-                      <Disc instrument={instrument} />
-                      <span className="text-[13px] font-semibold tracking-tight text-text">
-                        {instrument.symbol}
-                      </span>
-                      <span className="text-[13px] text-text-faint">•</span>
-                      <span className="text-[13px] tabular-nums text-text">{num(price, 2)}</span>
-                      <span className={`text-[13px] tabular-nums ${tone}`}>
-                        {sign}
-                        {num(Math.abs(moved), 2)}
-                      </span>
-                      <span className={`text-[13px] tabular-nums ${tone}`}>
-                        ({sign}
-                        {num(Math.abs(percent), 2)}%)
-                      </span>
-                    </span>
-                  );
-                })}
+              <div key={copy} data-copy={copy} className="flex items-stretch gap-3 pr-3" aria-hidden={copy === 1}>
+                {quotes.map((quote) => (
+                  <QuoteCard key={`${copy}-${quote.id}`} quote={quote} />
+                ))}
               </div>
             ))}
           </div>
@@ -143,36 +106,64 @@ export default function MarqueeTicker({ instruments }: { instruments: Instrument
   );
 }
 
-/**
- * The brand disc at the head of each row.
- *
- * Real tapes put a logo here. There are no logos to put, so the disc carries
- * the issuer's initial on a colour picked from the issuer name — invented
- * marks would be a worse answer than an honest monogram, and hashing the name
- * keeps one issuer the same colour everywhere it appears.
- */
-const DISC_COLOURS = [
-  'bg-[#d9a62e] text-black',
-  'bg-[#4c8bf5] text-white',
-  'bg-[#e07b39] text-black',
-  'bg-[#3fae7a] text-black',
-  'bg-[#9b7bd4] text-white',
-  'bg-[#c9c9c9] text-black',
-];
-
-function Disc({ instrument }: { instrument: Instrument }) {
-  const key = instrument.issuer_name || instrument.symbol;
-  let hash = 0;
-  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  const initial = key.trim().charAt(0).toUpperCase() || '?';
+function QuoteCard({ quote }: { quote: MarketQuote }) {
+  const up = quote.percent >= 0;
+  const flat = quote.percent === 0;
+  const tone = flat ? 'text-text-dim' : up ? 'text-success' : 'text-danger';
+  const sign = up ? '+' : '−';
 
   return (
-    <span
-      className={`grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full text-[11px]
-                  font-bold leading-none ${DISC_COLOURS[hash % DISC_COLOURS.length]}`}
-      aria-hidden
+    <article
+      className="group flex w-[212px] shrink-0 flex-col justify-between rounded-xl
+                 border border-border bg-bg-card/70 px-3.5 py-3 shadow-e1
+                 transition-colors duration-300 hover:border-accent/40"
     >
-      {initial}
-    </span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ background: quote.accent }}
+            aria-hidden
+          />
+          <span className="font-mono text-[10px] font-semibold tracking-wider text-accent">
+            {quote.label}
+          </span>
+        </span>
+        <span className={`flex items-center gap-0.5 text-[10px] font-medium tabular-nums ${tone}`}>
+          {!flat && (up ? <TrendingUp size={10} /> : <TrendingDown size={10} />)}
+          {sign}
+          {Math.abs(quote.percent).toFixed(2)}%
+        </span>
+      </div>
+
+      <p className="mt-1.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-text-dim">
+        {quote.name}
+        {/* Said on the card itself, not in a footnote nobody reads. */}
+        {quote.daily && (
+          <span
+            className="shrink-0 rounded border border-border px-1 text-[9px] uppercase tracking-wider text-text-faint"
+            title="European Central Bank reference rate, published once a day"
+          >
+            daily
+          </span>
+        )}
+      </p>
+
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <span className="text-lg font-semibold tabular-nums tracking-tight text-text">
+          {quote.price.toLocaleString('en-US', {
+            minimumFractionDigits: quote.decimals,
+            maximumFractionDigits: quote.decimals,
+          })}
+        </span>
+        <span className={`text-[10px] tabular-nums ${tone}`}>
+          {sign}
+          {Math.abs(quote.change).toLocaleString('en-US', {
+            minimumFractionDigits: quote.decimals,
+            maximumFractionDigits: quote.decimals,
+          })}
+        </span>
+      </div>
+    </article>
   );
 }
