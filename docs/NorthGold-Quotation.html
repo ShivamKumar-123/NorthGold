@@ -53,9 +53,19 @@
     margin: 12mm 0 0; padding: 6mm 7mm; border: 1px solid rgba(217,166,46,.32); border-radius: 5px;
     background: rgba(217,166,46,.07);
   }
-  .cover .headline .label { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .16em; color: #9a948a; }
-  .cover .headline .amount { font-size: 26pt; font-weight: 700; color: var(--gold-bright); margin-top: 2mm; }
-  .cover .headline .note { font-size: 9pt; color: #9a948a; margin-top: 2mm; }
+  .cover .figures { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 6mm; align-items: start; }
+  .cover .figures .bar { background: rgba(217,166,46,.28); align-self: stretch; }
+  .cover .headline .label { font-size: 8pt; text-transform: uppercase; letter-spacing: .14em; color: #9a948a; }
+  .cover .headline .amount { font-size: 23pt; font-weight: 700; color: var(--gold-bright); margin-top: 2mm; line-height: 1.1; }
+  .cover .headline .amount.alt { color: #e8e2d4; }
+  .cover .headline .qual { font-size: 8.5pt; color: #85806f; margin-top: 1.2mm; }
+  /* Its own class, not `.note` — the global callout paints an ivory
+     background, which on a black cover reads as a sticker. */
+  .cover .headline .combined {
+    margin-top: 5mm; padding-top: 3.5mm; border-top: 1px solid rgba(255,255,255,.1);
+    font-size: 9.5pt; color: #c9c2b1;
+  }
+  .cover .headline .combined strong { color: var(--gold-bright); }
   .cover dl { margin: auto 0 0; display: grid; grid-template-columns: 34mm 1fr; gap: 2.2mm 4mm; font-size: 9.3pt; }
   .cover dt { color: #7e796d; text-transform: uppercase; letter-spacing: .1em; font-size: 7.8pt; padding-top: .6mm; }
   .cover dd { margin: 0; color: #ded8c9; }
@@ -103,9 +113,24 @@
   </p>
 
   <div class="headline">
-    <div class="label">Total one-time development, inclusive of GST</div>
-    <div class="amount">₹5,90,000</div>
-    <div class="note">Plus ₹88,028 for the first year of infrastructure and services. Full breakdown inside.</div>
+    <div class="figures">
+      <div>
+        <div class="label">One-time development</div>
+        <div class="amount">₹5,90,000</div>
+        <div class="qual">Website, admin panel and both apps · incl. GST</div>
+      </div>
+      <span class="bar"></span>
+      <div>
+        <div class="label">Server &amp; services · first year</div>
+        <div class="amount alt">₹88,028</div>
+        <div class="qual">Hosting, database, messaging, store fees · incl. GST</div>
+      </div>
+    </div>
+    <div class="combined">
+      Total to build and run for the first year — <strong>₹6,78,028</strong>.
+      Development is billed in four stages; server and service costs are billed
+      by their providers. Full breakdown inside.
+    </div>
   </div>
 
   <dl>
