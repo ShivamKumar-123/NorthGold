@@ -85,3 +85,23 @@ Two other shortcuts worth knowing about:
 
 Everything else — the design system, the GSAP and Framer Motion choreography,
 light/dark, the payment-card wallet tiles, the referral graph — is the same code.
+
+## Deploying to Vercel
+
+This app is a subdirectory of a larger repository, so the import needs one
+setting changed: **Root Directory → `demoWeb`**. Everything else is detected.
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | Vite |
+| Root directory | `demoWeb` |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Install command | `npm install` |
+| Environment variables | none — there is no backend |
+
+`vercel.json` rewrites everything to `index.html`. Without it a deep link like
+`/admin/deposits` would 404 on refresh: the router lives in the browser, and
+the server has no such path to serve. The catch-all is safe because Vercel
+checks the filesystem *before* applying rewrites, so real assets are still
+served as themselves.
