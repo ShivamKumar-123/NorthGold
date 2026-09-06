@@ -11,6 +11,7 @@ import LandingMotion from '@/components/LandingMotion';
 import CardPromo from '@/components/CardPromo';
 import Reveal from '@/components/Reveal';
 import SplitWords from '@/components/SplitWords';
+import VisionSection from '@/components/VisionSection';
 import PageBackdrop from '@/components/PageBackdrop';
 import SectionBackdrop from '@/components/SectionBackdrop';
 import WaveDivider from '@/components/WaveDivider';
@@ -161,6 +162,9 @@ export default async function LandingPage() {
 
       {/* ══ Card promo ═════════════════════════════════════════════════════ */}
       <CardPromo />
+
+      {/* ══ Vision ═════════════════════════════════════════════════════════ */}
+      <VisionSection />
 
       {/* ══ Plans ══════════════════════════════════════════════════════════ */}
       <section id="plans" className="relative isolate overflow-hidden border-b border-border">

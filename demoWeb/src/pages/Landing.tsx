@@ -14,6 +14,7 @@ import ReturnsCalculator from '@/components/ReturnsCalculator';
 import Reveal from '@/components/Reveal';
 import SectionBackdrop from '@/components/SectionBackdrop';
 import SplitWords from '@/components/SplitWords';
+import VisionSection from '@/components/VisionSection';
 import Tilt from '@/components/Tilt';
 import WaveDivider from '@/components/WaveDivider';
 import { money, num } from '@/lib/format';
@@ -138,6 +139,9 @@ export default function LandingPage() {
 
       {/* ══ Card promo ═════════════════════════════════════════════════════ */}
       <CardPromo />
+
+      {/* ══ Vision ═════════════════════════════════════════════════════════ */}
+      <VisionSection />
 
       {/* ══ Plans ══════════════════════════════════════════════════════════ */}
       <section id="plans" className="relative isolate overflow-hidden border-b border-border">
