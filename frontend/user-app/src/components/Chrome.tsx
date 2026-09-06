@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 
 import AppShell from '@/components/AppShell';
 import Footer from '@/components/Footer';
+import HowItWorksModal from '@/components/HowItWorksModal';
 import Navbar from '@/components/Navbar';
 import { Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -11,7 +12,7 @@ import { useAuth } from '@/lib/auth';
 // Public pages: header + footer, signed in or not. These are not "the app",
 // so wrapping them in the application sidebar would be wrong even for a
 // logged-in visitor.
-const MARKETING_ROUTES = new Set(['/', '/about', '/contact']);
+const MARKETING_ROUTES = new Set(['/', '/about', '/contact', '/calculator']);
 
 // Sign-in and sign-up are standalone screens that bring their own chrome
 // (AuthLayout). Rendering the site header and footer around them would give
@@ -30,6 +31,9 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        {/* Only on the marketing pages. It explains the offer, so opening it
+            over a sign-in form or the dashboard is an interruption, not help. */}
+        <HowItWorksModal />
       </div>
     );
   }

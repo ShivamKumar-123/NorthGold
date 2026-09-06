@@ -51,7 +51,47 @@ export default function AuthMotion() {
         // She points at the form, so she must not arrive before it exists.
         .fromTo('[data-auth="figure"]',
           { x: -40, opacity: 0 },
-          { x: 0, opacity: 1, duration: 1.1 }, '-=0.9');
+          { x: 0, opacity: 1, duration: 1.1 }, '-=0.9')
+        .fromTo('[data-auth="trust"]',
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6 }, '-=0.8');
+
+      // ── Ambient, and endless ────────────────────────────────────────
+      // Deliberately NOT part of the timeline above. The safety net below
+      // snaps that timeline to its end if the ticker never runs; doing the
+      // same to an infinite tween would freeze it mid-drift instead.
+      gsap.to('[data-auth="orb"]', {
+        xPercent: (i) => (i % 2 ? -9 : 8),
+        yPercent: (i) => (i % 2 ? 7 : -6),
+        duration: 11,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true,
+        stagger: 1.4,
+      });
+
+      // The ring turns behind the card, so its gradient never settles into a
+      // shape the eye can pin down.
+      gsap.to('[data-auth="ring"]', {
+        rotate: 360,
+        duration: 28,
+        ease: 'none',
+        repeat: -1,
+        transformOrigin: '50% 50%',
+      });
+
+      // A light crossing the card. Long gap between passes: often enough to
+      // notice, rare enough not to nag.
+      gsap.fromTo('[data-auth="sweep"]',
+        { xPercent: 0 },
+        {
+          xPercent: 520,
+          duration: 1.9,
+          ease: 'power2.inOut',
+          repeat: -1,
+          repeatDelay: 5.5,
+          delay: 1.1,
+        });
     });
 
     // Belt and braces: if the ticker never runs — a backgrounded tab on first

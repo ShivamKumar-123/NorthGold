@@ -2,8 +2,23 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import AuthMotion from '@/components/AuthMotion';
+import Counter from '@/components/Counter';
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
+
+/** How many members the platform claims. One constant, so the two places it
+ *  appears can never drift apart. */
+const TRUSTED_CLIENTS = 12_400;
+
+/** The faces on the trust badge. Monograms rather than stock photographs —
+ *  invented portraits of people who did not sign up would be a worse answer
+ *  than initials that are plainly a device. */
+const FACES = [
+  { initials: 'AK', tone: '#d9a62e' },
+  { initials: 'RS', tone: '#b87333' },
+  { initials: 'MN', tone: '#c9a227' },
+  { initials: 'JD', tone: '#8a6d3b' },
+];
 
 /**
  * Standalone shell for sign-in and sign-up.
@@ -109,13 +124,17 @@ export default function AuthLayout({
 
       {/* ── Form side ────────────────────────────────────────────────── */}
       <div className="relative flex flex-1 flex-col overflow-hidden bg-bg">
-        {/* Ambient gold wash so the form half is not a flat slab. */}
+        {/* Ambient gold wash so the form half is not a flat slab. Tagged for
+            AuthMotion, which drifts them for as long as the screen is open —
+            a still gradient reads as a background, a moving one as light. */}
         <span
+          data-auth="orb"
           className="pointer-events-none absolute -right-40 -top-40 h-[540px] w-[540px] rounded-full opacity-40 blur-[120px]"
           style={{ background: 'radial-gradient(circle, rgba(217,166,46,.45), transparent 70%)' }}
           aria-hidden
         />
         <span
+          data-auth="orb"
           className="pointer-events-none absolute -bottom-48 -left-24 h-[440px] w-[440px] rounded-full opacity-30 blur-[120px]"
           style={{ background: 'radial-gradient(circle, rgba(184,115,51,.4), transparent 70%)' }}
           aria-hidden
@@ -156,38 +175,111 @@ export default function AuthLayout({
             />
           </div>
 
-          {/* The card. `border-gradient` gives it a lit top-left edge that a
-              flat 1px border cannot, which is what makes it read as raised. */}
-          <div
-            className="border-gradient relative w-full max-w-[440px] shrink-0 rounded-3xl p-7 shadow-e4 sm:p-9"
-            data-auth="card"
-          >
+          {/* The card, and the trust badge under it. They travel together so
+              the badge stays with the form at every width — the reassurance
+              belongs next to the password field, not across the page. */}
+          <div className="relative w-full max-w-[440px] shrink-0">
+            {/* A slowly turning conic ring behind the card. Sits at -z so it
+                lights the card's edge instead of covering it. */}
             <span
-              className="pointer-events-none absolute -right-px -top-px h-24 w-24 rounded-tr-3xl opacity-70"
-              style={{ background: 'radial-gradient(circle at top right, rgba(217,166,46,.35), transparent 70%)' }}
+              data-auth="ring"
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.2rem] opacity-40 blur-2xl"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, rgba(217,166,46,.55), transparent 28%, rgba(184,115,51,.4) 55%, transparent 82%, rgba(217,166,46,.55))',
+              }}
               aria-hidden
             />
 
-            <div className="relative">
-              <p className="eyebrow flex items-center gap-1.5">
-                <Sparkles size={11} className="text-gold" />
-                {eyebrow}
-              </p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-[2rem]">{title}</h1>
-              <p className="mt-2.5 text-sm leading-relaxed text-text-muted">{subtitle}</p>
+            <div
+              className="border-gradient relative overflow-hidden rounded-3xl p-7 shadow-e4 sm:p-9"
+              data-auth="card"
+            >
+              <span
+                className="pointer-events-none absolute -right-px -top-px h-24 w-24 rounded-tr-3xl opacity-70"
+                style={{ background: 'radial-gradient(circle at top right, rgba(217,166,46,.35), transparent 70%)' }}
+                aria-hidden
+              />
+              {/* A light sweeping across the face of the card, every few
+                  seconds. Transparent at both ends so it fades itself in and
+                  out rather than needing a second tween to do it. */}
+              <span
+                data-auth="sweep"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12"
+                style={{
+                  background:
+                    'linear-gradient(100deg, transparent, rgba(255,255,255,.07) 45%, rgba(217,166,46,.10) 55%, transparent)',
+                }}
+                aria-hidden
+              />
 
-              <div className="mt-7">{children}</div>
+              <div className="relative">
+                <p className="eyebrow flex items-center gap-1.5">
+                  <Sparkles size={11} className="text-gold" />
+                  {eyebrow}
+                </p>
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-[2rem]">{title}</h1>
+                <p className="mt-2.5 text-sm leading-relaxed text-text-muted">{subtitle}</p>
 
-              <p className="mt-7 text-center text-sm text-text-muted">{footer}</p>
+                <div className="mt-7">{children}</div>
 
-              <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-border pt-5 text-[11px] text-text-dim">
-                <Lock size={11} />
-                Your details are encrypted in transit and never shared
-              </p>
+                <p className="mt-7 text-center text-sm text-text-muted">{footer}</p>
+
+                <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-border pt-5 text-[11px] text-text-dim">
+                  <Lock size={11} />
+                  Your details are encrypted in transit and never shared
+                </p>
+              </div>
             </div>
+
+            <TrustBadge className="mt-4" />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Members already on the platform, shown beside the form.
+ *
+ * The count animates up rather than simply appearing — a number that lands is
+ * read, a number that is already there is scenery. `Counter` renders the real
+ * figure on the server and under reduced motion, so the animation only ever
+ * replaces a value that was already correct.
+ */
+function TrustBadge({ className = '' }: { className?: string }) {
+  return (
+    <div
+      data-auth="trust"
+      className={`flex items-center gap-3 rounded-2xl border border-border bg-bg-card/60 px-4 py-3 backdrop-blur-sm ${className}`}
+    >
+      {/* Overlap kept to 8px: at 10px the next disc covered the second
+          letter of the monogram under it. */}
+      <div className="flex -space-x-2">
+        {FACES.map(({ initials, tone }) => (
+          <span
+            key={initials}
+            className="grid h-8 w-8 place-items-center rounded-full text-[9px] font-bold tracking-tight text-black ring-2 ring-bg"
+            style={{ background: tone }}
+            aria-hidden
+          >
+            {initials}
+          </span>
+        ))}
+      </div>
+
+      <p className="text-sm leading-tight text-text-muted">
+        <span className="block text-base font-semibold text-text">
+          <Counter value={TRUSTED_CLIENTS} />+
+        </span>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-text-dim">Trusted clients</span>
+      </p>
+
+      <span className="ml-auto flex items-center gap-1.5 text-[11px] text-success">
+        <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden />
+        Verified
+      </span>
     </div>
   );
 }
