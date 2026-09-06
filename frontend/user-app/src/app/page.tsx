@@ -6,6 +6,9 @@ import {
 
 import HeroScene from '@/components/HeroScene';
 import MarqueeTicker from '@/components/MarqueeTicker';
+import ForexCrossRates from '@/components/ForexCrossRates';
+import ForexRates from '@/components/ForexRates';
+import GlobalPresence from '@/components/GlobalPresence';
 import LandingMotion from '@/components/LandingMotion';
 import CardPromo from '@/components/CardPromo';
 import Reveal from '@/components/Reveal';
@@ -218,6 +221,9 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ══ Global presence ══════════════════════════════════════ */}
+      <GlobalPresence />
+
       {/* ══ How it works ═══════════════════════════════════════════════════ */}
       <section className="border-b border-border bg-bg">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
@@ -267,6 +273,10 @@ export default async function LandingPage() {
           </ol>
         </div>
       </section>
+
+      {/* ══ Live foreign exchange ════════════════════════════════ */}
+      <ForexRates />
+      <ForexCrossRates />
 
       {/* ══ CTA ════════════════════════════════════════════════════════════ */}
       <section className="relative isolate overflow-hidden">

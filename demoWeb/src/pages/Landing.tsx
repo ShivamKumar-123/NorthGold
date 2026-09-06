@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom';
 
 import CardPromo from '@/components/CardPromo';
 import HeroScene from '@/components/HeroScene';
+import ForexCrossRates from '@/components/ForexCrossRates';
+import ForexRates from '@/components/ForexRates';
+import GlobalPresence from '@/components/GlobalPresence';
 import LandingMotion from '@/components/LandingMotion';
 import MarqueeTicker from '@/components/MarqueeTicker';
 import PageBackdrop from '@/components/PageBackdrop';
@@ -197,6 +200,9 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ══ Global presence ══════════════════════════════════════ */}
+      <GlobalPresence />
+
       {/* ══ How it works ═══════════════════════════════════════════════════ */}
       <section className="border-b border-border bg-bg">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
@@ -246,6 +252,10 @@ export default function LandingPage() {
           </ol>
         </div>
       </section>
+
+      {/* ══ Live foreign exchange ════════════════════════════════ */}
+      <ForexRates />
+      <ForexCrossRates />
 
       {/* ══ CTA ════════════════════════════════════════════════════════════ */}
       <section className="relative isolate overflow-hidden">
