@@ -75,7 +75,7 @@ export default function App() {
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
-            <Route path="/instruments" element={<Navigate to="/#plans" replace />} />
+            <Route path="/instruments" element={<Navigate to="/calculator#plans" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

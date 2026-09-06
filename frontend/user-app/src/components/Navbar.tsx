@@ -10,7 +10,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/lib/auth';
 
 const LINKS = [
-  { href: '/#plans', label: 'Plans' },
+  { href: '/calculator#plans', label: 'Plans' },
   { href: '/calculator', label: 'Calculator' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },

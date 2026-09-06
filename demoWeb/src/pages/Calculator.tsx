@@ -3,6 +3,7 @@ import { ArrowRight, BadgeCheck, CalendarClock, Layers, Wallet } from 'lucide-re
 
 import LandingMotion from '@/components/LandingMotion';
 import PageBackdrop from '@/components/PageBackdrop';
+import PlanTiers from '@/components/PlanTiers';
 import Reveal from '@/components/Reveal';
 import ReturnsCalculator from '@/components/ReturnsCalculator';
 import WaveDivider from '@/components/WaveDivider';
@@ -72,6 +73,11 @@ export default function CalculatorPage() {
         </div>
       </section>
 
+      {/* The tiers, moved off the landing page. They belong beside the tool
+          that computes against them, and these are contracted rates — they
+          have to stay published somewhere a prospect can find them. */}
+      <PlanTiers plans={plans} />
+
       <section className="relative isolate border-y border-border py-20 lg:py-28">
         <WaveDivider position="top" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
@@ -105,8 +111,8 @@ export default function CalculatorPage() {
               <Link to="/register" className="btn-primary px-7 py-3.5 text-base">
                 Open an account <ArrowRight size={17} />
               </Link>
-              <Link to="/#plans" className="btn-ghost px-7 py-3.5 text-base">
-                Compare the tiers
+              <Link to="/about" className="btn-ghost px-7 py-3.5 text-base">
+                How it works
               </Link>
             </div>
           </Reveal>

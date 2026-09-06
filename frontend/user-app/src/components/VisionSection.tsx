@@ -46,15 +46,40 @@ const POINTS = [
  * already looks for, so the heading sequences and the six points stagger in
  * step with every other section instead of arriving on their own clock.
  *
+ * The band paints no background of its own, so the page backdrop
+ * photograph shows through it — the wave dividers above and below are
+ * what turn that into a boundary rather than a gap.
+ *
  * The grid is `items-center` rather than stretched. The photograph is a 3:2
  * landscape and the list beside it is considerably taller; forcing the image
  * to fill that height would crop straight through the two people in it.
  */
 export default function VisionSection() {
   return (
-    <section id="vision" className="relative isolate overflow-hidden border-b border-border bg-bg">
+    <section id="vision" className="relative isolate overflow-hidden border-b border-border">
       <WaveDivider position="top" />
       <WaveDivider position="bottom" />
+      {/* The card render that used to sit over the return schedule. Outside
+          the flow on purpose: it must never push the heading around or
+          intercept a click, and it only appears at `2xl`, where the container
+          leaves margin for it to sit in. */}
+      <div
+        className="pointer-events-none absolute -right-16 top-6 hidden w-[350px] rotate-6 opacity-90 2xl:block"
+        data-anim="drift"
+        aria-hidden
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/cards/card-hero.webp"
+          alt=""
+          width={1200}
+          height={800}
+          loading="lazy"
+          decoding="async"
+          className="w-full drop-shadow-[0_30px_60px_rgba(0,0,0,.7)]"
+        />
+      </div>
+
       {/* Warm wash behind the photograph so the frame does not sit on a flat
           slab. Decorative, and outside the flow so it can never shift text. */}
       <div

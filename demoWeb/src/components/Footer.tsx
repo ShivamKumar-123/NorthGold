@@ -10,7 +10,7 @@ const COLUMNS = [
     title: 'Platform',
     links: [
       { href: '/about', label: 'How it works' },
-      { href: '/#plans', label: 'Return plans' },
+      { href: '/calculator#plans', label: 'Return plans' },
       { href: '/calculator', label: 'Returns calculator' },
     ],
   },
@@ -78,7 +78,7 @@ export default function Footer() {
               <Link to="/register" className="btn-primary px-6 py-3.5">
                 Open an account <ArrowRight size={16} />
               </Link>
-              <Link to="/#plans" className="btn-ghost px-6 py-3.5">
+              <Link to="/calculator#plans" className="btn-ghost px-6 py-3.5">
                 Explore plans <ArrowRight size={16} />
               </Link>
             </div>
@@ -162,7 +162,7 @@ export default function Footer() {
               afford to lose.
             </p>
           </div>
-          <Link to="/#plans" className="btn-ghost shrink-0 px-5 py-3 text-xs text-warn">
+          <Link to="/calculator#plans" className="btn-ghost shrink-0 px-5 py-3 text-xs text-warn">
             Read full disclosure <ArrowUpRight size={14} />
           </Link>
         </div>
@@ -174,7 +174,7 @@ export default function Footer() {
           <p>&copy; {new Date().getFullYear()} NorthGold. All rights reserved.</p>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {['Privacy Policy', 'Terms of Service', 'Risk Disclosure', 'Cookies'].map((item) => (
-              <Link key={item} to="/#plans" className="transition hover:text-text-muted">
+              <Link key={item} to="/calculator#plans" className="transition hover:text-text-muted">
                 {item}
               </Link>
             ))}
