@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import {
-  ArrowRight, ArrowUpRight, BadgeCheck, Banknote, Building2, Layers,
+  ArrowRight, ArrowUpRight, BadgeCheck, Banknote, Layers,
   Lock, ShieldCheck, Sparkles, TrendingUp, Users,
 } from 'lucide-react';
 
-import Counter from '@/components/Counter';
 import HeroScene from '@/components/HeroScene';
 import MarqueeTicker from '@/components/MarqueeTicker';
 import NetworkDiagram from '@/components/NetworkDiagram';
@@ -18,7 +17,7 @@ import WaveDivider from '@/components/WaveDivider';
 import ReturnsCalculator from '@/components/ReturnsCalculator';
 import Tilt from '@/components/Tilt';
 import { API_BASE, money, num } from '@/lib/api';
-import type { Instrument, Issuer, MlmStructure, Paginated, RoiPlan } from '@/types';
+import type { Instrument, MlmStructure, Paginated, RoiPlan } from '@/types';
 
 // Rendered per request, NOT prerendered at build time: the API is not
 // reachable during `next build` (and certainly not during a Docker image
@@ -41,34 +40,19 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export default async function LandingPage() {
-  const [instrumentsRes, plans, structure, issuers] = await Promise.all([
+  const [instrumentsRes, plans, structure] = await Promise.all([
     fetchJson<Paginated<Instrument>>('/instruments/?per_page=9&ordering=display_order'),
     fetchJson<RoiPlan[]>('/investments/plans/'),
     fetchJson<MlmStructure>('/mlm/structure/'),
-    fetchJson<Issuer[]>('/instruments/issuers/'),
   ]);
 
   const instruments = instrumentsRes?.items ?? [];
   const planList = plans ?? [];
   const levels = structure?.levels ?? [];
-  const issuerList = issuers ?? [];
 
-  const topYield = planList.length
-    ? Math.max(...planList.map((p) => Number(p.total_return_percent)))
-    : 0;
   const entryPoint = planList.length
     ? Math.min(...planList.map((p) => Number(p.min_amount)))
     : 0;
-  const topMonthlyRate = planList.reduce((best, plan) => {
-    const peak = plan.months.reduce((m, row) => Math.max(m, Number(row.percent)), 0);
-    return Math.max(best, peak);
-  }, 0);
-  // Tenure is per-plan and admin-editable, so the yield label can't hardcode 12.
-  const tenures = new Set(planList.map((p) => p.tenure_months));
-  const yieldLabel = tenures.size === 1 ? `Best ${[...tenures][0]}-month yield` : 'Best total yield';
-  // The top tier drives the hero card — it is the most compelling schedule.
-  const headlinePlan =
-    [...planList].sort((a, b) => Number(b.total_return_percent) - Number(a.total_return_percent))[0] ?? null;
 
   return (
     <>
@@ -84,7 +68,7 @@ export default async function LandingPage() {
         <div className="grid-overlay" aria-hidden />
         <div className="grid-floor" aria-hidden />
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-24 pt-16 sm:px-6 lg:pb-32 lg:pt-24">
+        <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-16 sm:px-6 lg:pb-16 lg:pt-24">
           <div className="grid items-center gap-16 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
             {/* ── Copy ─────────────────────────────────────────────── */}
             <div className="text-center lg:text-left">
@@ -98,38 +82,35 @@ export default async function LandingPage() {
                 <span className="text-success">Monthly payouts</span>
               </span>
 
+              {/* The greeting is its own line above the headline. Folding it
+                  into the h1 would put a salutation inside the sentence the
+                  page is actually there to make. */}
+              <p
+                className="mt-7 text-sm font-semibold uppercase tracking-[0.22em] text-gradient-gold"
+                data-anim="hero-welcome"
+              >
+                Welcome to Net financing
+              </p>
+
               {/* Solid body, gradient only on the phrase that matters.
                   Running .text-gradient across every span gives each its own
                   ramp, which turns the opening words muddy. */}
               <h1
-                className="mt-7 text-balance text-display font-semibold text-text text-3d [overflow-wrap:break-word]"
+                className="mt-3 text-balance text-display font-semibold text-text text-3d [overflow-wrap:break-word]"
                 data-anim="hero-title"
               >
-                <SplitWords text="Your money should pay you" />{' '}
-                <SplitWords text="every month" className="text-gradient-gold" />
+                <SplitWords text="Instant access to investing," />{' '}
+                <SplitWords text="anytime and anywhere" className="text-gradient-gold" />
               </h1>
 
               <p
                 className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-text-muted lg:mx-0"
                 data-anim="hero-copy"
               >
-                Deposit once into a partner-bank instrument and receive a
-                contracted return every month — on a schedule you can read in
-                full before you commit. Hold longer, earn more.
+                Invest in the most well-known and in-demand assets available.
+                Using the device of your choosing, the platform has everything
+                you could ever want in a perfect investing tool.
               </p>
-
-              <div
-                className="mt-10 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-                data-anim="hero-cta"
-              >
-                <Link href="/register" className="btn-primary px-7 py-3.5 text-base">
-                  Open an account
-                  <ArrowRight size={17} />
-                </Link>
-                <Link href="#calculator" className="btn-ghost px-7 py-3.5 text-base">
-                  See your returns
-                </Link>
-              </div>
 
               <div
                 className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-dim lg:justify-start"
@@ -147,67 +128,38 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* ── 3D card stack ────────────────────────────────────── */}
-            <div className="relative perspective-lg" data-anim="hero-scene">
-              <HeroScene plan={headlinePlan} />
+            {/* ── Card, and the calls to action above it ── */}
+            <div className="relative">
+              {/* The buttons moved out of the copy column and onto the card
+                  column, so they read as the action attached to the product
+                  shot rather than as a third line of text under a paragraph. */}
+              <div
+                className="relative z-10 flex flex-wrap items-center justify-center gap-3"
+                data-anim="hero-cta"
+              >
+                <Link href="/register" className="btn-primary px-7 py-3.5 text-base">
+                  Open an account
+                  <ArrowRight size={17} />
+                </Link>
+                <Link href="#calculator" className="btn-ghost px-7 py-3.5 text-base">
+                  See your returns
+                </Link>
+              </div>
+
+              <div className="relative perspective-lg" data-anim="hero-scene">
+                <HeroScene />
+              </div>
             </div>
           </div>
-
-          {/* Headline figures */}
-          <Reveal delay={400}>
-            <dl
-              className="perspective mx-auto mt-20 grid max-w-4xl grid-cols-2 gap-4 lg:grid-cols-4"
-              data-anim="stagger"
-            >
-              <HeroStat
-                value={<Counter value={topMonthlyRate} decimals={2} suffix="%" />}
-                label="Top monthly rate"
-                tone="text-gradient-gold"
-                glow="rgba(217,166,46,.4)"
-              />
-              <HeroStat
-                value={<Counter value={topYield} decimals={1} suffix="%" />}
-                label={yieldLabel}
-                glow="rgba(217,166,46,.4)"
-              />
-              <HeroStat
-                value={<Counter value={instruments.length} />}
-                label="Listed instruments"
-                glow="rgba(232,232,229,.35)"
-              />
-              <HeroStat
-                value={<Counter value={levels.length} />}
-                label="Commission levels"
-                glow="rgba(184,115,51,.4)"
-              />
-            </dl>
-          </Reveal>
         </div>
 
-        <MarqueeTicker instruments={instruments} />
+        {/* Lifted clear of the section's bottom edge. Flush against it the
+            strip read as a border between two sections rather than as the
+            closing band of the hero. */}
+        <div className="relative pb-12 lg:pb-16">
+          <MarqueeTicker instruments={instruments} />
+        </div>
       </section>
-
-      {/* ══ Issuers ════════════════════════════════════════════════════════ */}
-      {issuerList.length > 0 && (
-        <section className="border-b border-border bg-bg">
-          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-            <Reveal className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
-              <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-dim">
-                Instruments issued by
-              </span>
-              {issuerList.map((issuer) => (
-                <span
-                  key={issuer.id}
-                  className="flex items-center gap-2 text-sm font-medium text-text-muted transition hover:text-text"
-                >
-                  <Building2 size={15} className="text-text-faint" />
-                  {issuer.name}
-                </span>
-              ))}
-            </Reveal>
-          </div>
-        </section>
-      )}
 
       {/* ══ Card promo ═════════════════════════════════════════════════════ */}
       <CardPromo />
@@ -532,34 +484,6 @@ function Aurora() {
         }}
       />
     </div>
-  );
-}
-
-function HeroStat({
-  value,
-  label,
-  tone = 'text-text',
-  glow,
-}: {
-  value: React.ReactNode;
-  label: string;
-  tone?: string;
-  glow: string;
-}) {
-  return (
-    <Tilt max={9} lift={12}>
-      <div className="card preserve-3d group overflow-hidden px-5 py-6 text-center transition-shadow duration-300 hover:shadow-e3">
-        <span
-          className="pointer-events-none absolute inset-x-0 -top-16 mx-auto h-32 w-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
-          style={{ background: glow }}
-          aria-hidden
-        />
-        <dd className={`relative text-3xl font-semibold tracking-tight layer-1 ${tone}`}>{value}</dd>
-        <dt className="relative mt-2 text-[11px] uppercase tracking-[0.12em] text-text-dim">
-          {label}
-        </dt>
-      </div>
-    </Tilt>
   );
 }
 
