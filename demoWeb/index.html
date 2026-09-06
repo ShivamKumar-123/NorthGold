@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NorthGold — Fixed-income instruments with monthly returns</title>
+
+    <!-- The .ico carries 16/32/48 for the tab and the bookmarks bar; the PNGs
+         are what modern browsers actually pick up. `apple-touch-icon` has the
+         dark ground baked in because iOS does not honour alpha on a
+         home-screen icon. -->
+    <link rel="icon" href="/icons/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#080808" />
+    <meta
+      name="description"
+      content="Invest in partner-bank instruments, receive a contracted monthly return, and earn referral commission across your whole network."
+    />
+    <!--
+      Runs before first paint. React cannot do this — it hydrates after the
+      browser has already painted, which is exactly the white flash this
+      exists to prevent.
+    -->
+    <script>
+      (function () {
+        try {
+          var s = localStorage.getItem('ng_theme');
+          var t =
+            s === 'light' || s === 'dark'
+              ? s
+              : window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          var e = document.documentElement;
+          e.classList.toggle('dark', t === 'dark');
+          e.classList.toggle('light', t === 'light');
+          e.style.colorScheme = t;
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

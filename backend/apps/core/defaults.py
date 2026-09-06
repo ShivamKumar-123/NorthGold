@@ -1,0 +1,44 @@
+"""Default values for every SystemSetting key, with the type each must hold.
+
+`get_setting` falls back here when a key has never been written, so a fresh
+database is fully functional before an admin touches anything.
+"""
+from decimal import Decimal
+
+SETTING_DEFAULTS = {
+    # --- MLM ---------------------------------------------------------------
+    "mlm_deposit_enabled": True,      # pay upline when a deposit is approved
+    "mlm_roi_enabled": True,          # pay upline on every monthly ROI payout
+    "mlm_max_levels": 5,              # hard ceiling on chain walk depth
+    "mlm_require_active_investment": False,  # upline must hold an active investment to earn
+    # --- Investments -------------------------------------------------------
+    "auto_invest_on_deposit": True,   # approved deposit auto-starts an investment
+    "roi_credit_target": "wallet",    # 'wallet' (withdrawable) | 'principal' (compounds)
+    # --- Wallet ------------------------------------------------------------
+    "withdrawal_min_amount": "10",
+    "withdrawal_fee_percent": "0",
+    "deposit_min_amount": "100",
+    # --- Branding ----------------------------------------------------------
+    "platform_name": "NorthGold",
+    # --- Support -----------------------------------------------------------
+    # `support_whatsapp` is dialled as a wa.me link, so it must be digits only
+    # with the country code and no '+', spaces or dashes. An empty value hides
+    # the chat launcher rather than opening a broken link.
+    "support_email": "support@example.com",
+    "support_phone": "+91 00000 00000",
+    "support_whatsapp": "910000000000",
+    "support_hours": "Mon-Sat, 10:00-19:00 IST",
+    "support_address": "Update this address in the admin panel.",
+}
+
+DECIMAL_SETTINGS = {
+    "withdrawal_min_amount",
+    "withdrawal_fee_percent",
+    "deposit_min_amount",
+}
+
+
+def coerce(key, value):
+    if key in DECIMAL_SETTINGS:
+        return Decimal(str(value))
+    return value

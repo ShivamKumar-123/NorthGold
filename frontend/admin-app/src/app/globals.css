@@ -1,0 +1,752 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── NorthGold palette ────────────────────────────────────────────────────
+   Premium Gold #D9A62E · Bright Gold #F5C34A · Deep Gold #A87516
+   Silver White #E8E8E5 · Charcoal #1A1A1A · Deep Black #080808           */
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable Text',
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --gold: #d9a62e;
+  --gold-bright: #f5c34a;
+  --gold-deep: #a87516;
+  --silver: #e8e8e5;
+  --charcoal: #1a1a1a;
+  --black: #080808;
+}
+
+/* ── Theme tokens ─────────────────────────────────────────────────────────
+   Surface, border and text scales are space-separated RGB channels so that
+   Tailwind's `<alpha-value>` syntax still works (`bg-bg-card/60`). Every
+   `bg-bg-*`, `border-border-*` and `text-text-*` class in the app resolves
+   through these, so the whole UI flips by swapping this one block.
+
+   Dark is the default and is what an unclassed document gets — the blocking
+   script in <head> adds `.light` before first paint when it needs to. */
+:root,
+html.dark {
+  color-scheme: dark;
+
+  --c-bg: 8 8 8;
+  --c-bg-sunken: 4 4 4;
+  --c-bg-card: 17 17 16;
+  --c-bg-elevated: 26 26 26;
+  --c-bg-float: 36 36 34;
+
+  --c-border: 42 42 39;
+  --c-border-strong: 62 62 57;
+  --c-border-subtle: 22 22 21;
+
+  --c-text: 232 232 229;
+  --c-text-muted: 156 156 151;
+  --c-text-dim: 110 110 105;
+  --c-text-faint: 74 74 70;
+
+  --c-accent: 217 166 46;
+
+  /* Photographic plates: a dark wash over the artwork. */
+  --plate-a: rgba(23, 23, 20, 0.9);
+  --plate-b: rgba(17, 17, 16, 0.94);
+  --plate-base: #111110;
+  --plate-art: 1;
+}
+
+/* Warm ivory rather than pure white — the brand is gold, and gold on #fff
+   reads cold and washed out. */
+html.light {
+  color-scheme: light;
+
+  --c-bg: 247 245 240;
+  --c-bg-sunken: 238 234 226;
+  --c-bg-card: 255 255 255;
+  --c-bg-elevated: 255 255 255;
+  --c-bg-float: 255 255 255;
+
+  --c-border: 223 217 205;
+  --c-border-strong: 199 190 173;
+  --c-border-subtle: 238 233 224;
+
+  --c-text: 26 26 24;
+  --c-text-muted: 92 87 78;
+  --c-text-dim: 131 124 112;
+  --c-text-faint: 169 162 150;
+
+  /* #D9A62E on ivory is ~2:1. Deep Gold darkened to ~5.5:1 keeps the brand
+     hue while staying readable as text and as an icon. */
+  --c-accent: 138 98 12;
+
+  --plate-a: rgba(255, 255, 255, 0.9);
+  --plate-b: rgba(250, 248, 243, 0.95);
+  --plate-base: #ffffff;
+  /* The dashboard artwork is dark gold on black; at full strength it would
+     punch holes in a light card. Fade it to a watermark instead. */
+  --plate-art: 0.14;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+/* The page background lives on `html`, NOT on `body`.
+   In the root stacking context the paint order is: html's background, then
+   negative z-index children, then in-flow descendants. `body` is an in-flow
+   descendant — so a background on it paints ON TOP of the fixed page backdrop
+   (which sits at z-index -50) and hides it completely. */
+html {
+  background-color: rgb(var(--c-bg));
+}
+
+body {
+  color: rgb(var(--c-text));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(217, 166, 46, 0.35);
+  color: #080808;
+}
+html.dark ::selection {
+  color: #fff;
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────
+   Every ambient animation here is decorative, and the tilt effects move
+   content around under the cursor. Honour the OS setting completely. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .tilt-root {
+    transform: none !important;
+  }
+}
+
+/* ── Atmosphere ──────────────────────────────────────────────────────────── */
+
+.aurora {
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 130%;
+  pointer-events: none;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+.aurora__blob {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+}
+
+/* Perspective floor grid, receding toward the horizon. This establishes the
+   scene's depth before a single card is drawn. */
+.grid-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 55%;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(217, 166, 46, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 166, 46, 0.14) 1px, transparent 1px);
+  background-size: 60px 60px;
+  transform: perspective(420px) rotateX(62deg);
+  transform-origin: bottom center;
+  mask-image: linear-gradient(to top, #000 0%, transparent 78%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 78%);
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(232, 232, 229, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(232, 232, 229, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 78%);
+}
+
+/* Film grain — breaks up the wide flat gradients that band on 8-bit displays. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* ── Type ────────────────────────────────────────────────────────────────── */
+
+/* Silver into gold — the logo's own two-tone treatment, applied to headings. */
+.text-gradient {
+  background: linear-gradient(115deg, #ffffff 4%, #e8e8e5 38%, #d9a62e 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(115deg, #f9cf63 0%, #f5c34a 40%, #d9a62e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Extruded headline — stacked shadows fake a solid letter body. */
+.text-3d {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 3px rgba(0, 0, 0, 0.6),
+    0 8px 26px rgba(0, 0, 0, 0.85);
+}
+
+.eyebrow {
+  @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-accent;
+}
+
+@layer components {
+  /* ── Surfaces ────────────────────────────────────────────────────────────
+     A card is a physical panel: a lit top bevel, a body gradient falling away
+     from the light, and a shadow that grows with elevation. */
+  .card {
+    @apply relative rounded-2xl border border-border shadow-e1;
+    background:
+      linear-gradient(168deg, rgba(23, 23, 20, 0.86) 0%, rgba(17, 17, 16, 0.9) 55%, rgba(11, 11, 10, 0.94) 100%),
+      url('/images/dash/card.webp') center / cover no-repeat,
+      linear-gradient(168deg, #171714, #111110);
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 ease-out
+           hover:-translate-y-1 hover:border-border-strong hover:shadow-e3;
+  }
+
+  /* One step above a card — for things that sit on the page, not in it. */
+  .panel {
+    @apply relative rounded-2xl border border-white/[0.08] shadow-e2;
+    background:
+      linear-gradient(168deg, rgba(34, 33, 32, 0.86) 0%, rgba(19, 19, 18, 0.92) 100%),
+      url('/images/dash/right_card.webp') center / cover no-repeat,
+      linear-gradient(168deg, #222120, #131312);
+  }
+
+  .glass {
+    background: linear-gradient(180deg, rgba(36, 36, 34, 0.74) 0%, rgba(17, 17, 16, 0.9) 100%);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(232, 232, 229, 0.09);
+    @apply shadow-e3;
+  }
+
+  /* Gradient hairline border. Two backgrounds with different clip boxes is the
+     only way to get a gradient border that follows a rounded radius. */
+  .border-gradient {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(168deg, #171714, #111110) padding-box,
+      linear-gradient(150deg, rgba(217, 166, 46, 0.65), rgba(168, 117, 22, 0.32) 45%, rgba(232, 232, 229, 0.06) 82%)
+        border-box;
+  }
+
+  .border-gradient-gold {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(168deg, #1d1810, #12100b) padding-box,
+      linear-gradient(150deg, rgba(245, 195, 74, 0.85), rgba(217, 166, 46, 0.35) 55%, rgba(232, 232, 229, 0.06) 86%)
+        border-box;
+  }
+
+  /* ── Controls ────────────────────────────────────────────────────────────
+     Buttons are extruded: a Deep Gold block sits under the face, and pressing
+     shortens it while the face travels down to meet it. */
+  .btn {
+    @apply relative inline-flex select-none items-center justify-center gap-2 rounded-xl
+           px-5 py-3 text-sm font-semibold transition-all duration-150
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
+  }
+
+  /* Deep Black on gold, NOT white: #D9A62E against white is roughly 2.3:1 and
+     fails contrast outright, while against #080808 it is comfortably legible. */
+  .btn-primary {
+    @apply btn text-[#080808] shadow-btn-3d;
+    background: linear-gradient(180deg, #f5c34a 0%, #d9a62e 52%, #c2921f 100%);
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply -translate-y-0.5;
+    background: linear-gradient(180deg, #f9cf63 0%, #e8b63c 52%, #cf9c23 100%);
+    box-shadow: 0 6px 0 0 #a87516, 0 14px 30px -8px rgba(217, 166, 46, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+  .btn-primary:active:not(:disabled) {
+    @apply translate-y-[3px] shadow-btn-3d-press;
+  }
+
+  .btn-ghost {
+    @apply btn border border-border text-text shadow-btn-3d-ghost;
+    background: linear-gradient(180deg, #242422 0%, #151514 100%);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    @apply -translate-y-0.5 border-border-strong;
+    box-shadow: 0 5px 0 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .btn-ghost:active:not(:disabled) {
+    @apply translate-y-[2px];
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .btn-danger {
+    @apply btn text-white;
+    background: linear-gradient(180deg, #fb6f86 0%, #f43f5e 52%, #d92846 100%);
+    box-shadow: 0 4px 0 0 #a3122f, 0 8px 20px -6px rgba(244, 63, 94, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .btn-danger:hover:not(:disabled) {
+    @apply -translate-y-0.5;
+    box-shadow: 0 6px 0 0 #a3122f, 0 14px 28px -8px rgba(244, 63, 94, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+  .btn-danger:active:not(:disabled) {
+    @apply translate-y-[3px];
+    box-shadow: 0 1px 0 0 #a3122f, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Inputs are recessed — the inverse bevel of a button. */
+  .input {
+    @apply w-full rounded-xl border border-border px-4 py-3 text-sm text-text
+           transition placeholder:text-text-faint
+           focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25;
+    background: linear-gradient(180deg, #050505 0%, #131312 100%);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .label {
+    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1
+           text-xs text-text-muted backdrop-blur;
+    background: linear-gradient(180deg, rgba(232, 232, 229, 0.07), rgba(232, 232, 229, 0.02));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 8px -2px rgba(0, 0, 0, 0.7);
+  }
+
+  /* ── Tables ────────────────────────────────────────────────────────────── */
+  .table-wrap {
+    @apply overflow-x-auto rounded-2xl border border-border shadow-e1;
+    background:
+      linear-gradient(168deg, rgba(23, 23, 20, 0.88) 0%, rgba(17, 17, 16, 0.92) 100%),
+      url('/images/dash/chart.webp') bottom / cover no-repeat,
+      linear-gradient(168deg, #171714, #111110);
+  }
+
+  table.data {
+    @apply w-full min-w-[640px] text-left text-sm;
+  }
+
+  table.data thead th {
+    @apply whitespace-nowrap border-b border-border px-4 py-3.5 text-[11px]
+           font-semibold uppercase tracking-[0.1em] text-text-muted;
+    background:
+      linear-gradient(180deg, rgba(35, 35, 32, 0.88) 0%, rgba(26, 26, 24, 0.94) 100%),
+      url('/images/dash/section_header.webp') center / cover no-repeat,
+      linear-gradient(180deg, #232320, #1a1a18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  table.data tbody td {
+    @apply whitespace-nowrap border-b border-border/50 px-4 py-3.5 text-text;
+  }
+
+  table.data tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  table.data tbody tr {
+    @apply transition-colors;
+  }
+  table.data tbody tr:hover {
+    @apply bg-white/[0.03];
+  }
+
+  /* ── Light theme ─────────────────────────────────────────────────────────
+     Everything above that reads a token flips on its own. What needs stating
+     here is the handful of surfaces whose gradients, bevels and photographic
+     plates are hard-coded for a black UI — on ivory they read as holes.
+
+     The rule of the inversion: on black, depth comes from a LIT top bevel and
+     a dark shadow; on ivory it comes from a soft drop shadow and a hairline
+     border, because there is no light source to catch. */
+  html.light .card {
+    background:
+      linear-gradient(168deg, rgba(255, 255, 255, 0.88) 0%, rgba(253, 252, 250, 0.9) 55%, rgba(250, 248, 243, 0.92) 100%),
+      url('/images/dash/card.webp') center / cover no-repeat,
+      #ffffff;
+    box-shadow: 0 1px 2px rgba(38, 32, 20, 0.06), 0 8px 24px -12px rgba(38, 32, 20, 0.16);
+  }
+
+  html.light .panel {
+    background:
+      linear-gradient(168deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 246, 241, 0.92) 100%),
+      url('/images/dash/right_card.webp') center / cover no-repeat,
+      #ffffff;
+    border-color: rgb(var(--c-border));
+    box-shadow: 0 2px 4px rgba(38, 32, 20, 0.06), 0 14px 34px -16px rgba(38, 32, 20, 0.22);
+  }
+
+  html.light .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(247, 245, 240, 0.92) 100%);
+    border-color: rgba(38, 32, 20, 0.1);
+    box-shadow: 0 4px 8px rgba(38, 32, 20, 0.05), 0 24px 50px -24px rgba(38, 32, 20, 0.25);
+  }
+
+  html.light .border-gradient {
+    background:
+      linear-gradient(168deg, #ffffff, #faf8f3) padding-box,
+      linear-gradient(150deg, rgba(217, 166, 46, 0.8), rgba(168, 117, 22, 0.35) 45%, rgba(38, 32, 20, 0.1) 82%)
+        border-box;
+  }
+  html.light .border-gradient-gold {
+    background:
+      linear-gradient(168deg, #fffdf6, #fdf6e6) padding-box,
+      linear-gradient(150deg, rgba(168, 117, 22, 0.9), rgba(217, 166, 46, 0.45) 55%, rgba(38, 32, 20, 0.1) 86%)
+        border-box;
+  }
+
+  /* The gold face stays: Deep Black on gold is the brand's primary button in
+     both themes, and it already passes contrast. Only the extrusion softens. */
+  html.light .btn-primary {
+    box-shadow: 0 4px 0 0 #a87516, 0 8px 20px -6px rgba(168, 117, 22, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  html.light .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 0 0 #a87516, 0 14px 30px -8px rgba(168, 117, 22, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  html.light .btn-ghost {
+    background: linear-gradient(180deg, #ffffff 0%, #f2eee6 100%);
+    box-shadow: 0 3px 0 0 rgba(38, 32, 20, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  html.light .btn-ghost:hover:not(:disabled) {
+    box-shadow: 0 5px 0 0 rgba(38, 32, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  html.light .btn-ghost:active:not(:disabled) {
+    box-shadow: 0 1px 0 0 rgba(38, 32, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Recessed still, but the inset shadow is a warm grey — pure black inside a
+     white field looks like dirt, not depth. */
+  html.light .input {
+    background: linear-gradient(180deg, #f4f1ea 0%, #ffffff 100%);
+    box-shadow: inset 0 2px 4px rgba(38, 32, 20, 0.09), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  html.light .chip {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 245, 240, 0.85));
+    border-color: rgba(38, 32, 20, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px -3px rgba(38, 32, 20, 0.2);
+  }
+
+  html.light .table-wrap {
+    background:
+      linear-gradient(168deg, rgba(255, 255, 255, 0.9) 0%, rgba(251, 249, 245, 0.93) 100%),
+      url('/images/dash/chart.webp') bottom / cover no-repeat,
+      #ffffff;
+    box-shadow: 0 1px 2px rgba(38, 32, 20, 0.06), 0 8px 24px -12px rgba(38, 32, 20, 0.16);
+  }
+  html.light table.data thead th {
+    background:
+      linear-gradient(180deg, rgba(246, 243, 236, 0.9) 0%, rgba(238, 234, 225, 0.94) 100%),
+      url('/images/dash/section_header.webp') center / cover no-repeat,
+      #f2efe8;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  html.light table.data tbody tr:hover {
+    @apply bg-black/[0.035];
+  }
+}
+
+/* ── 3D primitives ───────────────────────────────────────────────────────── */
+
+/* Driven by the Tilt component. The custom properties are written from JS on
+   pointer move, so the browser only ever animates a compositor property. */
+.tilt-root {
+  transform-style: preserve-3d;
+  transform: perspective(var(--tilt-perspective, 900px))
+    rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+    translateZ(var(--tilt-z, 0px));
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* While the pointer is over the card, follow it immediately. */
+.tilt-root[data-active='true'] {
+  transition: transform 90ms linear;
+}
+
+/* Specular highlight that tracks the pointer across a tilted surface — warm,
+   so it reads as light off gold rather than a grey wash. */
+.tilt-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  background: radial-gradient(
+    circle at var(--sheen-x, 50%) var(--sheen-y, 50%),
+    rgba(245, 195, 74, 0.16),
+    transparent 45%
+  );
+}
+
+.tilt-root[data-active='true'] .tilt-sheen {
+  opacity: 1;
+}
+
+/* Lifts a child toward the viewer inside a preserve-3d parent. */
+.layer-1 { transform: translateZ(18px); }
+.layer-2 { transform: translateZ(38px); }
+.layer-3 { transform: translateZ(64px); }
+
+/* Coloured light pooling under a raised element. */
+.underglow::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -14px;
+  height: 26px;
+  border-radius: 9999px;
+  background: var(--underglow, rgba(217, 166, 46, 0.6));
+  filter: blur(20px);
+  opacity: 0.55;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+
+.skeleton {
+  @apply animate-pulse rounded bg-white/5;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 11%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 11%, #000 92%, transparent);
+}
+
+.hairline {
+  @apply h-px w-full bg-gradient-to-r from-transparent via-border-strong to-transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4a4438, #302c25);
+  border-radius: 6px;
+  border: 2px solid #080808;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6b6047, #453e32);
+}
+
+/* ── Light theme: type & effects ──────────────────────────────────────────
+   These sit outside @layer components because the rules they override are
+   unlayered too — same cascade tier, so specificity decides and `html.light`
+   wins cleanly. */
+html.light .text-gradient {
+  background: linear-gradient(115deg, #1a1a18 4%, #3a352b 38%, #8a620c 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+html.light .text-gradient-gold {
+  background: linear-gradient(115deg, #a87516 0%, #8a620c 45%, #6d4c07 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* The extrusion inverts: on ivory the letter body is a soft warm grey cast,
+   not a black one, or the heading looks smudged. */
+html.light .text-3d {
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 3px rgba(38, 32, 20, 0.12),
+    0 8px 26px rgba(38, 32, 20, 0.14);
+}
+html.light .grain::after {
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+}
+html.light .skeleton {
+  @apply bg-black/[0.07];
+}
+html.light .tilt-sheen {
+  background: radial-gradient(
+    circle at var(--sheen-x, 50%) var(--sheen-y, 50%),
+    rgba(168, 117, 22, 0.14),
+    transparent 45%
+  );
+}
+
+/* Gradient text is `color: transparent` with the gradient clipped to the
+   glyphs — so any inherited text-shadow paints straight through the letters.
+   Harmless on black, but the light theme's white bevel turns the phrase into a
+   cream smear. Kill the shadow wherever the two meet. */
+.text-gradient,
+.text-gradient-gold {
+  text-shadow: none;
+}
+
+/* ── Surfaces that stay dark in light mode ────────────────────────────────
+   The brand rail is dark in BOTH themes: it is the one fixed anchor in the
+   panel, and an ivory sidebar against ivory content leaves the layout with no
+   structure at all. Redefining the tokens ON the container re-darkens every
+   `text-text-muted` / `border-border` descendant in one rule — the
+   alternative is a `light:` variant on every child. */
+.on-dark {
+  --c-bg-card: 17 17 16;
+  --c-bg-elevated: 26 26 26;
+  --c-bg-float: 36 36 34;
+  --c-border: 42 42 39;
+  --c-border-strong: 62 62 57;
+  --c-border-subtle: 22 22 21;
+  --c-text: 232 232 229;
+  --c-text-muted: 156 156 151;
+  --c-text-dim: 110 110 105;
+  --c-text-faint: 74 74 70;
+  --c-accent: 217 166 46;
+}
+/* …and the raised objects inside keep their dark treatment, which the generic
+   `html.light .panel` / `.card` rules above would otherwise overwrite. */
+html.light .on-dark .panel {
+  background: linear-gradient(168deg, #222120 0%, #131312 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 12px 28px -10px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+html.light .on-dark.card,
+html.light .on-dark .card {
+  background: linear-gradient(168deg, #171714 0%, #111110 55%, #0b0b0a 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+html.light .on-dark .text-3d {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 3px rgba(0, 0, 0, 0.6),
+    0 8px 26px rgba(0, 0, 0, 0.85);
+}
+
+/* ── Logo variant switching ───────────────────────────────────────────────
+   The wordmark's silver half disappears on ivory, so the light theme swaps in
+   a dark-text copy. Done in CSS, not from the theme hook, because the rule
+   is not "which theme is active" but "is the surface under this logo dark" —
+   and inside an `.on-dark` island (the sidebar, the auth panel) the answer is
+   still yes even in the light theme. */
+.logo-alt {
+  display: none;
+}
+html.light .logo-base {
+  display: none;
+}
+html.light .logo-alt {
+  display: block;
+}
+html.light .on-dark .logo-base {
+  display: block;
+}
+html.light .on-dark .logo-alt {
+  display: none;
+}
+
+/* ── Plates ───────────────────────────────────────────────────────────────
+   Layered backgrounds, not ::before overlays: layer one is a translucent
+   wash, layer two the artwork, layer three the base surface. A pseudo-element
+   would be a positioned descendant and would paint above the container's own
+   content unless every call site wrapped its children. */
+.tex-app {
+  background:
+    linear-gradient(180deg, rgba(8, 8, 8, 0.6), rgba(8, 8, 8, 0.76)),
+    url('/images/dash/app.webp') center / cover fixed no-repeat,
+    #080808;
+}
+/* The artwork is gold-on-black, so on ivory it needs a heavier wash to stay a
+   backdrop rather than a stain — but not so heavy that it disappears. */
+html.light .tex-app {
+  background:
+    linear-gradient(180deg, rgba(247, 245, 240, 0.8), rgba(243, 240, 233, 0.87)),
+    url('/images/dash/app.webp') center / cover fixed no-repeat,
+    #f7f5f0;
+}
+
+/* The sidebar plate is a tall portrait: anchor it left so the gold ribbon
+   stays in the rail instead of being cropped out by object-fit centring. */
+.tex-sidebar {
+  background:
+    linear-gradient(180deg, rgba(13, 13, 12, 0.74), rgba(8, 8, 8, 0.86)),
+    url('/images/dash/sidebar.webp') left top / cover no-repeat,
+    linear-gradient(180deg, #151513, #0a0a09);
+}
+
+/* Nav links carry a slice of the app plate. The active state layers a gold
+   wash ON TOP of the same stack rather than replacing it. */
+.tex-navlink {
+  background:
+    linear-gradient(100deg, rgba(17, 17, 16, 0.86), rgba(11, 11, 10, 0.9)),
+    url('/images/dash/navlink.webp') center / cover no-repeat;
+}
+.tex-navlink:hover {
+  background:
+    linear-gradient(100deg, rgba(26, 26, 24, 0.8), rgba(15, 15, 14, 0.86)),
+    url('/images/dash/navlink.webp') center / cover no-repeat;
+}
+.tex-navlink-active,
+.tex-navlink-active:hover {
+  background:
+    linear-gradient(180deg, rgba(217, 166, 46, 0.24), rgba(217, 166, 46, 0.1)),
+    url('/images/dash/navlink.webp') center / cover no-repeat;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 4px 14px -6px rgba(217, 166, 46, 0.75);
+}

@@ -1,0 +1,38 @@
+# Secrets — never commit a real .env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.sqlite3
+backend/staticfiles/
+backend/media/*
+!backend/media/.gitkeep
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Next / Vite
+node_modules/
+.next/
+out/
+dist/
+.vite/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
