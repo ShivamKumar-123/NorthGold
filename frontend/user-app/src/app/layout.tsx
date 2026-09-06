@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 
 import Chrome from '@/components/Chrome';
+import HowItWorksModal from '@/components/HowItWorksModal';
 import WelcomeGate from '@/components/WelcomeGate';
 import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider, themeScript } from '@/lib/theme';
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <AuthProvider>
             <WelcomeGate />
+            <HowItWorksModal />
             <Chrome>{children}</Chrome>
           </AuthProvider>
         </ThemeProvider>

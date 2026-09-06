@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLayoutEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Tilt from '@/components/Tilt';
 import { ArrowRight, BadgeCheck, Banknote, HandCoins } from 'lucide-react';
 
 const POINTS = [
@@ -128,7 +129,10 @@ export default function CardPromo() {
         {/* ── Figure ───────────────────────────────────────────────────
             She holds the card out toward the copy, so she goes on the right
             and the reading order still ends on the CTA. */}
-        <motion.div {...figure} className="relative mx-auto w-full max-w-[460px] lg:max-w-none">
+        {/* `sheen` off: a specular sweep across a cut-out figure lights
+            the empty air around her as well as the subject. */}
+        <Tilt max={6} lift={14} perspective={1300} sheen={false}>
+          <motion.div {...figure} className="relative mx-auto w-full max-w-[460px] lg:max-w-none">
               <img
             src="/images/people/card-hero.webp"
             alt="A NorthGold member holding out a NorthGold card"
@@ -144,7 +148,8 @@ export default function CardPromo() {
             style={{ background: 'radial-gradient(ellipse, rgba(0,0,0,.6), transparent 70%)' }}
             aria-hidden
           />
-        </motion.div>
+          </motion.div>
+        </Tilt>
       </div>
     </section>
   );

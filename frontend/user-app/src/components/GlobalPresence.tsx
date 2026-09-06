@@ -1,4 +1,6 @@
 import Reveal from '@/components/Reveal';
+import Tilt from '@/components/Tilt';
+import WaveDivider from '@/components/WaveDivider';
 import SplitWords from '@/components/SplitWords';
 
 /**
@@ -12,20 +14,21 @@ import SplitWords from '@/components/SplitWords';
 const LAT_TOP = 84;
 const LAT_BOTTOM = -58;
 
-/** Financial centres, unlabelled — the same way the reference reads. */
-const MARKERS: Array<{ name: string; lat: number; lon: number }> = [
-  { name: 'Toronto', lat: 43.7, lon: -79.4 },
-  { name: 'New York', lat: 40.7, lon: -74.0 },
-  { name: 'Mexico City', lat: 19.4, lon: -99.1 },
-  { name: 'São Paulo', lat: -23.5, lon: -46.6 },
-  { name: 'Buenos Aires', lat: -34.6, lon: -58.4 },
-  { name: 'London', lat: 51.5, lon: -0.1 },
-  { name: 'Frankfurt', lat: 50.1, lon: 8.7 },
-  { name: 'Dubai', lat: 25.2, lon: 55.3 },
-  { name: 'Mumbai', lat: 19.1, lon: 72.9 },
-  { name: 'Singapore', lat: 1.35, lon: 103.8 },
-  { name: 'Hong Kong', lat: 22.3, lon: 114.2 },
-  { name: 'Sydney', lat: -33.9, lon: 151.2 },
+/** Financial centres. The country is what the label leads with — the section
+ *  is about which countries this reaches, so the city is the detail. */
+const MARKERS: Array<{ city: string; country: string; lat: number; lon: number }> = [
+  { city: 'Toronto', country: 'Canada', lat: 43.7, lon: -79.4 },
+  { city: 'New York', country: 'United States', lat: 40.7, lon: -74.0 },
+  { city: 'Mexico City', country: 'Mexico', lat: 19.4, lon: -99.1 },
+  { city: 'São Paulo', country: 'Brazil', lat: -23.5, lon: -46.6 },
+  { city: 'Buenos Aires', country: 'Argentina', lat: -34.6, lon: -58.4 },
+  { city: 'London', country: 'United Kingdom', lat: 51.5, lon: -0.1 },
+  { city: 'Frankfurt', country: 'Germany', lat: 50.1, lon: 8.7 },
+  { city: 'Dubai', country: 'United Arab Emirates', lat: 25.2, lon: 55.3 },
+  { city: 'Mumbai', country: 'India', lat: 19.1, lon: 72.9 },
+  { city: 'Singapore', country: 'Singapore', lat: 1.35, lon: 103.8 },
+  { city: 'Hong Kong', country: 'Hong Kong SAR', lat: 22.3, lon: 114.2 },
+  { city: 'Sydney', country: 'Australia', lat: -33.9, lon: 151.2 },
 ];
 
 const place = (lat: number, lon: number) => ({
@@ -36,6 +39,8 @@ const place = (lat: number, lon: number) => ({
 export default function GlobalPresence() {
   return (
     <section id="presence" className="relative isolate overflow-hidden border-b border-border bg-bg">
+      <WaveDivider position="top" />
+      <WaveDivider position="bottom" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14">
           {/* ── Copy ─────────────────────────────────────────────────── */}
@@ -64,11 +69,12 @@ export default function GlobalPresence() {
           <Reveal delay={120}>
             {/* The wrapper keeps the image's exact aspect so the absolutely
                 placed pins stay on their coordinates at every width. */}
-            <div className="relative w-full" style={{ aspectRatio: '1856 / 728' }}>
+            <Tilt max={7} lift={16} perspective={1500} sheen={false}>
+              <div className="relative w-full" style={{ aspectRatio: '1856 / 728' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
                 src="/images/bg/worldmap.webp"
-                alt="World map with the regions NorthGold serves marked"
+                alt="World map marking the countries NorthGold operates in"
                 width={1856}
                 height={728}
                 loading="lazy"
@@ -78,25 +84,41 @@ export default function GlobalPresence() {
 
               {MARKERS.map((marker, i) => (
                 <span
-                  key={marker.name}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  key={marker.city}
+                  className="group absolute -translate-x-1/2 -translate-y-1/2"
                   style={place(marker.lat, marker.lon)}
-                  title={marker.name}
                 >
                   {/* The halo is a separate element from the dot: the ping
                       animation drives `transform`, which would otherwise wipe
                       out the centring translate on the dot itself. */}
-                  <span className="relative grid h-3 w-3 place-items-center">
+                  <span className="relative grid h-3 w-3 cursor-default place-items-center">
                     <span
                       className="absolute h-full w-full animate-ping rounded-full bg-accent/70"
                       style={{ animationDelay: `${i * 0.35}s`, animationDuration: '2.8s' }}
                       aria-hidden
                     />
-                    <span className="relative h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(217,166,46,.9)]" />
+                    <span className="relative h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_10px_rgba(217,166,46,.9)] transition-transform duration-200 group-hover:scale-150" />
+                  </span>
+
+                  {/* Built rather than left to the browser's own `title`
+                      tooltip, which takes about a second to appear — long
+                      enough that most people have moved the pointer on. */}
+                  <span
+                    className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 translate-y-1
+                               whitespace-nowrap rounded-lg border border-accent/30 bg-[#111110] px-2.5 py-1.5
+                               text-center opacity-0 shadow-e3 transition duration-200
+                               group-hover:translate-y-0 group-hover:opacity-100"
+                    role="tooltip"
+                  >
+                    <span className="block text-[11px] font-semibold leading-tight text-accent">
+                      {marker.country}
+                    </span>
+                    <span className="block text-[10px] leading-tight text-white/55">{marker.city}</span>
                   </span>
                 </span>
               ))}
-            </div>
+              </div>
+            </Tilt>
           </Reveal>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Reveal from '@/components/Reveal';
+import WaveDivider from '@/components/WaveDivider';
 import SplitWords from '@/components/SplitWords';
 import TradingViewWidget from '@/components/TradingViewWidget';
 
@@ -12,7 +13,9 @@ import TradingViewWidget from '@/components/TradingViewWidget';
  */
 export default function ForexCrossRates() {
   return (
-    <section id="cross-rates" className="relative isolate border-b border-border bg-bg">
+    <section id="cross-rates" className="relative isolate overflow-hidden border-b border-border bg-bg">
+      <WaveDivider position="top" />
+      <WaveDivider position="bottom" />
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-24">
         <div className="mx-auto max-w-3xl text-center" data-anim="head">
           <p className="eyebrow" data-head="eyebrow">

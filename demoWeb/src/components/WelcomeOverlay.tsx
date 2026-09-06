@@ -29,6 +29,8 @@ import Logo from '@/components/Logo';
 // Versioned: a stale key from an earlier build would keep the intro
 // suppressed forever in a tab that had already loaded the site once — which is
 // exactly what happened while this was being built.
+import { signalWelcomeDone } from '@/lib/welcomeSignal';
+
 const SESSION_KEY = 'ng_welcome_seen_v2';
 
 /** Total run time, start to reveal. Set on the timeline rather than tuned
@@ -46,7 +48,13 @@ export default function WelcomeOverlay({ name }: { name?: string }) {
   const timeline = useRef<gsap.core.Timeline | null>(null);
 
   useLayoutEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Every path out of here announces itself, including the ones that
+    // never play — whatever follows the curtain must not wait forever
+    // for an animation that was skipped.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      signalWelcomeDone();
+      return;
+    }
 
     // `?welcome=1` forces a replay. Showing this to someone is otherwise a
     // matter of clearing session storage by hand, and an intro you cannot
@@ -55,7 +63,10 @@ export default function WelcomeOverlay({ name }: { name?: string }) {
 
     if (!forced) {
       try {
-        if (sessionStorage.getItem(SESSION_KEY)) return;
+        if (sessionStorage.getItem(SESSION_KEY)) {
+          signalWelcomeDone();
+          return;
+        }
       } catch {
         // Storage blocked: play it rather than never. One extra intro beats a
         // broken first impression.
@@ -84,6 +95,7 @@ export default function WelcomeOverlay({ name }: { name?: string }) {
             /* nothing to remember it with */
           }
           setActive(false);
+          signalWelcomeDone();
         },
       });
       timeline.current = tl;
@@ -152,7 +164,10 @@ export default function WelcomeOverlay({ name }: { name?: string }) {
     }, rootRef);
 
     // If the ticker never runs, the curtain must still lift.
-    const safety = window.setTimeout(() => setActive(false), (RUN_SECONDS + 2.5) * 1000);
+    const safety = window.setTimeout(() => {
+      setActive(false);
+      signalWelcomeDone();
+    }, (RUN_SECONDS + 2.5) * 1000);
 
     return () => {
       window.clearTimeout(safety);

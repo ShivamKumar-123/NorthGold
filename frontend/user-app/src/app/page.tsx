@@ -1,8 +1,5 @@
 import Link from 'next/link';
-import {
-  ArrowRight, ArrowUpRight, BadgeCheck, Banknote,
-  Lock, ShieldCheck, Sparkles, TrendingUp, Users,
-} from 'lucide-react';
+import { ArrowRight, Banknote, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 
 import HeroScene from '@/components/HeroScene';
 import MarqueeTicker from '@/components/MarqueeTicker';
@@ -12,6 +9,7 @@ import GlobalPresence from '@/components/GlobalPresence';
 import LandingMotion from '@/components/LandingMotion';
 import CardPromo from '@/components/CardPromo';
 import Reveal from '@/components/Reveal';
+import OpenStepsButton from '@/components/OpenStepsButton';
 import SplitWords from '@/components/SplitWords';
 import VisionSection from '@/components/VisionSection';
 import PageBackdrop from '@/components/PageBackdrop';
@@ -224,105 +222,62 @@ export default async function LandingPage() {
       {/* ══ Global presence ══════════════════════════════════════ */}
       <GlobalPresence />
 
-      {/* ══ How it works ═══════════════════════════════════════════════════ */}
-      <section className="border-b border-border bg-bg">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
-          <Reveal>
-            <SectionHead eyebrow="How it works" title="Four steps, no surprises" center />
-          </Reveal>
-
-          <ol className="perspective relative mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4" data-anim="stagger">
-            <span
-              className="pointer-events-none absolute left-0 right-0 top-[30px] hidden h-px bg-gradient-to-r from-transparent via-border-strong to-transparent lg:block"
-              aria-hidden
-            />
-            {[
-              {
-                icon: <Users size={16} />,
-                title: 'Open an account',
-                body: 'Register in a minute. A referral link links you into your sponsor’s network automatically.',
-              },
-              {
-                icon: <Banknote size={16} />,
-                title: 'Deposit',
-                body: 'Bank transfer, UPI, crypto — or cash, where you describe the handover and our team verifies it.',
-              },
-              {
-                icon: <BadgeCheck size={16} />,
-                title: 'We verify',
-                body: 'An administrator checks the payment against your message and reference before anything is credited.',
-              },
-              {
-                icon: <TrendingUp size={16} />,
-                title: 'Earn monthly',
-                body: 'Your return is credited on each monthly anniversary of your deposit, at that month’s contracted rate.',
-              },
-            ].map((step, i) => (
-              <Reveal key={step.title} as="li" delay={i * 110} className="relative">
-                <div className="flex flex-col items-center text-center">
-                  <span className="relative z-10 grid h-[60px] w-[60px] place-items-center rounded-2xl border border-border-strong text-base font-bold text-accent shadow-e3"
-                        style={{ background: 'linear-gradient(168deg,#242422,#111110)' }}>
-                    {i + 1}
-                  </span>
-                  <span className="mt-5 text-text-muted">{step.icon}</span>
-                  <h3 className="mt-3 font-semibold text-text">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-text-muted">{step.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* ══ Live foreign exchange ════════════════════════════════ */}
       <ForexRates />
       <ForexCrossRates />
 
-      {/* ══ CTA ════════════════════════════════════════════════════════════ */}
+      {/* ══ CTA ════════════════════════════════════════════════ */}
       <section className="relative isolate overflow-hidden">
         <WaveDivider position="top" />
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
           <Reveal>
-            <div className="grain relative isolate overflow-hidden rounded-3xl border border-white/[0.08] px-6 py-16 text-center shadow-e4 sm:px-12">
-              {/* This render ships with its own studio backdrop, so it works as
-                  a bleed rather than a cut-out. The gradient over it keeps the
-                  copy at full contrast. */}
+            {/* `on-dark` because the panel is painted over a dark photograph in
+                both site themes — without it the copy would flip to near-black
+                on black the moment someone switches to light. */}
+            <div className="on-dark grain relative isolate overflow-hidden rounded-3xl border border-white/[0.08] shadow-e4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/cards/card-angled.webp"
+                src="/images/bg/account.webp"
                 alt=""
-                width={1200}
-                height={800}
+                width={2048}
+                height={768}
                 loading="lazy"
                 decoding="async"
-                className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-[0.22] blur-[3px]"
-                data-anim="zoom"
+                className="absolute inset-0 -z-20 h-full w-full object-cover"
+                aria-hidden
               />
-              {/* Two overlays, not one. The flat wash alone still left the
-                  card's chip and logo reading THROUGH the heading; the radial
-                  pass darkens the centre specifically, where the copy sits. */}
-              <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(4,6,12,.78),rgba(4,6,12,.94))]" />
-              <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_70%_at_50%_50%,rgba(4,6,12,.88),transparent_75%)]" />
-              <div className="absolute inset-0 -z-10 bg-[radial-gradient(80%_120%_at_50%_0%,rgba(217,166,46,.22),transparent_65%)]" />
-              <div className="grid-overlay opacity-50" aria-hidden />
+              {/* Weighted to the left, where the words are: the right half of
+                  the photograph is the part worth seeing. */}
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  background:
+                    'linear-gradient(90deg, rgba(4,5,8,.94) 0%, rgba(4,5,8,.86) 38%, rgba(4,5,8,.45) 72%, rgba(4,5,8,.25) 100%)',
+                }}
+                aria-hidden
+              />
 
-              <h2 className="text-display-sm font-semibold text-text text-3d">
-                Start earning <span className="text-gradient-gold">next month</span>
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl leading-relaxed text-text-muted">
-                Open an account, make your first deposit, and share your referral
-                link to build a network that pays you every single month.
-              </p>
-              <div className="mt-9 flex flex-wrap justify-center gap-3">
-                <Link href="/register" className="btn-primary px-7 py-3.5 text-base">
-                  Open an account
-                  <ArrowRight size={17} />
-                </Link>
-                <Link href="#plans" className="btn-ghost px-7 py-3.5 text-base">
-                  Browse the plans
-                </Link>
+              <div className="relative flex flex-col gap-8 px-6 py-14 sm:px-12 lg:flex-row lg:items-center lg:justify-between lg:py-16">
+                <div>
+                  <h2 className="text-display-sm font-semibold text-text text-3d">
+                    Instant account opening &amp; funding
+                  </h2>
+                  <p className="mt-3 text-lg font-medium text-gradient-gold">Trade within minutes!</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Reopens the four steps rather than going anywhere. It is
+                      the one place the panel can be summoned back after its
+                      single automatic showing. */}
+                  <OpenStepsButton>Get Started</OpenStepsButton>
+                  <Link href="/register" className="btn-primary px-7 py-3.5 text-base">
+                    Open An Account
+                    <ArrowRight size={17} />
+                  </Link>
+                </div>
               </div>
-              <p className="mt-8 text-xs leading-relaxed text-text-dim">
+
+              <p className="relative px-6 pb-10 text-xs leading-relaxed text-text-dim sm:px-12">
                 Capital is at risk. Returns shown are the contracted schedule for
                 each plan, not a guarantee of future performance.
               </p>

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Tilt from '@/components/Tilt';
 import { ArrowRight, Mail, MessageCircle } from 'lucide-react';
 
 const TOPICS = [
@@ -188,6 +189,7 @@ export default function ContactForm({
             : {})}
           className="relative mx-auto hidden w-full max-w-[460px] lg:block lg:max-w-none"
         >
+          <Tilt max={6} lift={14} perspective={1300} sheen={false}>
               <img
             src="/images/people/contact.webp"
             alt=""
@@ -198,6 +200,7 @@ export default function ContactForm({
             className="relative z-10 mx-auto w-full drop-shadow-[0_40px_80px_rgba(0,0,0,.6)]"
             aria-hidden
           />
+          </Tilt>
           <span
             className="absolute inset-x-16 bottom-3 h-14 rounded-[50%] blur-2xl"
             style={{ background: 'radial-gradient(ellipse, rgba(0,0,0,.6), transparent 70%)' }}

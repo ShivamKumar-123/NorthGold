@@ -1,6 +1,8 @@
 import { Handshake, Lightbulb, ShieldCheck, Target, TrendingUp, Users } from 'lucide-react';
 
 import Reveal from '@/components/Reveal';
+import Tilt from '@/components/Tilt';
+import WaveDivider from '@/components/WaveDivider';
 import SplitWords from '@/components/SplitWords';
 
 const POINTS = [
@@ -51,6 +53,8 @@ const POINTS = [
 export default function VisionSection() {
   return (
     <section id="vision" className="relative isolate overflow-hidden border-b border-border bg-bg">
+      <WaveDivider position="top" />
+      <WaveDivider position="bottom" />
       {/* Warm wash behind the photograph so the frame does not sit on a flat
           slab. Decorative, and outside the flow so it can never shift text. */}
       <div
@@ -63,7 +67,8 @@ export default function VisionSection() {
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
           {/* ── Photograph ───────────────────────────────────────────── */}
           <Reveal>
-            <figure className="relative">
+            <Tilt max={9} lift={22} perspective={1100}>
+              <figure className="relative">
               {/* Gold edge behind the frame — offset, so it reads as a lit
                   edge rather than as a border drawn around the picture. */}
               <span
@@ -82,7 +87,8 @@ export default function VisionSection() {
                   className="w-full"
                 />
               </div>
-            </figure>
+              </figure>
+            </Tilt>
           </Reveal>
 
           {/* ── Copy ─────────────────────────────────────────────────── */}

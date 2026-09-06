@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from '@/components/AppShell';
 import MarketingLayout from '@/components/MarketingLayout';
 import ScrollManager from '@/components/ScrollManager';
+import HowItWorksModal from '@/components/HowItWorksModal';
 import WelcomeGate from '@/components/WelcomeGate';
 import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
@@ -38,6 +39,7 @@ export default function App() {
         <AuthProvider>
           <ScrollManager />
           <WelcomeGate />
+          <HowItWorksModal />
           <Routes>
             {/* Public: header + footer. */}
             <Route element={<MarketingLayout />}>
