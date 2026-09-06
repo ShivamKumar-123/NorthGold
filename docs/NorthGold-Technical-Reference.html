@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>NorthGold — Technical Reference</title>
+<style>
+  /* Print-first. The product is dark gold on black; a document is not — a
+     dark page wastes toner and reads badly on paper, so this inverts to ink
+     on white and keeps the gold only as an accent. */
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --gold: #A87516;
+    --gold-bright: #D9A62E;
+    --ink: #16150f;
+    --muted: #5b574c;
+    --faint: #8b8578;
+    --rule: #e4dfd3;
+    --wash: #faf8f3;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0;
+    font: 10.5pt/1.55 "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  h1, h2, h3, h4 { line-height: 1.2; margin: 0; font-weight: 650; }
+  h2 {
+    font-size: 17pt; margin: 0 0 4mm;
+    padding-bottom: 2.5mm; border-bottom: 2px solid var(--gold);
+  }
+  h3 { font-size: 12pt; margin: 7mm 0 2mm; color: var(--gold); }
+  h4 { font-size: 10.5pt; margin: 5mm 0 1.5mm; }
+  p { margin: 0 0 3mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.4mm; }
+  code {
+    font-family: Consolas, "SF Mono", Menlo, monospace;
+    font-size: 9pt; background: var(--wash);
+    border: 1px solid var(--rule); border-radius: 3px; padding: 0 1.2mm;
+  }
+  pre {
+    font-family: Consolas, "SF Mono", Menlo, monospace;
+    font-size: 8.6pt; line-height: 1.45;
+    background: var(--wash); border: 1px solid var(--rule);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px; padding: 3mm 4mm; margin: 0 0 4mm;
+    white-space: pre-wrap; overflow-wrap: break-word;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  a { color: var(--gold); text-decoration: none; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.4pt; }
+  th, td { text-align: left; padding: 2mm 2.5mm; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--wash); font-weight: 650; font-size: 8.6pt; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .page { page-break-after: always; }
+  /* A heading alone at the foot of a page is worse than a slightly short
+     page, so headings stay with what follows them. */
+  h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  table, pre, .flow li { page-break-inside: avoid; }
+  .page:last-of-type { page-break-after: auto; }
+  .avoid-break { page-break-inside: avoid; }
+
+  /* ── Cover ─────────────────────────────────────────────────────────── */
+  .cover {
+    height: 297mm; padding: 34mm 24mm 20mm;
+    background: #0b0b0a; color: #f3efe4;
+    display: flex; flex-direction: column;
+  }
+  .cover .mark { width: 26mm; height: 26mm; margin-bottom: 12mm; }
+  .cover h1 { font-size: 34pt; letter-spacing: -0.02em; }
+  .cover h1 span { color: var(--gold-bright); }
+  .cover .sub { margin-top: 6mm; font-size: 12.5pt; color: #b8b2a3; max-width: 120mm; line-height: 1.5; }
+  .cover .rule { width: 40mm; height: 2px; background: linear-gradient(90deg, var(--gold-bright), transparent); margin: 10mm 0; }
+  .cover dl { margin: auto 0 0; display: grid; grid-template-columns: 34mm 1fr; gap: 2.5mm 4mm; font-size: 9.5pt; }
+  .cover dt { color: #7e796d; text-transform: uppercase; letter-spacing: .1em; font-size: 8pt; padding-top: .6mm; }
+  .cover dd { margin: 0; color: #ded8c9; }
+  /* The global `code` pill is ink-on-white; on the dark cover it reads as a
+     sticker stuck to the page. */
+  .cover code {
+    background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14);
+    color: var(--gold-bright);
+  }
+
+  /* ── Callouts ──────────────────────────────────────────────────────── */
+  .note, .warn, .rule-box {
+    padding: 3mm 4mm; border-radius: 4px; margin: 0 0 4mm; font-size: 9.6pt;
+    page-break-inside: avoid;
+  }
+  .note { background: var(--wash); border-left: 3px solid var(--gold); }
+  .warn { background: #fdf4ec; border-left: 3px solid #c2610a; }
+  .rule-box { background: #f7f9f5; border-left: 3px solid #3f7d3f; }
+  .note strong, .warn strong, .rule-box strong { display: block; margin-bottom: 1mm; }
+
+  .lede { font-size: 11.5pt; color: var(--muted); margin-bottom: 5mm; }
+  .small { font-size: 9pt; color: var(--muted); }
+  .kicker { font-size: 8pt; text-transform: uppercase; letter-spacing: .14em; color: var(--gold); margin-bottom: 1.5mm; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 7mm; }
+
+  .toc { list-style: none; padding: 0; }
+  .toc li { display: flex; gap: 3mm; padding: 2mm 0; border-bottom: 1px dotted var(--rule); }
+  .toc .n { color: var(--gold); font-weight: 650; width: 7mm; }
+
+  .flow { counter-reset: step; list-style: none; padding: 0; }
+  .flow li {
+    position: relative; padding-left: 9mm; margin-bottom: 3mm;
+    page-break-inside: avoid;
+  }
+  .flow li::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: 0; top: 0;
+    width: 6mm; height: 6mm; border-radius: 50%;
+    background: var(--gold); color: #fff;
+    font-size: 8pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ Cover ══════════════════════════════════════════════════════════ -->
+<section class="cover page">
+  <img class="mark" src="../frontend/user-app/public/icons/icon-192.png" alt="" />
+  <h1>NorthGold<br /><span>Technical Reference</span></h1>
+  <div class="rule"></div>
+  <p class="sub">
+    How the platform decides what to pay, who verifies what, and how commission
+    moves through the network — plus how to run and use all three builds.
+  </p>
+  <dl>
+    <dt>Covers</dt><dd>Django API · Next.js user app · Next.js admin panel · Vite demo</dd>
+    <dt>Currency</dt><dd>Indian Rupee (₹), <code>en-IN</code> grouping throughout</dd>
+    <dt>Repository</dt><dd>github.com/ShivamKumar-123/NorthGold</dd>
+    <dt>Audience</dt><dd>Developers running, deploying or extending the platform</dd>
+  </dl>
+</section>
+
+<!-- ══ Contents ═══════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li><span class="n">1</span><span>What the platform does</span></li>
+    <li><span class="n">2</span><span>The three builds, and which to run</span></li>
+    <li><span class="n">3</span><span>Core logic — the rules money obeys</span></li>
+    <li><span class="n">4</span><span>ROI plans and the payout engine</span></li>
+    <li><span class="n">5</span><span>Deposits, withdrawals and the ledger</span></li>
+    <li><span class="n">6</span><span>Referral commission (MLM)</span></li>
+    <li><span class="n">7</span><span>Running each build</span></li>
+    <li><span class="n">8</span><span>Using it — member walkthrough</span></li>
+    <li><span class="n">9</span><span>Using it — administrator walkthrough</span></li>
+    <li><span class="n">10</span><span>Admin configuration reference</span></li>
+    <li><span class="n">11</span><span>Deploying the demo</span></li>
+    <li><span class="n">12</span><span>Limits and what is not production-grade</span></li>
+  </ol>
+
+  <h3>How to read this</h3>
+  <p>
+    Sections 3 to 6 are the logic: what the system computes and why. Sections 7
+    to 10 are operational: how to start it and what each screen is for. If you
+    only need to demo the product, read section 7 (demo), then 8 and 9.
+  </p>
+
+  <div class="note">
+    <strong>One idea underpins everything here</strong>
+    A member is promised a specific schedule of payments at the moment they
+    invest. Every rule in this document exists to make sure that promise is
+    kept exactly — not approximately, not generously, and not retroactively
+    changed.
+  </div>
+</section>
+
+<!-- ══ 1 · What it does ═══════════════════════════════════════════════ -->
+<section class="page">
+  <h2>1 · What the platform does</h2>
+  <p class="lede">
+    NorthGold takes a deposit, places it in a fixed-income plan, and pays a
+    contracted percentage back every month for the term. People who introduce
+    other members earn commission on what those members deposit and on what
+    they are subsequently paid.
+  </p>
+
+  <h3>The cycle in one page</h3>
+  <ol class="flow">
+    <li><strong>A member deposits cash</strong> at the counter and files a request describing the handover — who took it, where, when, and the receipt number.</li>
+    <li><strong>An administrator verifies it</strong> against the counter receipt and approves. Nothing moves until this happens.</li>
+    <li><strong>The wallet is credited</strong> and, if auto-invest is on, an investment opens immediately on the plan whose slab contains that amount.</li>
+    <li><strong>Commission cascades</strong> up the depositor's sponsor chain, level by level, paying each upline its configured share of the deposit.</li>
+    <li><strong>Every month the schedule pays out.</strong> The percentage for that month is applied to the original principal and credited to the wallet — and commission cascades again on that payout.</li>
+    <li><strong>At maturity the principal returns</strong> to the wallet and the investment closes.</li>
+    <li><strong>The member withdraws</strong> by requesting a cash collection; the amount is held immediately and handed over once an administrator confirms.</li>
+  </ol>
+
+  <div class="rule-box">
+    <strong>Why cash only</strong>
+    Every movement is a physical hand-over confirmed by a person. The data model
+    still contains bank, UPI and crypto methods, and the code paths exist — but
+    nothing in the product offers them, so there is exactly one way money enters
+    and leaves, and exactly one thing to verify.
+  </div>
+</section>
+
+<!-- ══ 2 · Builds ═════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>2 · The three builds, and which to run</h2>
+
+  <table>
+    <thead>
+      <tr><th>Build</th><th>Stack</th><th>Port</th><th>Use it when</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>backend/</strong></td>
+        <td>Django · DRF · Channels · Celery</td>
+        <td class="num">8000</td>
+        <td>The real system. Holds the database and every rule.</td>
+      </tr>
+      <tr>
+        <td><strong>frontend/user-app/</strong></td>
+        <td>Next.js 15 (App Router)</td>
+        <td class="num">3000</td>
+        <td>What members see. Needs the backend running.</td>
+      </tr>
+      <tr>
+        <td><strong>frontend/admin-app/</strong></td>
+        <td>Next.js 15 (App Router)</td>
+        <td class="num">3001</td>
+        <td>Staff panel. Needs the backend running.</td>
+      </tr>
+      <tr>
+        <td><strong>demoWeb/</strong></td>
+        <td>Vite · React · React Router</td>
+        <td class="num">5173</td>
+        <td>Showing the product with nothing to install or host.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The demo is not a mock-up</h3>
+  <p>
+    <code>demoWeb</code> reimplements every rule in this document against
+    <code>localStorage</code>. Its seed does not write plausible-looking
+    balances — it <strong>replays the real actions</strong> (deposit, approve,
+    auto-invest, cascade commission, run every payout since due), which is why
+    the ledger adds up and each screen agrees with the others. It also contains
+    the admin panel, at <code>/admin</code>, rather than as a second app.
+  </p>
+
+  <div class="note">
+    <strong>Which one to open</strong>
+    To <em>demo</em> the product: <code>demoWeb</code> alone — no backend, no
+    database, no configuration. To <em>develop</em> the real system: backend
+    first, then the two Next apps.
+  </div>
+
+  <h3>What the demo does differently</h3>
+  <table>
+    <thead><tr><th></th><th>Real system</th><th>Demo</th></tr></thead>
+    <tbody>
+      <tr><td>Storage</td><td>PostgreSQL / SQLite via DRF</td><td><code>localStorage</code>, per browser</td></tr>
+      <tr><td>Admin</td><td>Separate app on :3001</td><td><code>/admin</code> routes in the same app</td></tr>
+      <tr><td>Prices</td><td>WebSocket feed</td><td>A timer nudging feed-priced rows ±0.4%</td></tr>
+      <tr><td>Payouts</td><td>Celery beat, scheduled</td><td>Caught up whenever the app loads</td></tr>
+      <tr><td>Uploads</td><td>Stored files</td><td>File <em>name</em> only — see §12</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══ 3 · Core logic ═════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>3 · Core logic — the rules money obeys</h2>
+  <p class="lede">
+    Six rules explain almost every behaviour in the system. Each exists because
+    the obvious alternative is quietly wrong.
+  </p>
+
+  <h3>1. The schedule is frozen at purchase</h3>
+  <p>
+    An investment <strong>copies</strong> the plan's month-by-month curve when
+    it opens. Editing a plan afterwards changes what future investments are
+    promised and never touches an existing one.
+  </p>
+  <div class="rule-box">
+    <strong>Why</strong>
+    A member read a specific schedule before committing. If the plan were
+    referenced rather than copied, an administrator adjusting a rate would
+    silently rewrite what everyone already holding that plan was promised.
+  </div>
+
+  <h3>2. Money rounds down, always</h3>
+  <p>
+    Every payout and every commission is floored to two decimals, never
+    rounded to nearest.
+  </p>
+  <div class="rule-box">
+    <strong>Why</strong>
+    Rounding half-up gains a fraction of a paisa on roughly half of all
+    payments. Across twelve months and five commission levels, that is a
+    systematic over-payment against a schedule that promised an exact figure.
+  </div>
+
+  <h3>3. Payout runs are idempotent</h3>
+  <p>
+    Each investment carries a <code>months_paid</code> cursor. The engine pays
+    only months past that cursor whose due date has arrived, then advances it.
+  </p>
+  <div class="rule-box">
+    <strong>Why</strong>
+    In the real system Celery can retry a task; in the demo the engine runs on
+    <em>every</em> page load. Without a cursor, either would double-pay.
+  </div>
+
+  <h3>4. Due dates clamp to the end of the month</h3>
+  <p>
+    A deposit on the 31st pays on the 28th in February, not on the 3rd of
+    March.
+  </p>
+
+  <h3>5. Withdrawals hold funds at request time</h3>
+  <p>
+    The balance leaves the wallet the moment a withdrawal is requested, not
+    when it is approved. Rejection returns it.
+  </p>
+  <div class="rule-box">
+    <strong>Why</strong>
+    Holding at approval would let the same balance back two pending
+    withdrawals at once, and the second would be approved against money that no
+    longer exists.
+  </div>
+
+  <h3>6. The ledger is append-only</h3>
+  <p>
+    Every movement writes a transaction row recording the amount, the resulting
+    balance and a human-readable note. Balances are never edited in place
+    without a row explaining the change.
+  </p>
+</section>
+
+<!-- ══ 4 · Plans ══════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>4 · ROI plans and the payout engine</h2>
+
+  <h3>Slabs</h3>
+  <p>
+    A deposit amount selects exactly one plan. Slabs never overlap and the top
+    tier is open-ended, so any amount at or above the entry minimum matches
+    one and only one plan.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Plan</th><th>Deposit range</th><th class="num">Month 1</th>
+        <th class="num">Month 12</th><th class="num">Total over term</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Starter</strong></td><td>₹100 – ₹999</td><td class="num">1.00%</td><td class="num">1.50%</td><td class="num">13.90%</td></tr>
+      <tr><td><strong>Silver</strong></td><td>₹1,000 – ₹4,999</td><td class="num">1.00%</td><td class="num">2.50%</td><td class="num">19.75%</td></tr>
+      <tr><td><strong>Gold</strong></td><td>₹5,000 – ₹24,999</td><td class="num">1.50%</td><td class="num">3.00%</td><td class="num">25.00%</td></tr>
+      <tr><td><strong>Platinum</strong></td><td>₹25,000 and above</td><td class="num">2.00%</td><td class="num">3.50%</td><td class="num">31.75%</td></tr>
+    </tbody>
+  </table>
+
+  <p class="small">
+    All four run 12 months. The curves <em>ramp</em> — a later month pays more
+    than an earlier one — which is the incentive to stay invested. Both the
+    slab boundaries and every monthly percentage are editable in the admin
+    panel.
+  </p>
+
+  <h3>What a month pays</h3>
+  <pre><code>payout(month N) = floor2( principal × percent[N] / 100 )
+
+Example — ₹30,000 on Platinum, month 6 pays 2.50%
+         = floor2(30000 × 2.50 / 100)
+         = ₹750.00</code></pre>
+  <p>
+    The percentage always applies to the <strong>original principal</strong>.
+    Returns are credited to the wallet as withdrawable balance and do not
+    compound. (<code>roi_credit_target</code> can be switched to
+    <code>principal</code> to compound instead.)
+  </p>
+
+  <h3>The engine, step by step</h3>
+  <ol class="flow">
+    <li>For each active investment, look at month <code>months_paid + 1</code>.</li>
+    <li>Compute its due date: start date plus that many months, clamped to month end.</li>
+    <li>If the due date is in the future, stop — this investment is up to date.</li>
+    <li>Otherwise credit the payout, write the ledger row, advance the cursor, and cascade commission on the amount.</li>
+    <li>Repeat until the schedule runs out or a future date is reached.</li>
+    <li>When the last month is paid, return the principal to the wallet and mark the investment matured.</li>
+  </ol>
+
+  <div class="note">
+    <strong>When does it run?</strong>
+    Real system: a Celery beat task. Demo: on app load, because there is no
+    scheduler in a browser — which is safe precisely because of the cursor.
+  </div>
+</section>
+
+<!-- ══ 5 · Wallet ═════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>5 · Deposits, withdrawals and the ledger</h2>
+
+  <h3>Deposit</h3>
+  <ol class="flow">
+    <li>Member hands cash over at the counter and collects a receipt.</li>
+    <li>They file a deposit request: amount, receipt number, and a written description of the handover. <strong>The description is mandatory</strong> — cash leaves no bank trail, so it is the only thing an administrator can verify against.</li>
+    <li>The request sits as <em>pending</em>. No balance changes.</li>
+    <li>An administrator approves or rejects it. A rejection requires a reason, which the member sees.</li>
+    <li>On approval: wallet credited → investment opened (if auto-invest is on) → commission cascaded.</li>
+  </ol>
+
+  <h3>Withdrawal</h3>
+  <ol class="flow">
+    <li>Member requests an amount and says when they will collect.</li>
+    <li>The amount is <strong>held immediately</strong> — it leaves the available balance and a <code>withdrawal_hold</code> row is written.</li>
+    <li>An administrator approves (records the hand-over) or rejects (returns the money with a <code>withdrawal_refund</code> row).</li>
+  </ol>
+
+  <h3>Transaction kinds</h3>
+  <table>
+    <thead><tr><th>Kind</th><th>Effect on wallet</th><th>Written when</th></tr></thead>
+    <tbody>
+      <tr><td><code>deposit</code></td><td>+</td><td>An administrator approves a deposit</td></tr>
+      <tr><td><code>investment</code></td><td>−</td><td>Principal moves from wallet into an investment</td></tr>
+      <tr><td><code>roi_payout</code></td><td>+</td><td>A scheduled month falls due and is paid</td></tr>
+      <tr><td><code>commission</code></td><td>+</td><td>A downline's deposit or payout pays this member</td></tr>
+      <tr><td><code>principal_return</code></td><td>+</td><td>An investment matures</td></tr>
+      <tr><td><code>withdrawal_hold</code></td><td>−</td><td>A withdrawal is requested</td></tr>
+      <tr><td><code>withdrawal_refund</code></td><td>+</td><td>A withdrawal is rejected</td></tr>
+      <tr><td><code>withdrawal</code></td><td>0</td><td>Approved — records the hand-over; the hold already moved the money</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    <strong>Reading the balances</strong>
+    <em>Available</em> is what can be invested or withdrawn right now.
+    <em>Locked in investments</em> is principal currently earning. A pending
+    withdrawal is in neither — it has been held.
+  </div>
+</section>
+
+<!-- ══ 6 · MLM ════════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>6 · Referral commission</h2>
+  <p class="lede">
+    Everyone joining through a referral link is placed under the person whose
+    code they used. Commission then walks <em>up</em> that chain from whoever
+    triggered it.
+  </p>
+
+  <h3>The ladder</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th><th>Relationship</th>
+        <th class="num">On their deposit</th>
+        <th class="num">On their monthly return</th>
+        <th class="num">Unlocks at</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>L1</strong></td><td>Someone you personally introduced</td><td class="num">5.0%</td><td class="num">10.0%</td><td class="num">0 directs</td></tr>
+      <tr><td><strong>L2</strong></td><td>Their introductions</td><td class="num">3.0%</td><td class="num">5.0%</td><td class="num">1 direct</td></tr>
+      <tr><td><strong>L3</strong></td><td>One level deeper</td><td class="num">2.0%</td><td class="num">3.0%</td><td class="num">2 directs</td></tr>
+      <tr><td><strong>L4</strong></td><td></td><td class="num">1.0%</td><td class="num">2.0%</td><td class="num">3 directs</td></tr>
+      <tr><td><strong>L5</strong></td><td></td><td class="num">0.5%</td><td class="num">1.0%</td><td class="num">4 directs</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How a cascade works</h3>
+  <ol class="flow">
+    <li>Something pays out — a deposit is approved, or a monthly return is credited.</li>
+    <li>Start at the depositor's sponsor. That is level 1.</li>
+    <li>Check the unlock rule: does this person have at least <code>min_directs</code> direct referrals? If not, record a <em>skip</em> with the reason and move on without paying.</li>
+    <li>Otherwise pay <code>floor2(base × percent / 100)</code>, credit the wallet, write the ledger row.</li>
+    <li>Move to that person's sponsor — level 2 — and repeat, up to the configured maximum depth (5 by default).</li>
+    <li>Stop at the top of the chain, at the depth limit, or if a sponsor loop is detected.</li>
+  </ol>
+
+  <h3>Worked example</h3>
+  <pre><code>Chain:   Anita ← Rahul ← Priya          (Priya is at the top)
+Event:   Anita's ₹900 deposit is approved
+
+  L1  Rahul   5.0% of 900  = ₹45.00   → paid
+  L2  Priya   3.0% of 900  = ₹27.00   → paid if Priya has ≥1 direct
+
+Later, Anita's month-1 return of ₹9.00 is credited:
+
+  L1  Rahul  10.0% of 9    = ₹0.90    → paid
+  L2  Priya   5.0% of 9    = ₹0.45    → paid</code></pre>
+
+  <div class="note">
+    <strong>Skipped payments are recorded, not discarded</strong>
+    A level that paid nothing because it was not unlocked still writes a row
+    with its reason. The member sees it in their commission log — which is what
+    turns "why did I not get paid?" into an answer instead of a support ticket.
+  </div>
+
+  <h3>Two switches worth knowing</h3>
+  <ul>
+    <li><code>mlm_deposit_enabled</code> — pay commission when a deposit is approved.</li>
+    <li><code>mlm_roi_enabled</code> — pay commission on every monthly return. This is the larger of the two over a full term.</li>
+  </ul>
+</section>
+
+<!-- ══ 7 · Running ════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>7 · Running each build</h2>
+
+  <h3>The demo — nothing to install beyond npm</h3>
+  <pre><code>cd demoWeb
+npm install
+npm run dev            # http://localhost:5173
+
+npm run build          # production build into dist/
+npm run preview        # serve that build on :4173</code></pre>
+  <p>No backend, no database, no environment variables. Open and use.</p>
+
+  <h4>Demo accounts</h4>
+  <table>
+    <thead><tr><th>Role</th><th>Email</th><th>Password</th></tr></thead>
+    <tbody>
+      <tr><td>Member</td><td><code>priya@northgold.demo</code></td><td><code>demo1234</code></td></tr>
+      <tr><td>Administrator</td><td><code>admin@northgold.demo</code></td><td><code>admin123</code></td></tr>
+    </tbody>
+  </table>
+  <p class="small">
+    Both sign-in screens carry a <em>click to fill</em> button. Every seeded
+    member uses <code>demo1234</code>: priya, arjun, rahul, sneha, neha, vikram
+    and anita, all <code>@northgold.demo</code>. The admin panel is at
+    <code>/admin</code>.
+  </p>
+
+  <h3>The real system</h3>
+  <pre><code># 1 · API
+cd backend
+python -m venv .venv &amp;&amp; .venv\Scripts\activate     # Windows
+pip install -r requirements.txt
+copy .env.example .env                              # then edit SECRET_KEY
+python manage.py migrate
+python manage.py seed_platform \
+    --admin-email you@example.com --admin-password 'choose-one'
+python manage.py runserver 8000
+
+# 2 · Member app                    # 3 · Admin panel
+cd frontend/user-app                cd frontend/admin-app
+npm install                         npm install
+copy .env.local.example .env.local  copy .env.local.example .env.local
+npm run dev     # :3000             npm run dev     # :3001</code></pre>
+
+  <div class="warn">
+    <strong>There are no default administrator credentials</strong>
+    The seed command only creates one if you pass <code>--admin-email</code>
+    and <code>--admin-password</code>. That is deliberate — a shipped default
+    password is a shipped vulnerability.
+  </div>
+
+  <h3>Verifying the rules still hold</h3>
+  <pre><code>cd backend
+python manage.py test        # 35 tests</code></pre>
+  <p class="small">
+    The suite covers the payout schedule, rounding, idempotency, the commission
+    cascade with its unlock rules, and the downline tree including its depth
+    boundary.
+  </p>
+</section>
+
+<!-- ══ 8 · Member walkthrough ═════════════════════════════════════════ -->
+<section class="page">
+  <h2>8 · Using it — member walkthrough</h2>
+  <p class="lede">
+    The fastest way to understand the product is to run one deposit end to end
+    and watch it reach four different screens.
+  </p>
+
+  <ol class="flow">
+    <li>
+      <strong>Open the landing page.</strong> The plan cards show each slab and
+      its month curve. The calculator computes a full schedule for any amount —
+      using the same code that will later pay it, not a second implementation.
+    </li>
+    <li>
+      <strong>Sign in</strong> (or open an account; a referral code is optional
+      and an unknown one is ignored rather than blocking the signup).
+    </li>
+    <li>
+      <strong>Dashboard.</strong> Available balance, active principal, lifetime
+      returns and referral earnings, the next payouts due, and your network as
+      a graph.
+    </li>
+    <li>
+      <strong>Wallet → Deposit.</strong> Enter an amount, the receipt number,
+      and a description of the handover. Submit. It appears as <em>pending</em>
+      and nothing has moved yet.
+    </li>
+    <li>
+      <strong>Wait for approval</strong> (see §9 — in the demo you can do this
+      yourself). Once approved: the wallet is credited, an investment opens,
+      and your sponsor chain is paid.
+    </li>
+    <li>
+      <strong>Investments.</strong> Each investment shows its progress through
+      the term, what it has returned, and its full payout schedule.
+    </li>
+    <li>
+      <strong>My Network.</strong> Your referral link, the tree beneath you,
+      what each member has paid you, a level-by-level breakdown, and the
+      commission log — including the payments that were skipped and why.
+    </li>
+    <li>
+      <strong>Wallet → Withdraw.</strong> Request an amount and say when you
+      will collect. The balance is held immediately.
+    </li>
+  </ol>
+
+  <h3>Other screens</h3>
+  <ul>
+    <li><strong>Profile</strong> — personal details, password, and KYC document upload.</li>
+    <li><strong>Support</strong> — the floating button on every signed-in page composes a message and opens it on WhatsApp. It is a composer, not a live chat: there is no inbox behind it, and a widget that silently drops messages is worse than none.</li>
+    <li><strong>About / Contact</strong> — public pages; Contact pulls its numbers from admin settings.</li>
+  </ul>
+</section>
+
+<!-- ══ 9 · Admin walkthrough ══════════════════════════════════════════ -->
+<section class="page">
+  <h2>9 · Using it — administrator walkthrough</h2>
+  <p class="lede">
+    The panel exists to do two things well: verify money movements, and set the
+    rules that govern them.
+  </p>
+
+  <h3>The daily job — verification</h3>
+  <ol class="flow">
+    <li>
+      <strong>Dashboard</strong> opens with the queue: how many deposits and
+      withdrawals are waiting and for how much.
+    </li>
+    <li>
+      <strong>Deposits.</strong> Each request shows the member, the amount, the
+      receipt number and their description of the handover. Check it against
+      the counter receipt.
+    </li>
+    <li>
+      <strong>Approve</strong> — and be deliberate, because this is the moment
+      the platform takes on an obligation: it credits the wallet, opens an
+      investment, and pays commission up the chain. Or <strong>reject</strong>
+      with a reason, which the member sees.
+    </li>
+    <li>
+      <strong>Withdrawals</strong> work the same way. The money was already
+      held when the member asked. Approving records the hand-over; rejecting
+      returns it to their wallet.
+    </li>
+  </ol>
+
+  <div class="warn">
+    <strong>Approval is not reversible from the panel</strong>
+    There is no undo. An approved deposit has already opened an investment and
+    paid commission to several people. Verify before approving, not after.
+  </div>
+
+  <h3>Reading the dashboard</h3>
+  <ul>
+    <li><strong>Total deposited / withdrawn</strong> — approved lifetime figures, and the net inflow between them.</li>
+    <li><strong>Active principal</strong> — money currently earning returns, i.e. the platform's live obligation.</li>
+    <li><strong>ROI paid out / commission paid out</strong> — what has already been settled. Their sum is the total obligation met so far.</li>
+    <li><strong>Commission by level</strong> — where the referral spend is actually going. Heavy L1 with almost nothing deeper means the network is wide but shallow.</li>
+  </ul>
+
+  <h3>Users &amp; network</h3>
+  <p>
+    Search by name, email or referral code. Selecting a member draws the tree
+    beneath them. Pending KYC documents appear at the top of this screen for
+    approval or rejection.
+  </p>
+</section>
+
+<!-- ══ 10 · Config reference ══════════════════════════════════════════ -->
+<section class="page">
+  <h2>10 · Admin configuration reference</h2>
+
+  <h3>ROI plans</h3>
+  <p>
+    Edit slab boundaries, term length and every monthly percentage. Changing
+    the term adds or trims months from the curve so it always has exactly one
+    entry per month — a missing entry would make a payout read
+    <code>undefined</code> and silently pay nothing.
+  </p>
+  <div class="note">
+    <strong>Editing a plan never changes an existing investment.</strong>
+    Each one froze its own copy of the schedule at purchase. Edits apply to
+    investments opened from now on.
+  </div>
+
+  <h3>MLM levels</h3>
+  <p>
+    Set the deposit rate, the monthly-return rate and the unlock threshold for
+    each level. <code>min_directs</code> is the number of people that member
+    must have personally introduced before that level pays them at all.
+  </p>
+
+  <h3>Settings</h3>
+  <table>
+    <thead><tr><th>Setting</th><th>What it controls</th></tr></thead>
+    <tbody>
+      <tr><td>Support email / phone / hours / address</td><td>Shown on the contact page and used by the contact form.</td></tr>
+      <tr><td>WhatsApp number</td><td>Behind the support button. <strong>Digits only with the country code</strong> — <code>wa.me</code> rejects <code>+</code>, spaces and dashes.</td></tr>
+      <tr><td>Minimum deposit / withdrawal</td><td>Enforced before a request can be filed. Defaults: ₹100 and ₹10.</td></tr>
+      <tr><td>Auto-invest on deposit</td><td>An approved deposit immediately opens an investment. Off: the balance sits in the wallet until the member invests it.</td></tr>
+      <tr><td>Pay commission on deposits</td><td>Cascade when a deposit is approved.</td></tr>
+      <tr><td>Pay commission on returns</td><td>Cascade on every monthly payout. The larger of the two over a full term.</td></tr>
+      <tr><td>Maximum commission depth</td><td>How far up the sponsor chain a payment walks. Default 5.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cash counter</h3>
+  <p>
+    Read-only, and deliberately so: it displays the support settings above.
+    Duplicating the edit form here would give the same fact two places to be
+    changed and one of them to be forgotten.
+  </p>
+
+  <h3>Reset demo data <span class="small">(demo only)</span></h3>
+  <p>
+    In the demo's admin sidebar and Settings screen. Reseeds the entire
+    database from scratch — useful before showing the product to someone.
+  </p>
+</section>
+
+<!-- ══ 11 · Deploy ════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>11 · Deploying the demo</h2>
+  <p class="lede">
+    <code>demoWeb</code> is a static site with no backend, so it deploys
+    anywhere that serves files. These are the Vercel steps.
+  </p>
+
+  <ol class="flow">
+    <li>On <strong>vercel.com</strong>, choose <em>Add New → Project</em> and import the <code>NorthGold</code> repository.</li>
+    <li>
+      <strong>Set Root Directory to <code>demoWeb</code>.</strong> This is the
+      one setting that matters — the app is a subdirectory, and left at the
+      repository root the build will fail.
+    </li>
+    <li>Everything else is detected: framework <em>Vite</em>, build <code>npm run build</code>, output <code>dist</code>.</li>
+    <li>Add no environment variables. There is no backend to point at.</li>
+    <li>Deploy.</li>
+  </ol>
+
+  <h3>Check after deploying</h3>
+  <p>
+    Visit <code>/</code>, <code>/login</code> and <code>/admin</code> by typing
+    the URL directly, then <strong>refresh each one</strong>. If they all load,
+    the SPA rewrite is working.
+  </p>
+  <div class="note">
+    <strong>Why that check matters</strong>
+    The router lives in the browser; the server has no <code>/admin/deposits</code>
+    to serve. <code>demoWeb/vercel.json</code> rewrites everything to
+    <code>index.html</code> so deep links survive a refresh. A catch-all is safe
+    because Vercel resolves the filesystem before applying rewrites, so real
+    assets are still served as themselves.
+  </div>
+
+  <div class="warn">
+    <strong>Tell visitors what a browser-local demo means</strong>
+    The database lives in each visitor's own browser. Two people see different
+    data, one person's actions are invisible to another, and clearing site data
+    resets everything. That is fine for a demo — as long as nobody expects
+    otherwise.
+  </div>
+</section>
+
+<!-- ══ 12 · Limits ════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>12 · Limits and what is not production-grade</h2>
+
+  <h3>In the demo</h3>
+  <ul>
+    <li>
+      <strong>Passwords are plain text and every check runs client-side.</strong>
+      Anyone can open devtools and grant themselves a balance. That is
+      acceptable when the whole database is already in the reader's own browser
+      — there is nothing to protect. It is not acceptable anywhere else.
+    </li>
+    <li>
+      <strong>Uploads are not kept.</strong> Deposit proofs and KYC documents
+      record the file name only. Base64 blobs would exhaust the ~5&nbsp;MB
+      storage quota after a handful of receipts, and there is no server to hold
+      them.
+    </li>
+    <li>
+      <strong>The contact form composes, it does not post.</strong> There is no
+      enquiry inbox, so it assembles the fields into a message and hands off to
+      WhatsApp or email. The buttons say so.
+    </li>
+  </ul>
+
+  <h3>In the real system</h3>
+  <ul>
+    <li>
+      <strong>Set the support WhatsApp number before going live.</strong> It
+      ships as a placeholder, and the support button opens a dead number until
+      it is changed in Settings.
+    </li>
+    <li>
+      <strong>Approvals cannot be undone from the panel.</strong> Reversing one
+      means a manual correction, because commission has already been paid to
+      other people.
+    </li>
+    <li>
+      <strong>Returns are not a guarantee.</strong> The schedule is what the
+      platform contracts to pay; it is not a prediction of investment
+      performance. The risk notice in the footer says this, and it should stay
+      there.
+    </li>
+  </ul>
+
+  <h3>If you extend it</h3>
+  <ul>
+    <li>Adding a settlement method means adding it to the deposit and withdrawal forms — the data model and the verification flow already handle more than cash.</li>
+    <li>Giving the demo a real inbox means replacing one handoff in <code>ContactForm.tsx</code> with a POST, plus a model behind it.</li>
+    <li>Changing how money is rounded, when a schedule is frozen, or when funds are held will break the tests in <code>backend/apps/investments/tests.py</code> — which is the point of them.</li>
+  </ul>
+
+  <hr style="border:0;border-top:1px solid var(--rule);margin:8mm 0 4mm" />
+  <p class="small">
+    NorthGold · Technical Reference · generated from the source in
+    <code>github.com/ShivamKumar-123/NorthGold</code>. Figures in this document
+    were read out of the code, not transcribed by hand.
+  </p>
+</section>
+
+</body>
+</html>
