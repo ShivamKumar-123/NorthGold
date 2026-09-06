@@ -1,12 +1,11 @@
 import Link from 'next/link';
 import {
-  ArrowRight, ArrowUpRight, BadgeCheck, Banknote, Layers,
+  ArrowRight, ArrowUpRight, BadgeCheck, Banknote,
   Lock, ShieldCheck, Sparkles, TrendingUp, Users,
 } from 'lucide-react';
 
 import HeroScene from '@/components/HeroScene';
 import MarqueeTicker from '@/components/MarqueeTicker';
-import NetworkDiagram from '@/components/NetworkDiagram';
 import LandingMotion from '@/components/LandingMotion';
 import CardPromo from '@/components/CardPromo';
 import Reveal from '@/components/Reveal';
@@ -15,10 +14,9 @@ import VisionSection from '@/components/VisionSection';
 import PageBackdrop from '@/components/PageBackdrop';
 import SectionBackdrop from '@/components/SectionBackdrop';
 import WaveDivider from '@/components/WaveDivider';
-import ReturnsCalculator from '@/components/ReturnsCalculator';
 import Tilt from '@/components/Tilt';
 import { API_BASE, money, num } from '@/lib/api';
-import type { MlmStructure, RoiPlan } from '@/types';
+import type { RoiPlan } from '@/types';
 
 // Rendered per request, NOT prerendered at build time: the API is not
 // reachable during `next build` (and certainly not during a Docker image
@@ -41,13 +39,9 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 }
 
 export default async function LandingPage() {
-  const [plans, structure] = await Promise.all([
-    fetchJson<RoiPlan[]>('/investments/plans/'),
-    fetchJson<MlmStructure>('/mlm/structure/'),
-  ]);
+  const plans = await fetchJson<RoiPlan[]>('/investments/plans/');
 
   const planList = plans ?? [];
-  const levels = structure?.levels ?? [];
 
   const entryPoint = planList.length
     ? Math.min(...planList.map((p) => Number(p.min_amount)))
@@ -140,7 +134,7 @@ export default async function LandingPage() {
                   Open an account
                   <ArrowRight size={17} />
                 </Link>
-                <Link href="#calculator" className="btn-ghost px-7 py-3.5 text-base">
+                <Link href="/calculator" className="btn-ghost px-7 py-3.5 text-base">
                   See your returns
                 </Link>
               </div>
@@ -221,125 +215,6 @@ export default async function LandingPage() {
               edit never changes what you were promised.
             </p>
           </Reveal>
-        </div>
-      </section>
-
-      {/* ══ Calculator ═════════════════════════════════════════════════════ */}
-      <section id="calculator" className="border-b border-border bg-bg">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
-          <Reveal>
-            <SectionHead
-              eyebrow="Before you commit"
-              title="See every payout, month by month"
-              description="This is the same schedule the platform will pay you — computed by the same code, not an estimate."
-              center
-            />
-          </Reveal>
-          <Reveal delay={120} className="mt-12">
-            <ReturnsCalculator plans={planList} />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ══ Referral ═══════════════════════════════════════════════════════ */}
-      <section id="referral" className="relative isolate overflow-hidden border-b border-border">
-        <WaveDivider position="top" />
-        <WaveDivider position="bottom" />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-96 bg-[radial-gradient(60%_100%_at_50%_100%,rgba(184,115,51,.12),transparent_70%)]"
-          aria-hidden
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:py-28">
-          <Reveal>
-            <SectionHead
-              eyebrow="Refer & earn"
-              title="Earn from your referrals — and from theirs"
-              description="Level 1 is someone you personally introduced. Levels 2 and beyond are their introductions, and so on down your network. You earn once when they deposit, then again every month they get paid."
-              center
-            />
-          </Reveal>
-
-          {levels.length === 0 ? (
-            <EmptyNotice>The referral programme is not published yet.</EmptyNotice>
-          ) : (
-            <>
-              <Reveal delay={120} className="mt-14">
-                <NetworkDiagram levels={levels} />
-              </Reveal>
-
-              <Reveal delay={200} className="mt-14">
-                <div className="table-wrap">
-                  <table className="data">
-                    <thead>
-                      <tr>
-                        <th>Level</th>
-                        <th>Relationship</th>
-                        <th className="text-right">On their deposit</th>
-                        <th className="text-right">On their monthly return</th>
-                        <th className="text-right">Unlocks at</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {levels.map((level) => (
-                        <tr key={level.level}>
-                          <td className="font-semibold">Level {level.level}</td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                level.kind === 'direct'
-                                  ? 'bg-accent/15 text-accent'
-                                  : 'bg-bronze/15 text-bronze'
-                              }`}
-                            >
-                              {level.kind}
-                            </span>
-                          </td>
-                          <td className="text-right tabular-nums text-success">
-                            {num(level.deposit_percent, 2)}%
-                          </td>
-                          <td className="text-right tabular-nums text-success">
-                            {num(level.roi_percent, 2)}%
-                          </td>
-                          <td className="text-right text-text-muted">
-                            {level.min_direct_referrals > 0
-                              ? `${level.min_direct_referrals} direct referrals`
-                              : 'Immediately'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Reveal>
-
-              <div className="perspective mt-6 grid gap-5 sm:grid-cols-3" data-anim="stagger">
-                {[
-                  {
-                    icon: <Users size={18} />,
-                    title: 'Direct referrals',
-                    body: 'Anyone who signs up on your link sits at level 1 and pays you the level-1 rate on everything they do.',
-                    tone: 'accent' as const,
-                  },
-                  {
-                    icon: <Layers size={18} />,
-                    title: 'Indirect referrals',
-                    body: 'When your referrals bring their own people, those sit at level 2, 3 and deeper — and still pay you.',
-                    tone: 'bronze' as const,
-                  },
-                  {
-                    icon: <TrendingUp size={18} />,
-                    title: 'Recurring, not one-off',
-                    body: 'You earn once when they deposit, then again every single month they receive their return.',
-                    tone: 'gold' as const,
-                  },
-                ].map((feature, i) => (
-                  <Reveal key={feature.title} delay={i * 90} className="h-full">
-                    <FeatureCard {...feature} />
-                  </Reveal>
-                ))}
-              </div>
-            </>
-          )}
         </div>
       </section>
 
@@ -605,36 +480,6 @@ function PlanCard({ plan, featured }: { plan: RoiPlan; featured?: boolean }) {
               : 'Principal held past maturity'}
           </p>
         </div>
-      </div>
-    </Tilt>
-  );
-}
-
-const FEATURE_TONES = {
-  accent: 'border-accent/25 bg-accent/10 text-accent',
-  bronze: 'border-bronze/25 bg-bronze/10 text-bronze',
-  gold: 'border-gold/25 bg-gold/10 text-gold',
-} as const;
-
-function FeatureCard({
-  icon,
-  title,
-  body,
-  tone,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  tone: keyof typeof FEATURE_TONES;
-}) {
-  return (
-    <Tilt max={6} lift={12} className="h-full">
-      <div className="card preserve-3d h-full p-6 transition-shadow duration-300 hover:shadow-e3">
-        <div className={`inline-flex rounded-xl border p-2.5 shadow-e1 layer-2 ${FEATURE_TONES[tone]}`}>
-          {icon}
-        </div>
-        <h3 className="mt-4 font-semibold layer-1">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-text-muted">{body}</p>
       </div>
     </Tilt>
   );

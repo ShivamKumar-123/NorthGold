@@ -11,6 +11,7 @@ import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Dashboard from '@/pages/Dashboard';
 import Investments from '@/pages/Investments';
+import Calculator from '@/pages/Calculator';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
@@ -41,6 +42,7 @@ export default function App() {
             {/* Public: header + footer. */}
             <Route element={<MarketingLayout />}>
               <Route path="/" element={<Landing />} />
+              <Route path="/calculator" element={<Calculator />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
             </Route>

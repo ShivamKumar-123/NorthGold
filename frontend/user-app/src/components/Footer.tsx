@@ -11,8 +11,7 @@ const COLUMNS = [
     links: [
       { href: '/about', label: 'How it works' },
       { href: '/#plans', label: 'Return plans' },
-      { href: '/#calculator', label: 'Returns calculator' },
-      { href: '/#referral', label: 'Refer & earn' },
+      { href: '/calculator', label: 'Returns calculator' },
     ],
   },
   {
