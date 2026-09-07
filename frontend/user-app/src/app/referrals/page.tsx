@@ -67,13 +67,13 @@ export default function ReferralsPage() {
     }
   }
 
-  if (authLoading || (loading && !earnings)) return <PageLoader label="Loading your network" />;
+  if (authLoading || (loading && !earnings)) return <PageLoader label="Loading your business" />;
   if (!user) return null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <header>
-        <h1 className="text-2xl font-semibold">My network</h1>
+        <h1 className="text-2xl font-semibold">My business</h1>
         <p className="mt-1 text-sm text-text-muted">
           Everyone below you, what they have invested, and what they have paid you.
         </p>

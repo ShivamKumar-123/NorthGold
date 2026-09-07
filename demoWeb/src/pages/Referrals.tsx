@@ -26,7 +26,7 @@ export default function ReferralsPage() {
   const [, tick] = useState(0);
   useEffect(() => subscribe(() => tick((n) => n + 1)), []);
 
-  if (authLoading) return <PageLoader label="Loading your network" />;
+  if (authLoading) return <PageLoader label="Loading your business" />;
   if (!user) return null;
 
   const earnings = q.earnings(user.id);
@@ -37,7 +37,7 @@ export default function ReferralsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <header>
-        <h1 className="text-2xl font-semibold">My network</h1>
+        <h1 className="text-2xl font-semibold">My business</h1>
         <p className="mt-1 text-sm text-text-muted">
           Everyone below you, what they have invested, and what they have paid you.
         </p>

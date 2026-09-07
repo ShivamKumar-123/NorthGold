@@ -28,7 +28,7 @@ SETTING_DEFAULTS = {
     "support_phone": "+91 00000 00000",
     "support_whatsapp": "910000000000",
     "support_hours": "Mon-Sat, 10:00-19:00 IST",
-    "support_address": "Update this address in the admin panel.",
+    "support_address": "Grosvenor Place, Level 15, 2205 George St, Sydney NSW 2000, Australia",
 }
 
 DECIMAL_SETTINGS = {

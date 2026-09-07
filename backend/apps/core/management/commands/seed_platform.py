@@ -99,10 +99,17 @@ INSTRUMENTS = [
      "current_price": "212.8000", "is_featured": False},
 ]
 
+# Values shipped as obvious "fill this in" text. A setting still holding one of
+# these has never been touched by an administrator, so re-seeding may safely
+# replace it with the current default.
+PLACEHOLDER_SETTINGS = {
+    "Update this address in the admin panel.",
+}
+
 CHANNELS = [
     {"name": "Cash Collection - Head Office", "channel_type": "cash",
      "contact_person": "Accounts Desk", "contact_phone": "+91 00000 00000",
-     "office_address": "Update this address in the admin panel.",
+     "office_address": "Grosvenor Place, Level 15, 2205 George St, Sydney NSW 2000, Australia",
      "instructions": "Hand the cash over at the counter, collect a receipt, then "
                      "file a deposit request describing the handover.",
      "min_amount": Decimal("100")},
@@ -141,14 +148,24 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Seed complete."))
 
     def _seed_settings(self):
-        created = 0
+        created = refreshed = 0
         for key, value in SETTING_DEFAULTS.items():
-            _, was_created = SystemSetting.objects.get_or_create(
+            row, was_created = SystemSetting.objects.get_or_create(
                 pk=key, defaults={"value": value},
             )
             created += int(was_created)
+            # A database seeded before the real details were known still holds
+            # the shipped placeholder, and get_or_create would leave it there
+            # forever. Refresh those; anything an administrator actually edited
+            # is left exactly as they set it.
+            if (not was_created and row.value in PLACEHOLDER_SETTINGS
+                    and value not in PLACEHOLDER_SETTINGS):
+                row.value = value
+                row.save(update_fields=["value", "updated_at"])
+                refreshed += 1
         self.stdout.write(f"  settings: {created} created, "
-                          f"{len(SETTING_DEFAULTS) - created} already present")
+                          f"{len(SETTING_DEFAULTS) - created - refreshed} already present"
+                          + (f", {refreshed} placeholder refreshed" if refreshed else ""))
 
     def _seed_mlm(self):
         for level, label, deposit_pct, roi_pct, min_directs in MLM_LEVELS:

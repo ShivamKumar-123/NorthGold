@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ArrowDownToLine, ArrowUpFromLine, Banknote, Receipt,
+  ArrowDownToLine, ArrowUpFromLine, Banknote, Receipt, TrendingUp,
 } from 'lucide-react';
 
 import BankCard from '@/components/BankCard';
+import CreateInvestmentModal from '@/components/CreateInvestmentModal';
+import MoneyAction from '@/components/MoneyAction';
 import { Alert, EmptyState, Modal, PageLoader, StatusBadge } from '@/components/ui';
 import { dateTime, money } from '@/lib/format';
 import { useAuth, useRequireAuth } from '@/lib/auth';
 import * as q from '@/lib/queries';
-import { createDeposit, depositsFor, requestWithdrawal, withdrawalsFor } from '@/lib/store';
+import { createDeposit, depositsFor, getPlans, requestWithdrawal, withdrawalsFor } from '@/lib/store';
 import type { Deposit, Withdrawal } from '@/lib/types';
 
 type PaymentMethod = 'cash';
@@ -30,6 +32,7 @@ export default function WalletPage() {
   const { refreshUser } = useAuth();
 
   const [summary, setSummary] = useState<WalletSummary | null>(null);
+  const [investOpen, setInvestOpen] = useState(false);
   const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -65,6 +68,9 @@ export default function WalletPage() {
 
   if (authLoading || (loading && !summary)) return <PageLoader label="Loading your wallet" />;
   if (!user) return null;
+
+  const availableBalance = summary?.wallet_balance ?? 0;
+  const investedBalance = summary?.invested_balance ?? 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -116,6 +122,43 @@ export default function WalletPage() {
           value={money(summary?.pending_withdrawal_amount)}
           hint={`${summary?.pending_withdrawal_count ?? 0} on hold`}
           tag="0004"
+        />
+      </div>
+
+      {/* What you can do with the money that is already here. Deposit lives in
+          the header because it brings money in from outside; these two move
+          what is on the platform already, so they sit under the figure they
+          both draw from. */}
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <MoneyAction
+          icon={<TrendingUp size={16} />}
+          title="Invest"
+          body="Put your available balance into a plan. The month-by-month rate is fixed the moment you start, and the first return is due one month later."
+          amountLabel="Available to invest"
+          amount={money(availableBalance)}
+          cta="Choose a plan"
+          disabled={availableBalance <= 0}
+          disabledHint={
+            investedBalance > 0
+              ? "Nothing available yet — your money is locked in investments. Each month's return lands here."
+              : 'Nothing available yet. Deposit first, and it appears here once verified.'
+          }
+          onClick={() => setInvestOpen(true)}
+        />
+        <MoneyAction
+          icon={<ArrowUpFromLine size={16} />}
+          title="Withdraw"
+          body="Send your available balance out. The amount is held the moment you ask, and released back if the request is turned down."
+          amountLabel="Available to withdraw"
+          amount={money(availableBalance)}
+          cta="Request a withdrawal"
+          disabled={availableBalance <= 0}
+          disabledHint={
+            investedBalance > 0
+              ? 'Nothing available yet — invested principal is returned at maturity, and returns arrive monthly.'
+              : 'Nothing available yet. Deposit first, and it appears here once verified.'
+          }
+          onClick={() => setWithdrawOpen(true)}
         />
       </div>
 
@@ -275,6 +318,14 @@ export default function WalletPage() {
         channels={channels}
         userId={user.id}
         onDone={afterSubmit}
+      />
+      <CreateInvestmentModal
+        open={investOpen}
+        onClose={() => setInvestOpen(false)}
+        plans={getPlans()}
+        userId={user.id}
+        available={availableBalance}
+        onDone={(message) => { setInvestOpen(false); afterSubmit(message); }}
       />
       <WithdrawModal
         open={withdrawOpen}

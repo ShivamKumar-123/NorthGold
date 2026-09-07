@@ -15,7 +15,7 @@ const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/investments', label: 'Investments', icon: PiggyBank },
   { href: '/wallet', label: 'Wallet', icon: Wallet },
-  { href: '/referrals', label: 'My Network', icon: Network },
+  { href: '/referrals', label: 'My Business', icon: Network },
 ];
 
 /**
