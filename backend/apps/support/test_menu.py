@@ -78,16 +78,34 @@ class MessageMenuTests(TestCase):
         self.assertEqual(res.data["reaction_counts"], {"❤️": 1})
         self.assertEqual(res.data["my_reaction"], "❤️")
 
-    def test_an_unlisted_emoji_is_refused(self):
+    def test_any_emoji_from_the_picker_is_accepted(self):
         self.member_sends(self.alice, "hi")
         message = SupportMessage.objects.get()
-
+        url = reverse("support-react", args=[message.id])
         self.client.force_authenticate(self.admin)
-        res = self.client.post(
-            reverse("support-react", args=[message.id]),
-            {"emoji": "\U0001F984"}, format="json",
-        )
-        self.assertEqual(res.status_code, 400)
+
+        # A plain symbol, one carrying a variation selector, a flag built from
+        # two regional indicators, and a zero-width-joined sequence: every shape
+        # the picker can hand back.
+        for emoji in ("\U0001F984", "❤️", "\U0001F1EE\U0001F1F3",
+                      "\U0001F468‍\U0001F469‍\U0001F467"):
+            res = self.client.post(url, {"emoji": emoji}, format="json")
+            self.assertEqual(res.status_code, 200, emoji)
+            self.assertEqual(res.data["my_reaction"], emoji)
+
+    def test_text_is_still_refused_as_a_reaction(self):
+        self.member_sends(self.alice, "hi")
+        message = SupportMessage.objects.get()
+        url = reverse("support-react", args=[message.id])
+        self.client.force_authenticate(self.admin)
+
+        # The field takes an emoji, not a note. Anything carrying letters or
+        # spaces is somebody typing into the wrong box.
+        for bad in ("nice", "\U0001F44D ok", "   "):
+            self.assertEqual(
+                self.client.post(url, {"emoji": bad}, format="json").status_code,
+                400, bad,
+            )
 
     def test_a_member_cannot_react_in_another_thread(self):
         self.member_sends(self.bob, "Bob's")

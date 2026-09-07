@@ -1,12 +1,21 @@
+import unicodedata
+
 from rest_framework import serializers
 
 from .models import SupportMessage
 
 MAX_BODY = 4000
 
-# The quick row on the message menu. Kept short deliberately — a picker with
-# forty faces in it is a decision, and reacting should not be one.
-ALLOWED_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
+# The six on the quick row. Everything else is one tap further in, behind the
+# picker — this list is what opens with the menu, not what is permitted.
+QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"]
+
+# An emoji is one or more symbols, possibly joined by a zero-width joiner and
+# carrying variation selectors or skin-tone modifiers. Allowing those
+# categories and nothing else accepts any emoji the picker can produce while
+# still refusing text — a reaction row is not a place to write sentences.
+EMOJI_CATEGORIES = {"So", "Sk", "Sm", "Mn", "Cf"}
+MAX_EMOJI_LENGTH = 16
 
 
 class QuotedMessageSerializer(serializers.ModelSerializer):
@@ -96,11 +105,12 @@ class EditMessageSerializer(serializers.Serializer):
 
 
 class ReactionSerializer(serializers.Serializer):
-    emoji = serializers.CharField(max_length=8)
+    emoji = serializers.CharField(max_length=MAX_EMOJI_LENGTH)
 
     def validate_emoji(self, value):
-        if value not in ALLOWED_REACTIONS:
-            raise serializers.ValidationError(
-                "Pick one of: " + " ".join(ALLOWED_REACTIONS),
-            )
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Pick an emoji.")
+        if any(unicodedata.category(ch) not in EMOJI_CATEGORIES for ch in value):
+            raise serializers.ValidationError("That is not an emoji.")
         return value

@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CornerUpLeft, Search, Send, Star, X } from 'lucide-react';
+import { CornerUpLeft, Search, Send, Smile, Star, X } from 'lucide-react';
 
 import ChatMessage from '@/components/ChatMessage';
+import EmojiPicker from '@/components/EmojiPicker';
 import { Alert, EmptyState, Modal } from '@/components/ui';
 import { ApiError, api } from '@/lib/api';
 import type { SupportMessage } from '@/lib/support';
@@ -52,7 +53,10 @@ export default function ChatThread({
   const [forwardSearch, setForwardSearch] = useState('');
   const [starredOnly, setStarredOnly] = useState(false);
   const [error, setError] = useState('');
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const boxRef = useRef<HTMLTextAreaElement | null>(null);
+  const emojiRef = useRef<HTMLDivElement | null>(null);
 
   const base = viewer === 'admin'
     ? `/support/admin/threads/${threadUserId}/`
@@ -84,6 +88,40 @@ export default function ChatThread({
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setEmojiOpen(false);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) setEmojiOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onDown);
+    };
+  }, [emojiOpen]);
+
+  /** Insert at the caret rather than appending — somebody who has gone back to
+   *  fix a word mid-sentence expects the emoji where they are looking. */
+  function insertEmoji(emoji: string) {
+    const box = boxRef.current;
+    if (!box) {
+      setText((t) => t + emoji);
+      return;
+    }
+    const start = box.selectionStart ?? text.length;
+    const end = box.selectionEnd ?? text.length;
+    setText(text.slice(0, start) + emoji + text.slice(end));
+    requestAnimationFrame(() => {
+      box.focus();
+      const at = start + emoji.length;
+      box.setSelectionRange(at, at);
+    });
+  }
 
   async function run(action: () => Promise<unknown>, failure: string) {
     setError('');
@@ -244,7 +282,26 @@ export default function ChatThread({
         )}
 
         <div className="flex items-end gap-2">
+          <div className="relative" ref={emojiRef}>
+            {emojiOpen && (
+              <div className="absolute bottom-12 left-0 z-40">
+                <EmojiPicker onPick={insertEmoji} />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setEmojiOpen((v) => !v)}
+              aria-label="Insert emoji"
+              aria-expanded={emojiOpen}
+              className={`grid h-11 w-10 place-items-center rounded-xl border border-border transition ${
+                emojiOpen ? 'border-accent/45 bg-accent/10 text-accent' : 'text-text-muted hover:text-text'
+              }`}
+            >
+              <Smile size={18} />
+            </button>
+          </div>
           <textarea
+            ref={boxRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {

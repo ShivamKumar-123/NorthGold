@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, CornerUpLeft, Forward, Pencil, Star, Trash2, X,
+  Check, Copy, CornerUpLeft, Forward, Pencil, SmilePlus, Star, Trash2, X,
 } from 'lucide-react';
 
+import EmojiPicker from '@/components/EmojiPicker';
 import { dateTime } from '@/lib/api';
-import { REACTIONS, type SupportMessage } from '@/lib/support';
+import { QUICK_REACTIONS } from '@/lib/emoji';
+import type { SupportMessage } from '@/lib/support';
 
 /**
  * One bubble in a support thread, with the menu that opens on it.
@@ -45,6 +47,7 @@ export default function ChatMessage({
   onJumpTo?: (id: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.body);
@@ -61,10 +64,13 @@ export default function ChatMessage({
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Escape') { setMenuOpen(false); setPickerOpen(false); }
     };
     const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setMenuOpen(false);
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setPickerOpen(false);
+      }
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onDown);
@@ -214,14 +220,16 @@ export default function ChatMessage({
         {menuOpen && !editing && (
           <div
             role="menu"
-            className={`panel absolute z-30 mt-1 w-52 animate-fade-up overflow-hidden rounded-xl p-1 text-sm ${
+            className={`panel absolute z-30 mt-1 animate-fade-up overflow-hidden rounded-xl p-1 text-sm ${
+              pickerOpen ? 'w-[min(88vw,320px)]' : 'w-52'
+            } ${
               mine ? 'right-0' : 'left-0'
             }`}
           >
             {/* The emoji row sits at the top, as it does on a phone. */}
             {onReact && (
               <div className="flex items-center justify-between gap-0.5 border-b border-white/[0.07] px-1 pb-1.5 pt-1">
-                {REACTIONS.map((emoji) => (
+                {QUICK_REACTIONS.map((emoji) => (
                   <button
                     key={emoji}
                     onClick={() => act(() => onReact(message.id, emoji))}
@@ -232,6 +240,30 @@ export default function ChatMessage({
                     {emoji}
                   </button>
                 ))}
+                {/* Six is what fits on the row; everything else is one tap
+                    further in, which is where every other chat app puts it. */}
+                <button
+                  onClick={() => setPickerOpen((v) => !v)}
+                  aria-label="More emoji"
+                  aria-expanded={pickerOpen}
+                  className={`grid h-7 w-7 place-items-center rounded-full transition
+                              hover:bg-white/[0.08] ${pickerOpen ? 'bg-accent/25 text-accent' : 'text-text-muted'}`}
+                >
+                  <SmilePlus size={15} />
+                </button>
+              </div>
+            )}
+
+            {pickerOpen && onReact && (
+              <div className="px-1 py-1.5">
+                <EmojiPicker
+                  className="!w-full !border-0 !bg-transparent !shadow-none"
+                  onPick={(emoji) => {
+                    onReact(message.id, emoji);
+                    setPickerOpen(false);
+                    setMenuOpen(false);
+                  }}
+                />
               </div>
             )}
 

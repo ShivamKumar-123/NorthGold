@@ -116,7 +116,7 @@ or email, and filters an open conversation by date range.
 Clicking a message opens its menu: reply with a quote, react, forward, copy,
 star, edit and delete. Replies carry a tappable quote of what they answer, and
 a quote lifted from another thread is dropped rather than rendered — the strip
-shows its text verbatim. Reactions are one per person, so a second choice
+shows its text verbatim. Reactions come from the full emoji set — six on the quick row, the rest behind a searchable picker that is also on the compose box — and are one per person, so a second choice
 replaces the first. Stars are per side, so the desk and the member can each
 mark what matters to them without clearing the other's. Editing is limited to
 your own words and only until the other side has read them.
@@ -208,7 +208,7 @@ support degrades rather than showing a frozen board.
 cd backend && python manage.py test
 ```
 
-68 tests. The money path (`apps.investments`) covers slab selection,
+69 tests. The money path (`apps.investments`) covers slab selection,
 deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
 indirect commission, qualification gating, idempotency of both the sweep and the
 commission engine, withdrawal holds and refunds, tree assembly, and ledger
