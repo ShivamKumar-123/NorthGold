@@ -89,22 +89,26 @@ export default function MessagesPage() {
     }
   }
 
+  /* Full height and full width. The admin rail is fixed, so on a large
+     screen the only chrome above this is the mobile header — hence the two
+     heights. Everything inside is min-h-0, so the two panels scroll rather
+     than the page: an inbox is somewhere you sit, not a card you glance at. */
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <header>
+    <div className="flex h-[calc(100vh-74px)] flex-col px-4 py-6 sm:px-6 lg:h-screen lg:py-8">
+      <header className="shrink-0">
         <h1 className="text-2xl font-semibold sm:text-3xl">Messages</h1>
         <p className="mt-1 text-sm text-text-muted">
           Every member who has written in. Replies land in their chat immediately.
         </p>
       </header>
 
-      {error && <div className="mt-5"><Alert kind="error" onDismiss={() => setError('')}>{error}</Alert></div>}
-      {notice && <div className="mt-5"><Alert kind="success" onDismiss={() => setNotice('')}>{notice}</Alert></div>}
+      {error && <div className="mt-5 shrink-0"><Alert kind="error" onDismiss={() => setError('')}>{error}</Alert></div>}
+      {notice && <div className="mt-5 shrink-0"><Alert kind="success" onDismiss={() => setNotice('')}>{notice}</Alert></div>}
 
       {loading && !threads.length ? (
-        <div className="mt-6"><PageLoader label="Loading the inbox" /></div>
+        <div className="mt-6 shrink-0"><PageLoader label="Loading the inbox" /></div>
       ) : threads.length === 0 ? (
-        <div className="mt-6">
+        <div className="mt-6 shrink-0">
           <EmptyState
             title="No messages yet"
             description="Threads appear here the moment a member writes in from their support chat."
@@ -112,10 +116,10 @@ export default function MessagesPage() {
           />
         </div>
       ) : (
-        <div className="mt-6 grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="mt-5 grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
           {/* ── Conversations ────────────────────────────────────────── */}
-          <aside className="card flex max-h-[70vh] flex-col overflow-hidden p-0">
-            <div className="relative border-b border-border p-3">
+          <aside className="card flex min-h-0 flex-col overflow-hidden p-0 max-lg:max-h-[38vh]">
+            <div className="relative shrink-0 border-b border-border p-3">
               <Search size={15} className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-text-dim" />
               <input
                 value={search}
@@ -161,7 +165,7 @@ export default function MessagesPage() {
           </aside>
 
           {/* ── The open thread ──────────────────────────────────────── */}
-          <section className="card flex max-h-[70vh] min-h-[420px] flex-col overflow-hidden p-0">
+          <section className="card flex min-h-0 flex-col overflow-hidden p-0 max-lg:min-h-[420px]">
             {!active ? (
               <div className="grid flex-1 place-items-center px-6 text-center">
                 <p className="text-sm text-text-muted">
@@ -170,7 +174,7 @@ export default function MessagesPage() {
               </div>
             ) : (
               <>
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+                <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 text-sm font-medium">
                       {active.name} <StatusBadge status={active.kyc_status} />
@@ -187,7 +191,7 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Date range — a view of the thread, not a different thread. */}
-                <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-3">
+                <div className="flex shrink-0 flex-wrap items-end gap-3 border-b border-border px-4 py-3">
                   <div>
                     <label className="label text-[10px]" htmlFor="from">From</label>
                     <input id="from" type="date" value={from} onChange={(e) => setFrom(e.target.value)}
