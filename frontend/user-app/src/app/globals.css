@@ -455,9 +455,28 @@ html.dark ::selection {
       #080808;
   }
 
+  /* ── Shrinkable app columns ────────────────────────────────────────────
+     A grid or flex child defaults to `min-width: auto`, which resolves to its
+     MIN-CONTENT width — not zero. One `table.data` inside, with its
+     `min-w-[640px]`, therefore forces its whole column to that width however
+     narrow the screen is, and the entire page grows sideways instead of the
+     table scrolling inside its own `overflow-x-auto` box.
+
+     On a 390px phone that made the signed-in app lay out 658px wide — the
+     viewport plus the sidebar — so every card ran off the right edge.
+
+     Scoped to the app shell, because this is where the wide data tables live.
+     `shrink-0` still wins for anything that must keep its size: this only
+     removes the implicit floor, it does not force anything to shrink. */
+  .tex-app :is(.grid, .flex) > * {
+    min-width: 0;
+  }
+
   /* ── Tables ────────────────────────────────────────────────────────────── */
   .table-wrap {
-    @apply overflow-x-auto rounded-2xl border border-border shadow-e1;
+    /* Belt and braces for the rule above: a table wrapper is an overflow
+       container, and one that cannot shrink is not a container at all. */
+    @apply min-w-0 max-w-full overflow-x-auto rounded-2xl border border-border shadow-e1;
     background:
       linear-gradient(168deg, rgba(23, 23, 20, 0.88) 0%, rgba(17, 17, 16, 0.92) 100%),
       url('/images/dash/chart.webp') bottom / cover no-repeat,
