@@ -41,6 +41,11 @@ and every screen agrees with every other screen.
   investments are promised and never touches an existing one.
 - **Cash deposits are verified.** Nothing moves until an administrator approves
   the request against the member's own description of the handover.
+- **KYC is part of opening an account.** Signup is two steps, and the second
+  one will not submit without all five identity documents. They land in the
+  admin KYC desk immediately; the member watches them clear on their own
+  dashboard. Approval is per document — the account reads as verified only once
+  every one of them has been approved.
 - **Withdrawals hold funds at request time**, not at approval — otherwise the
   same balance could be promised to two pending requests. Rejecting returns it.
 - **Commission walks the upline** level by level, honouring each level's
@@ -79,6 +84,7 @@ Two other shortcuts worth knowing about:
 | --- | --- | --- |
 | Data | PostgreSQL + DRF | `localStorage` |
 | Admin | Separate Next app on `:3001` | `/admin` routes in the same app |
+| KYC files | Uploaded and stored under `/media` | the file *name* only |
 | Prices | WebSocket feed | a timer nudging the feed-priced rows ±0.4% |
 | Payouts | Celery beat | caught up on app load |
 | Instruments | Browsable list + detail pages | the landing board only |

@@ -11,9 +11,10 @@ from apps.core.services import client_ip, notify, write_audit
 
 from .models import KYCDocument, Referral, User
 from .serializers import (
-    AdminLoginSerializer, AdminUserSerializer, ChangePasswordSerializer,
-    KYCDocumentSerializer, LoginSerializer, ProfileUpdateSerializer,
-    ReferralSerializer, RegisterSerializer, TokenPairSerializer, UserSerializer,
+    KYC_SIGNUP_DOCS, AdminLoginSerializer, AdminUserSerializer,
+    ChangePasswordSerializer, KYCDocumentSerializer, LoginSerializer,
+    ProfileUpdateSerializer, ReferralSerializer, RegisterSerializer,
+    TokenPairSerializer, UserSerializer,
 )
 from .services import build_downline_tree, downline_summary, register_user, submit_kyc
 
@@ -41,6 +42,7 @@ class RegisterView(APIView):
             utm={k: data.get(k, "") for k in
                  ("utm_source", "utm_medium", "utm_campaign")},
             ip_address=client_ip(request),
+            kyc_files={doc: data[doc] for doc in KYC_SIGNUP_DOCS if doc in data},
         )
         return Response(
             {"user": UserSerializer(user).data, "tokens": issue_tokens(user)},
@@ -308,10 +310,19 @@ class AdminKYCReviewView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        qs = KYCDocument.objects.select_related("user").filter(status="submitted")
+        # Defaults to the review queue. `?status=all` (or a specific status)
+        # is what the admin page uses to show what it has already decided,
+        # so a mistaken rejection can be found again rather than vanishing.
+        wanted = request.query_params.get("status") or "submitted"
+        qs = KYCDocument.objects.select_related("user").order_by("created_at")
+        if wanted != "all":
+            qs = qs.filter(status=wanted)
         return Response({"items": [
             {**KYCDocumentSerializer(d).data,
-             "user_email": d.user.email, "user_id": str(d.user_id)}
+             "user_email": d.user.email,
+             "user_name": d.user.full_name,
+             "user_kyc_status": d.user.kyc_status,
+             "user_id": str(d.user_id)}
             for d in qs
         ]})
 

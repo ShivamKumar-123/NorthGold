@@ -5,17 +5,10 @@ import { Alert, PageLoader, StatusBadge } from '@/components/ui';
 import { dateTime, displayName } from '@/lib/format';
 import { useAuth, useRequireAuth } from '@/lib/auth';
 import {
-  changePassword as savePassword, getUser, kycFor, updateProfile, uploadKyc,
+  KYC_DOC_TYPES as DOC_TYPES, changePassword as savePassword, getUser, kycFor,
+  updateProfile, uploadKyc,
 } from '@/lib/store';
 import type { KycDoc } from '@/lib/types';
-
-const DOC_TYPES = [
-  { value: 'id_front', label: 'ID — front' },
-  { value: 'id_back', label: 'ID — back' },
-  { value: 'selfie', label: 'Selfie with ID' },
-  { value: 'address_proof', label: 'Proof of address' },
-  { value: 'bank_proof', label: 'Bank proof' },
-];
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useRequireAuth();
@@ -26,7 +19,7 @@ export default function ProfilePage() {
   });
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm: '' });
   const [docs, setDocs] = useState<KycDoc[]>([]);
-  const [docType, setDocType] = useState(DOC_TYPES[0].value);
+  const [docType, setDocType] = useState<string>(DOC_TYPES[0].value);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');

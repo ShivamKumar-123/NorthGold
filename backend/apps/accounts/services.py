@@ -35,8 +35,16 @@ def resolve_sponsor(referral_code):
 
 @transaction.atomic
 def register_user(*, email, password, first_name="", last_name="", phone="",
-                  country="", referral_code="", utm=None, ip_address=None):
-    """Create a user and wire them into the tree under `referral_code`."""
+                  country="", referral_code="", utm=None, ip_address=None,
+                  kyc_files=None):
+    """Create a user and wire them into the tree under `referral_code`.
+
+    `kyc_files` is a {doc_type: uploaded file} mapping collected by the signup
+    form. The documents are written inside this same transaction as the user
+    itself, so an account can never exist without the identity documents it was
+    opened against — a half-registered signup would leave someone able to
+    deposit before anyone had anything to verify them by.
+    """
     sponsor = resolve_sponsor(referral_code)
     user = User.objects.create_user(
         email=email,
@@ -60,6 +68,18 @@ def register_user(*, email, password, first_name="", last_name="", phone="",
         utm_campaign=utm.get("utm_campaign", "")[:100],
         ip_address=ip_address,
     )
+
+    for doc_type, file_obj in (kyc_files or {}).items():
+        if file_obj is None:
+            continue
+        KYCDocument.objects.create(
+            user=user, doc_type=doc_type, file=file_obj, status="submitted",
+        )
+    if kyc_files:
+        # Straight to `submitted`: the queue has something in it from the very
+        # first moment, which is what an administrator sorts on.
+        user.kyc_status = "submitted"
+        user.save(update_fields=["kyc_status", "updated_at"])
 
     if sponsor:
         notify(

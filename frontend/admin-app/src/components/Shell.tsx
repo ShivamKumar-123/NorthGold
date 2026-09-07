@@ -22,6 +22,7 @@ const GROUPS = [
     items: [
       { href: '/deposits', label: 'Deposits', icon: ArrowDownToLine },
       { href: '/withdrawals', label: 'Withdrawals', icon: ArrowUpFromLine },
+      { href: '/kyc', label: 'KYC', icon: ShieldCheck },
     ],
   },
   {

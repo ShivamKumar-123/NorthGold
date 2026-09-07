@@ -90,6 +90,21 @@ celery -A config worker -l info
 celery -A config beat   -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 ```
 
+## Opening an account
+
+Registration is one request, not two. The signup form collects the member's
+details and **all five identity documents** — ID front, ID back, selfie, proof
+of address and bank proof — and the API refuses a signup missing any of them.
+The account and its documents are written in the same transaction, so nobody
+can exist on the platform without something for an administrator to verify them
+by.
+
+Each document is then reviewed on its own from **Admin → KYC**. A member reads
+as `approved` only once every one of theirs has been; a single rejection marks
+them `rejected` and the reason is shown back to them. Their own dashboard
+carries the same panel, document by document, so they can see exactly what the
+desk is holding.
+
 ## How money moves
 
 ```
@@ -130,7 +145,7 @@ backend/
   apps/wallet/       PaymentChannel, Deposit, Withdrawal, Transaction, verification
   apps/mlm/          MlmLevelConfig, Commission, the chain-walking engine
 frontend/user-app/   Next.js 15 — landing board, calculator, wallet, network tree
-frontend/admin-app/  Next.js 15 — verification queues, plan matrix, level config
+frontend/admin-app/  Next.js 15 — verification queues, KYC desk, plan matrix, levels
 nginx/               reverse proxy: admin.* → admin app, everything else → user app
 ```
 
@@ -169,13 +184,17 @@ support degrades rather than showing a frozen board.
 ## Tests
 
 ```bash
-cd backend && python manage.py test apps.investments
+cd backend && python manage.py test
 ```
 
-20 tests covering the full money path: slab selection, deposit-relative month
-maturity (including Jan 31 → Feb 28 clamping), direct and indirect commission,
-qualification gating, idempotency of both the sweep and the commission engine,
-withdrawal holds and refunds, tree assembly, and ledger integrity.
+42 tests. The money path (`apps.investments`) covers slab selection,
+deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
+indirect commission, qualification gating, idempotency of both the sweep and the
+commission engine, withdrawal holds and refunds, tree assembly, and ledger
+integrity. `apps.accounts` covers the signup gate — that a registration missing
+any document creates no account at all, and that a member turns `approved` only
+once every one of their documents has been. `apps.instruments` covers the price
+feed and the WebSocket fan-out.
 
 ## Before going live
 

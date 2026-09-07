@@ -5,6 +5,33 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import KYCDocument, Referral, User
 
+# Identity documents collected during signup. An account cannot be opened
+# without all of them, so verification starts the moment the user exists rather
+# than waiting for them to come back to the profile page later.
+KYC_SIGNUP_DOCS = ["id_front", "id_back", "selfie", "address_proof", "bank_proof"]
+
+MAX_KYC_FILE_BYTES = 5 * 1024 * 1024
+ALLOWED_KYC_CONTENT_TYPES = {
+    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic",
+    "application/pdf",
+}
+
+
+def validate_kyc_upload(value):
+    """Shared guard for every signup document.
+
+    Size is checked before anything touches disk. The content type is only
+    checked when the client sent one — a missing type is a quirk of some
+    upload clients, not evidence of a bad file, and rejecting on absence would
+    block legitimate signups.
+    """
+    if value.size > MAX_KYC_FILE_BYTES:
+        raise serializers.ValidationError("Each document must be 5 MB or smaller.")
+    content_type = (getattr(value, "content_type", "") or "").lower()
+    if content_type and content_type not in ALLOWED_KYC_CONTENT_TYPES:
+        raise serializers.ValidationError("Upload a JPEG, PNG, WebP or PDF.")
+    return value
+
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -13,6 +40,13 @@ class RegisterSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
     country = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+    # --- KYC, required to open the account -------------------------------
+    id_front = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
+    id_back = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
+    selfie = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
+    address_proof = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
+    bank_proof = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     # The referral link's ?ref= code. Unknown codes are ignored, not rejected —
     # a mistyped link must never block a signup.
     referral_code = serializers.CharField(max_length=20, required=False, allow_blank=True)

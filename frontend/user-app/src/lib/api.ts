@@ -181,8 +181,8 @@ export const api = {
     request<T>(path, { ...opts, method: 'PUT', body }),
   del: <T>(path: string, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...opts, method: 'DELETE' }),
-  postForm: <T>(path: string, form: FormData) =>
-    request<T>(path, { method: 'POST', body: form, isForm: true }),
+  postForm: <T>(path: string, form: FormData, opts?: Omit<RequestOptions, 'method' | 'body' | 'isForm'>) =>
+    request<T>(path, { ...opts, method: 'POST', body: form, isForm: true }),
 };
 
 // ─── formatting ───────────────────────────────────────────────────────────

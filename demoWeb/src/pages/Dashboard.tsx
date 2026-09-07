@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, CalendarClock, Coins, Network, PiggyBank, TrendingUp, Users, Wallet,
+  ArrowRight, CalendarClock, Coins, Network, PiggyBank, ShieldCheck, TrendingUp, Users, Wallet,
 } from 'lucide-react';
 
 import NetworkGraph from '@/components/NetworkGraph';
-import { Alert, EmptyState, PageLoader, StatCard } from '@/components/ui';
+import { EmptyState, PageLoader, StatCard, StatusBadge } from '@/components/ui';
 import { useRequireAuth } from '@/lib/auth';
 import { money, num, shortDate } from '@/lib/format';
 import * as q from '@/lib/queries';
-import { subscribe } from '@/lib/store';
+import { KYC_DOC_TYPES, kycFor, subscribe } from '@/lib/store';
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useRequireAuth();
@@ -29,7 +29,9 @@ export default function DashboardPage() {
   const recent = q.transactions(user.id, 8);
   const treeNodes = q.tree(user.id, 2);
 
-  const kycPending = user.kyc_status !== 'approved';
+  const kycDocs = kycFor(user.id);
+  const kycApproved = user.kyc_status === 'approved';
+  const kycRejected = kycDocs.some((d) => d.status === 'rejected');
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -69,15 +71,59 @@ export default function DashboardPage() {
       </header>
 
       
-      {kycPending && (
-        <div className="mt-5">
-          <Alert kind="warn">
-            Your identity verification is <strong>{user.kyc_status}</strong>.{' '}
-            <Link to="/profile" className="underline">Complete KYC</Link> to keep
-            withdrawals running smoothly.
-          </Alert>
+      {/* Identity verification, always on show — not only while something is
+          wrong. Someone who has just uploaded five documents wants to watch
+          them clear, and hiding the panel the moment they are approved leaves
+          no way to check what the desk actually holds. */}
+      <section className="card mt-5 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <ShieldCheck size={17} className="text-accent" /> Identity verification
+          </h2>
+          <StatusBadge status={user.kyc_status} />
         </div>
-      )}
+
+        <p className="mt-1.5 text-sm text-text-muted">
+          {kycApproved
+            ? 'All your documents have been approved. Nothing further is needed.'
+            : kycRejected
+              ? 'One or more documents were not accepted. Re-upload them from your profile.'
+              : 'Your documents are with our verification desk. Each one is reviewed separately.'}
+        </p>
+
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {KYC_DOC_TYPES.map((type) => {
+            const doc = kycDocs.find((d) => d.doc_type === type.value);
+            return (
+              <li
+                key={type.value}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-card/50 px-3 py-2.5"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{type.label}</span>
+                  {doc?.rejection_reason && (
+                    <span className="block truncate text-xs text-danger">{doc.rejection_reason}</span>
+                  )}
+                </span>
+                {doc ? (
+                  <StatusBadge status={doc.status} />
+                ) : (
+                  <span className="text-xs text-text-dim">Not uploaded</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {!kycApproved && (
+          <Link
+            to="/profile"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+          >
+            Manage documents <ArrowRight size={14} />
+          </Link>
+        )}
+      </section>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

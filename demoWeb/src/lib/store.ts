@@ -178,6 +178,23 @@ function seedInto(db: DB): DB {
     };
     db.users.push(user);
     byKey.set(person.key, user);
+
+    // Every account here was opened the way the signup form now opens one, so
+    // each member carries the same five documents. Their state follows the
+    // member's own: the approved ones are approved throughout, and the rest
+    // are still sitting in the queue for somebody to work through.
+    for (const doc of KYC_DOC_TYPES) {
+      db.kyc.push({
+        id: uid('kyc'),
+        user_id: user.id,
+        doc_type: doc.value,
+        file_name: `${person.key}-${doc.value}.jpg`,
+        status: user.kyc_status === 'approved' ? 'approved' : 'pending',
+        rejection_reason: '',
+        reviewed_at: user.kyc_status === 'approved' ? user.created_at : null,
+        created_at: user.created_at,
+      });
+    }
   });
 
   // Replay each member's deposit at the date they actually joined, then let
@@ -302,6 +319,17 @@ export function login(email: string, password: string): User {
   return user;
 }
 
+/** The identity documents an account cannot be opened without. Shared by the
+ *  signup form, the profile page and the admin review queue so all three name
+ *  the same five things. */
+export const KYC_DOC_TYPES = [
+  { value: 'id_front', label: 'ID — front' },
+  { value: 'id_back', label: 'ID — back' },
+  { value: 'selfie', label: 'Selfie with ID' },
+  { value: 'address_proof', label: 'Proof of address' },
+  { value: 'bank_proof', label: 'Bank proof' },
+] as const;
+
 export function register(input: {
   email: string;
   password: string;
@@ -310,9 +338,18 @@ export function register(input: {
   phone?: string;
   country?: string;
   referral_code?: string;
+  /** doc_type -> file name. All five are required: the account and the
+   *  documents it was opened against are written together, so nobody can
+   *  exist here without something for an administrator to verify. */
+  documents: Record<string, string>;
 }): User {
   const db = load();
   if (findByEmail(input.email)) throw new Error('An account with that email already exists.');
+
+  const missing = KYC_DOC_TYPES.filter((d) => !(input.documents?.[d.value] || '').trim());
+  if (missing.length) {
+    throw new Error(`Attach every document to continue: ${missing.map((d) => d.label).join(', ')}.`);
+  }
 
   // An unknown referral code is ignored rather than blocking the signup — the
   // person joining did not choose it and should not be stopped by it.
@@ -331,7 +368,9 @@ export function register(input: {
     city: '',
     address: '',
     is_staff: false,
-    kyc_status: 'unverified',
+    // Straight to `pending`: the documents go in with the account below, so
+    // the review queue has something in it from the very first moment.
+    kyc_status: 'pending',
     referral_code: referralCode(),
     sponsor_id: sponsor?.id ?? null,
     tree_depth: sponsor ? sponsor.tree_depth + 1 : 0,
@@ -340,6 +379,21 @@ export function register(input: {
     created_at: new Date().toISOString(),
   };
   db.users.push(user);
+
+  const now = new Date().toISOString();
+  for (const doc of KYC_DOC_TYPES) {
+    db.kyc.push({
+      id: uid('kyc'),
+      user_id: user.id,
+      doc_type: doc.value,
+      file_name: input.documents[doc.value].trim(),
+      status: 'pending',
+      rejection_reason: '',
+      reviewed_at: null,
+      created_at: now,
+    });
+  }
+
   save();
   return user;
 }
@@ -805,6 +859,11 @@ export const kycFor = (userId: string) =>
   load().kyc.filter((d) => d.user_id === userId).sort(byNewest);
 
 export const pendingKyc = () => load().kyc.filter((d) => d.status === 'pending').sort(byNewest);
+
+/** Everything the desk has ever seen, newest first — the admin page shows the
+ *  decided ones too, so a mistaken rejection can be found again rather than
+ *  vanishing out of the queue. */
+export const allKyc = () => load().kyc.slice().sort(byNewest);
 
 export function uploadKyc(userId: string, docType: string, fileName: string) {
   const db = load();

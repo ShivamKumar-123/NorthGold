@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, ShieldCheck, Users as UsersIcon } from 'lucide-react';
 
 import NetworkTree from '@/components/NetworkTree';
 import { Alert, EmptyState, StatusBadge } from '@/components/ui';
 import { money, shortDate } from '@/lib/format';
-import { downlineTree, getUsers, reviewKyc, pendingKyc } from '@/lib/store';
+import { downlineTree, getUsers, pendingKyc } from '@/lib/store';
 
 export default function AdminUsers() {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
 
   const users = getUsers().filter((u) => !u.is_staff);
   const kycQueue = pendingKyc();
@@ -34,57 +34,18 @@ export default function AdminUsers() {
         </p>
       </header>
 
-      {message && (
-        <div className="mt-5">
-          <Alert kind="success" onDismiss={() => setMessage('')}>{message}</Alert>
-        </div>
-      )}
-
       {kycQueue.length > 0 && (
-        <section className="mt-6">
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-muted">
-            <ShieldCheck size={15} /> KYC awaiting review ({kycQueue.length})
-          </h2>
-          <div className="space-y-2">
-            {kycQueue.map((doc) => {
-              const owner = users.find((u) => u.id === doc.user_id);
-              return (
-                <div key={doc.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">
-                      {owner ? `${owner.first_name} ${owner.last_name}`.trim() || owner.email : 'Unknown'}
-                    </p>
-                    <p className="text-xs text-text-muted">
-                      {doc.doc_type.replace('_', ' ')} · {doc.file_name} · {shortDate(doc.created_at)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        reviewKyc(doc.id, true);
-                        setMessage('Document approved.');
-                      }}
-                      className="btn-primary px-4 py-2 text-xs"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reason = window.prompt('Why is this being rejected? The member sees it.');
-                        if (!reason?.trim()) return;
-                        reviewKyc(doc.id, false, reason.trim());
-                        setMessage('Document rejected.');
-                      }}
-                      className="btn-danger px-4 py-2 text-xs"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <div className="mt-6">
+          {/* The queue itself lives on its own page now; this only says there
+              is something waiting, so nobody has to go looking. */}
+          <Alert kind="warn">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck size={14} />
+              {kycQueue.length} identity {kycQueue.length === 1 ? 'document is' : 'documents are'} awaiting review.{' '}
+              <Link to="/admin/kyc" className="font-medium underline">Open the KYC desk</Link>
+            </span>
+          </Alert>
+        </div>
       )}
 
       <div className="relative mt-6">

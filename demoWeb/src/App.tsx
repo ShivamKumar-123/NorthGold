@@ -24,6 +24,7 @@ import AdminShell from '@/pages/admin/AdminShell';
 import AdminChannels from '@/pages/admin/Channels';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminDeposits from '@/pages/admin/Deposits';
+import AdminKyc from '@/pages/admin/Kyc';
 import AdminLevels from '@/pages/admin/Levels';
 import AdminLogin from '@/pages/admin/Login';
 import AdminPlans from '@/pages/admin/Plans';
@@ -68,6 +69,7 @@ export default function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="deposits" element={<AdminDeposits />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
+              <Route path="kyc" element={<AdminKyc />} />
               <Route path="plans" element={<AdminPlans />} />
               <Route path="levels" element={<AdminLevels />} />
               <Route path="users" element={<AdminUsers />} />

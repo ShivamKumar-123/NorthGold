@@ -6,24 +6,7 @@ import { ShieldCheck, Upload } from 'lucide-react';
 import { Alert, PageLoader, StatusBadge } from '@/components/ui';
 import { ApiError, api, dateTime } from '@/lib/api';
 import { useAuth, useRequireAuth } from '@/lib/auth';
-
-const DOC_TYPES = [
-  { value: 'id_front', label: 'ID — front' },
-  { value: 'id_back', label: 'ID — back' },
-  { value: 'selfie', label: 'Selfie with ID' },
-  { value: 'address_proof', label: 'Proof of address' },
-  { value: 'bank_proof', label: 'Bank proof' },
-];
-
-type KycDoc = {
-  id: string;
-  doc_type: string;
-  file: string;
-  status: string;
-  rejection_reason: string;
-  reviewed_at: string | null;
-  created_at: string;
-};
+import { KYC_DOC_TYPES as DOC_TYPES, type KycDoc } from '@/lib/kyc';
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useRequireAuth();

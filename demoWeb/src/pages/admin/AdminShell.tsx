@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   ArrowDownToLine, ArrowUpFromLine, LayoutDashboard, Layers, LogOut, Menu, Network,
-  RotateCcw, Settings as SettingsIcon, Users, Wallet, X,
+  RotateCcw, Settings as SettingsIcon, ShieldCheck, Users, Wallet, X,
 } from 'lucide-react';
 
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/lib/auth';
 import { displayName } from '@/lib/format';
-import { pendingDeposits, pendingWithdrawals, resetDemo, subscribe } from '@/lib/store';
+import { pendingDeposits, pendingKyc, pendingWithdrawals, resetDemo, subscribe } from '@/lib/store';
 
-const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; icon: typeof Users; badge?: 'deposits' | 'withdrawals' }> }> = [
+const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; icon: typeof Users; badge?: 'deposits' | 'withdrawals' | 'kyc' }> }> = [
   {
     title: 'Overview',
     items: [{ to: '/admin', label: 'Dashboard', icon: LayoutDashboard }],
@@ -21,6 +21,7 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; i
     items: [
       { to: '/admin/deposits', label: 'Deposits', icon: ArrowDownToLine, badge: 'deposits' },
       { to: '/admin/withdrawals', label: 'Withdrawals', icon: ArrowUpFromLine, badge: 'withdrawals' },
+      { to: '/admin/kyc', label: 'KYC', icon: ShieldCheck, badge: 'kyc' },
     ],
   },
   {
@@ -65,7 +66,11 @@ export default function AdminShell() {
 
   if (loading || !user?.is_staff) return null;
 
-  const counts = { deposits: pendingDeposits().length, withdrawals: pendingWithdrawals().length };
+  const counts = {
+    deposits: pendingDeposits().length,
+    withdrawals: pendingWithdrawals().length,
+    kyc: pendingKyc().length,
+  };
 
   return (
     <div className="flex min-h-screen">
