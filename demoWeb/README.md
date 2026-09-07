@@ -51,6 +51,13 @@ and every screen agrees with every other screen.
   thread; the admin panel's Messages screen answers it, filters by member and
   by date, and can delete a message or a whole conversation. Members can delete
   their own messages but not the replies they were given.
+
+  Two tabs of the same browser now stay in step — a write in one drops the
+  other's cached copy and both re-read. Two *different browsers* cannot: the
+  database is this browser's `localStorage`, so Chrome and Edge are two
+  separate databases and a message sent in one will never reach the other. To
+  try both sides, use two tabs, or sign out and back in as the other account.
+  The Django build is what puts one shared database under both sides.
 - **KYC is part of opening an account.** Signup is two steps, and the second
   one will not submit without all five identity documents. They land in the
   admin KYC desk immediately; the member watches them clear on their own

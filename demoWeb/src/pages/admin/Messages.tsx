@@ -133,6 +133,14 @@ export default function AdminMessages() {
                 ))
               )}
             </div>
+
+            {/* The one thing about this demo that surprises people: its whole
+                database is this browser's localStorage. A member writing from
+                a different browser is writing to a different database. */}
+            <p className="shrink-0 border-t border-border px-3 py-2 text-[10px] leading-relaxed text-text-dim">
+              Demo data lives in this browser. A member who wrote from another
+              browser or device will not appear here.
+            </p>
           </aside>
 
           {/* ── The open thread ──────────────────────────────────────── */}

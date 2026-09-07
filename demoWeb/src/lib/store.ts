@@ -117,6 +117,32 @@ export function subscribe(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
+/**
+ * Writes from another tab.
+ *
+ * `localStorage` is shared by every tab of a browser, but `cache` is not —
+ * each tab parses its own copy once and then works from it. So a member
+ * writing to support in one tab and the desk reading the inbox in another were
+ * each looking at the snapshot their tab happened to load with: the message was
+ * in storage and on neither screen until a reload.
+ *
+ * The `storage` event fires only in the OTHER tabs, which is exactly the ones
+ * holding a stale copy. Dropping the cache makes the next read re-parse, and
+ * the listeners are what tell the screens to read again.
+ *
+ * This cannot reach across two different BROWSERS — separate browsers keep
+ * separate storage, so they are two separate databases. That is the demo's
+ * whole design; the Django build behind the production app is what puts one
+ * shared database under both sides.
+ */
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== KEY) return;
+    cache = null;
+    listeners.forEach((fn) => fn());
+  });
+}
+
 export function resetDemo() {
   cache = emptyDb();
   seedInto(cache);
