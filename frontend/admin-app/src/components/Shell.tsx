@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   ArrowDownToLine, ArrowUpFromLine, CandlestickChart, LayoutDashboard, LogOut, Menu,
-  Network, Settings, ShieldCheck, SlidersHorizontal, Users, Wallet, X,
+  MessageCircle, Network, Settings, ShieldCheck, SlidersHorizontal, Users, Wallet, X,
 } from 'lucide-react';
 
 import Logo from '@/components/Logo';
@@ -23,6 +23,7 @@ const GROUPS = [
       { href: '/deposits', label: 'Deposits', icon: ArrowDownToLine },
       { href: '/withdrawals', label: 'Withdrawals', icon: ArrowUpFromLine },
       { href: '/kyc', label: 'KYC', icon: ShieldCheck },
+      { href: '/messages', label: 'Messages', icon: MessageCircle },
     ],
   },
   {

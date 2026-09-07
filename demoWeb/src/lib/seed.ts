@@ -149,14 +149,15 @@ export const DEMO_PASSWORD = 'demo1234';
 export const EMPTY_DB: Omit<
   DB,
   | 'users' | 'investments' | 'payouts' | 'deposits' | 'withdrawals'
-  | 'transactions' | 'commissions' | 'kyc'
+  | 'transactions' | 'commissions' | 'kyc' | 'messages'
 > = {
   // 2: every seeded member carries the five KYC documents their account was
   //    opened with.
   // 3: the office address moved to Sydney. Settings live inside the stored
   //    database, so a reseed is what actually delivers the new one.
+  // 4: support threads, so the admin inbox opens with something in it.
   // A database stored under an older version is reseeded, not migrated.
-  version: 3,
+  version: 4,
   plans: ROI_PLANS,
   levels: MLM_LEVELS,
   issuers: ISSUERS,

@@ -105,6 +105,19 @@ them `rejected` and the reason is shown back to them. Their own dashboard
 carries the same panel, document by document, so they can see exactly what the
 desk is holding.
 
+## Talking to the desk
+
+Members write from a floating chat widget or the **Support** page — the same
+thread either way, because a thread *is* every message carrying that member's
+id, so the two views cannot disagree. Administrators answer from **Admin →
+Messages**, which lists one row per member who has written in, filters by name
+or email, and filters an open conversation by date range.
+
+Deleting is asymmetric on purpose. A member may remove their own messages but
+never the reply they were given; an administrator may remove any message, or
+clear a whole conversation, and both are written to the audit log. Every
+message can be copied on its own.
+
 ## How money moves
 
 ```
@@ -144,8 +157,9 @@ backend/
   apps/investments/  RoiPlan, RoiPlanMonth, Investment, RoiPayout, the payout runner
   apps/wallet/       PaymentChannel, Deposit, Withdrawal, Transaction, verification
   apps/mlm/          MlmLevelConfig, Commission, the chain-walking engine
+  apps/support/      SupportMessage — one thread per member, and the desk's inbox
 frontend/user-app/   Next.js 15 — landing board, calculator, wallet, network tree
-frontend/admin-app/  Next.js 15 — verification queues, KYC desk, plan matrix, levels
+frontend/admin-app/  Next.js 15 — verification queues, KYC desk, support inbox, plans
 nginx/               reverse proxy: admin.* → admin app, everything else → user app
 ```
 
@@ -187,14 +201,16 @@ support degrades rather than showing a frozen board.
 cd backend && python manage.py test
 ```
 
-42 tests. The money path (`apps.investments`) covers slab selection,
+55 tests. The money path (`apps.investments`) covers slab selection,
 deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
 indirect commission, qualification gating, idempotency of both the sweep and the
 commission engine, withdrawal holds and refunds, tree assembly, and ledger
 integrity. `apps.accounts` covers the signup gate — that a registration missing
 any document creates no account at all, and that a member turns `approved` only
 once every one of their documents has been. `apps.instruments` covers the price
-feed and the WebSocket fan-out.
+feed and the WebSocket fan-out. `apps.support` covers the chat's asymmetric
+delete rules — a member may remove their own words but not the answer they were
+given, and one member's thread never leaks into another's.
 
 ## Before going live
 

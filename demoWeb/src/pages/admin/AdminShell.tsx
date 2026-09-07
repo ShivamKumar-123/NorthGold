@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  ArrowDownToLine, ArrowUpFromLine, LayoutDashboard, Layers, LogOut, Menu, Network,
-  RotateCcw, Settings as SettingsIcon, ShieldCheck, Users, Wallet, X,
+  ArrowDownToLine, ArrowUpFromLine, Layers, LayoutDashboard, LogOut, Menu,
+  MessageCircle, Network, RotateCcw, Settings as SettingsIcon, ShieldCheck, Users,
+  Wallet, X,
 } from 'lucide-react';
 
 import Logo from '@/components/Logo';
@@ -10,9 +11,11 @@ import { ConfirmDialog } from '@/components/ui';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/lib/auth';
 import { displayName } from '@/lib/format';
-import { pendingDeposits, pendingKyc, pendingWithdrawals, resetDemo, subscribe } from '@/lib/store';
+import {
+  pendingDeposits, pendingKyc, pendingWithdrawals, resetDemo, subscribe, supportThreads,
+} from '@/lib/store';
 
-const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; icon: typeof Users; badge?: 'deposits' | 'withdrawals' | 'kyc' }> }> = [
+const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; icon: typeof Users; badge?: 'deposits' | 'withdrawals' | 'kyc' | 'messages' }> }> = [
   {
     title: 'Overview',
     items: [{ to: '/admin', label: 'Dashboard', icon: LayoutDashboard }],
@@ -23,6 +26,7 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; i
       { to: '/admin/deposits', label: 'Deposits', icon: ArrowDownToLine, badge: 'deposits' },
       { to: '/admin/withdrawals', label: 'Withdrawals', icon: ArrowUpFromLine, badge: 'withdrawals' },
       { to: '/admin/kyc', label: 'KYC', icon: ShieldCheck, badge: 'kyc' },
+      { to: '/admin/messages', label: 'Messages', icon: MessageCircle, badge: 'messages' },
     ],
   },
   {
@@ -72,6 +76,7 @@ export default function AdminShell() {
     deposits: pendingDeposits().length,
     withdrawals: pendingWithdrawals().length,
     kyc: pendingKyc().length,
+    messages: supportThreads().reduce((n, t) => n + (t.unread > 0 ? 1 : 0), 0),
   };
 
   return (

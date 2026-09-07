@@ -2,8 +2,8 @@ import {
   ADMIN, DEMO_PASSWORD, DEMO_PEOPLE, EMPTY_DB, INSTRUMENTS,
 } from './seed';
 import type {
-  Commission, DB, Deposit, Investment, KycDoc, RoiPayout, RoiPlan, Transaction, TreeNode, User,
-  Withdrawal,
+  Commission, DB, Deposit, Investment, KycDoc, RoiPayout, RoiPlan, SupportMessage, Transaction,
+  TreeNode, User, Withdrawal,
 } from './types';
 
 /**
@@ -71,6 +71,7 @@ function emptyDb(): DB {
     transactions: [],
     commissions: [],
     kyc: [],
+    messages: [],
   };
 }
 
@@ -244,6 +245,37 @@ function seedInto(db: DB): DB {
     requestWithdrawalIn(db, priya.id, 1500,
       'I will collect from the head office counter on Friday afternoon.');
   }
+
+  // Two support threads: one already answered, one still waiting. An inbox
+  // that opens empty says nothing about how it behaves once it is not.
+  const thread = (key: string, lines: Array<['user' | 'admin', string, number]>) => {
+    const owner = byKey.get(key);
+    if (!owner) return;
+    for (const [sender, body, hoursAgo] of lines) {
+      db.messages.push({
+        id: uid('msg'),
+        user_id: owner.id,
+        sender,
+        author_name: sender === 'admin' ? 'Admin Desk' : '',
+        body,
+        // The member's last line is deliberately unread, so the inbox opens
+        // with a badge on it.
+        read_at: sender === 'admin' ? new Date(now - hoursAgo * 3600_000).toISOString() : null,
+        created_at: new Date(now - hoursAgo * 3600_000).toISOString(),
+      });
+    }
+  };
+
+  thread('arjun', [
+    ['user', 'Hello, I handed over $8,000 at the counter this morning. How long does verification usually take?', 52],
+    ['admin', 'Thanks Arjun — we verify against the receipt number, usually the same working day. Yours is already approved.', 50],
+    ['user', 'Perfect, I can see it. Thank you!', 49],
+  ]);
+  thread('neha', [
+    ['user', 'When exactly does my second monthly return land? I deposited on the 12th.', 6],
+    ['admin', 'On the 12th of each month — the schedule runs from your own deposit date, not the calendar month.', 5],
+    ['user', 'Understood. One more thing — can I withdraw the return as soon as it arrives?', 2],
+  ]);
 
   return db;
 }
@@ -911,6 +943,100 @@ export function changePassword(userId: string, current: string, next: string) {
   if (next.length < 8) throw new Error('Your new password must be at least 8 characters.');
   user.password = next;
   save();
+}
+
+/* ── Support chat ──────────────────────────────────────────────────────────
+   A thread IS every message carrying the same `user_id`; there is no
+   conversation record to keep in step with the messages inside it. */
+
+export const messagesFor = (userId: string) =>
+  load().messages
+    .filter((m) => m.user_id === userId)
+    .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+
+export function sendMessage(
+  userId: string,
+  sender: 'user' | 'admin',
+  body: string,
+  authorName = '',
+) {
+  const text = body.trim();
+  if (!text) throw new Error('Write a message first.');
+  const db = load();
+  db.messages.push({
+    id: uid('msg'),
+    user_id: userId,
+    sender,
+    author_name: authorName,
+    body: text,
+    read_at: null,
+    created_at: new Date().toISOString(),
+  });
+  save();
+}
+
+/** Opening a thread marks the OTHER side's messages as seen. Your own were
+ *  never unread to you. */
+export function markThreadRead(userId: string, viewer: 'user' | 'admin') {
+  const db = load();
+  const other = viewer === 'user' ? 'admin' : 'user';
+  let touched = false;
+  for (const m of db.messages) {
+    if (m.user_id === userId && m.sender === other && !m.read_at) {
+      m.read_at = new Date().toISOString();
+      touched = true;
+    }
+  }
+  if (touched) save();
+}
+
+/** Replies the member has not read — drives the dot on the launcher. */
+export const unreadForMember = (userId: string) =>
+  load().messages.filter((m) => m.user_id === userId && m.sender === 'admin' && !m.read_at).length;
+
+export function deleteMessage(id: string) {
+  const db = load();
+  const index = db.messages.findIndex((m) => m.id === id);
+  if (index === -1) return;
+  db.messages.splice(index, 1);
+  save();
+}
+
+export function deleteThread(userId: string) {
+  const db = load();
+  db.messages = db.messages.filter((m) => m.user_id !== userId);
+  save();
+}
+
+/** The desk's inbox: one row per member who has ever written in, newest
+ *  activity first. */
+export function supportThreads() {
+  const db = load();
+  const byUser = new Map<string, SupportMessage[]>();
+  for (const m of db.messages) {
+    const list = byUser.get(m.user_id) ?? [];
+    list.push(m);
+    byUser.set(m.user_id, list);
+  }
+
+  return [...byUser.entries()]
+    .map(([userId, list]) => {
+      const sorted = list.sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+      const tail = sorted[sorted.length - 1];
+      const user = db.users.find((u) => u.id === userId);
+      return {
+        user_id: userId,
+        name: user ? `${user.first_name} ${user.last_name}`.trim() || user.email : 'Unknown',
+        email: user?.email ?? '',
+        kyc_status: user?.kyc_status ?? 'unverified',
+        messages: sorted.length,
+        unread: sorted.filter((m) => m.sender === 'user' && !m.read_at).length,
+        last_at: tail.created_at,
+        last_sender: tail.sender,
+        last_body: tail.body.slice(0, 120),
+      };
+    })
+    .sort((a, b) => (a.last_at < b.last_at ? 1 : -1));
 }
 
 /* ── Admin ─────────────────────────────────────────────────────────────── */

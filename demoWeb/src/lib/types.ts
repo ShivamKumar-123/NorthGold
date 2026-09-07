@@ -189,6 +189,24 @@ export type Settings = {
   mlm_max_levels: number;
 };
 
+/**
+ * One message in a support thread.
+ *
+ * There is no conversation record: a thread IS every message carrying the same
+ * `user_id`, which is what makes "one thread per member" true by construction.
+ * `sender` says which side of the desk it came from; `author_name` says who
+ * actually typed it, which differs only on an administrator's reply.
+ */
+export type SupportMessage = {
+  id: string;
+  user_id: string;
+  sender: 'user' | 'admin';
+  author_name: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+};
+
 export type DB = {
   version: number;
   users: User[];
@@ -201,6 +219,7 @@ export type DB = {
   levels: MlmLevel[];
   commissions: Commission[];
   kyc: KycDoc[];
+  messages: SupportMessage[];
   issuers: Issuer[];
   instruments: Instrument[];
   settings: Settings;

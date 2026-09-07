@@ -41,6 +41,10 @@ and every screen agrees with every other screen.
   investments are promised and never touches an existing one.
 - **Cash deposits are verified.** Nothing moves until an administrator approves
   the request against the member's own description of the handover.
+- **Support chat is real.** The floating bubble and the Support page share one
+  thread; the admin panel's Messages screen answers it, filters by member and
+  by date, and can delete a message or a whole conversation. Members can delete
+  their own messages but not the replies they were given.
 - **KYC is part of opening an account.** Signup is two steps, and the second
   one will not submit without all five identity documents. They land in the
   admin KYC desk immediately; the member watches them clear on their own
@@ -84,6 +88,7 @@ Two other shortcuts worth knowing about:
 | --- | --- | --- |
 | Data | PostgreSQL + DRF | `localStorage` |
 | Admin | Separate Next app on `:3001` | `/admin` routes in the same app |
+| Support chat | Polled against the API | reads straight from the store |
 | KYC files | Uploaded and stored under `/media` | the file *name* only |
 | Prices | WebSocket feed | a timer nudging the feed-priced rows ±0.4% |
 | Payouts | Celery beat | caught up on app load |

@@ -18,6 +18,7 @@ import Login from '@/pages/Login';
 import NotFound from '@/pages/NotFound';
 import Profile from '@/pages/Profile';
 import Referrals from '@/pages/Referrals';
+import Support from '@/pages/Support';
 import Register from '@/pages/Register';
 import Wallet from '@/pages/Wallet';
 
@@ -28,6 +29,7 @@ import AdminDeposits from '@/pages/admin/Deposits';
 import AdminKyc from '@/pages/admin/Kyc';
 import AdminLevels from '@/pages/admin/Levels';
 import AdminLogin from '@/pages/admin/Login';
+import AdminMessages from '@/pages/admin/Messages';
 import AdminPlans from '@/pages/admin/Plans';
 import AdminSettings from '@/pages/admin/Settings';
 import AdminUsers from '@/pages/admin/Users';
@@ -61,6 +63,7 @@ export default function App() {
               <Route path="/investments" element={<Investments />} />
               <Route path="/referrals" element={<Referrals />} />
               <Route path="/kyc" element={<Kyc />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
 
@@ -72,6 +75,7 @@ export default function App() {
               <Route path="deposits" element={<AdminDeposits />} />
               <Route path="withdrawals" element={<AdminWithdrawals />} />
               <Route path="kyc" element={<AdminKyc />} />
+              <Route path="messages" element={<AdminMessages />} />
               <Route path="plans" element={<AdminPlans />} />
               <Route path="levels" element={<AdminLevels />} />
               <Route path="users" element={<AdminUsers />} />

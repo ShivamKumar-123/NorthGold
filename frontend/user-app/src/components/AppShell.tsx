@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  ArrowDownToLine, LayoutDashboard, LogOut, Menu, Network,
-  PiggyBank, ShieldCheck, User as UserIcon, Wallet, X,
+  ArrowDownToLine, LayoutDashboard, LogOut, Menu, MessageCircle, Network, PiggyBank,
+  ShieldCheck, User as UserIcon, Wallet, X,
 } from 'lucide-react';
 
 import Logo from '@/components/Logo';
@@ -20,6 +20,7 @@ const NAV = [
   { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/referrals', label: 'My Business', icon: Network },
   { href: '/kyc', label: 'KYC', icon: ShieldCheck },
+  { href: '/support', label: 'Support', icon: MessageCircle },
 ];
 
 /**
