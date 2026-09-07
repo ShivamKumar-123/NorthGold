@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { MessageCircle, Search, Send, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { MessageCircle, Search, Trash2, X } from 'lucide-react';
 
-import ChatMessage from '@/components/ChatMessage';
+import ChatThread from '@/components/ChatThread';
 import { Alert, ConfirmDialog, EmptyState, StatusBadge } from '@/components/ui';
 import { shortDate } from '@/lib/format';
 import { useAuth } from '@/lib/auth';
-import {
-  deleteMessage, deleteThread, markThreadRead, messagesFor, sendMessage, subscribe,
-  supportThreads,
-} from '@/lib/store';
+import { deleteThread, markThreadRead, messagesFor, subscribe, supportThreads } from '@/lib/store';
 
 /**
  * The support desk: every member's thread on the left, the open one on the
@@ -26,11 +23,9 @@ export default function AdminMessages() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [reply, setReply] = useState('');
   const [message, setMessage] = useState('');
   const [clearing, setClearing] = useState(false);
   const [, tick] = useState(0);
-  const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => subscribe(() => tick((n) => n + 1)), []);
 
@@ -49,10 +44,6 @@ export default function AdminMessages() {
     if (openId) markThreadRead(openId, 'admin');
   }, [openId, threads.length]);
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
-  });
-
   const active = openId ? threads.find((t) => t.user_id === openId) ?? null : null;
 
   // The date range is applied here rather than in the store: it is a view of
@@ -67,13 +58,6 @@ export default function AdminMessages() {
     : [];
   const total = openId ? messagesFor(openId).length : 0;
   const filteredByDate = Boolean(from || to);
-
-  function send(e: React.FormEvent) {
-    e.preventDefault();
-    if (!openId || !reply.trim()) return;
-    sendMessage(openId, 'admin', reply, admin ? `${admin.first_name} ${admin.last_name}`.trim() : 'Admin Desk');
-    setReply('');
-  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -199,50 +183,14 @@ export default function AdminMessages() {
                   </span>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-                  {shown.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-text-dim">
-                      {filteredByDate ? 'Nothing in that date range.' : 'No messages.'}
-                    </p>
-                  ) : (
-                    <>
-                      {shown.map((m) => (
-                        <ChatMessage
-                          key={m.id}
-                          message={m}
-                          // The desk's own replies hang right in this window.
-                          mine={m.sender === 'admin'}
-                          canDelete
-                          onDelete={(id) => {
-                            deleteMessage(id);
-                            setMessage('Message deleted.');
-                          }}
-                        />
-                      ))}
-                      <div ref={endRef} />
-                    </>
-                  )}
-                </div>
-
-                <form onSubmit={send} className="flex items-end gap-2 border-t border-border px-4 py-3">
-                  <textarea
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        send(e as unknown as React.FormEvent);
-                      }
-                    }}
-                    rows={1}
-                    placeholder={`Reply to ${active.name}…`}
-                    aria-label="Reply"
-                    className="input max-h-32 min-h-[44px] flex-1 resize-y py-2.5 text-sm"
-                  />
-                  <button type="submit" disabled={!reply.trim()} className="btn-primary h-11 shrink-0 px-4">
-                    <Send size={16} /> Send
-                  </button>
-                </form>
+                <ChatThread
+                  threadUserId={active.user_id}
+                  viewer="admin"
+                  viewerId={admin?.id ?? ''}
+                  authorName={admin ? `${admin.first_name} ${admin.last_name}`.trim() || 'Admin Desk' : 'Admin Desk'}
+                  dateFrom={from}
+                  dateTo={to}
+                />
               </>
             )}
           </section>

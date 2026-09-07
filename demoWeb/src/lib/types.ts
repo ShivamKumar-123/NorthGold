@@ -205,6 +205,18 @@ export type SupportMessage = {
   body: string;
   read_at: string | null;
   created_at: string;
+  /** The message this one quotes, by id. Resolved when the bubble is drawn so
+   *  an edited original shows its current text, as every chat app does. */
+  reply_to: string | null;
+  /** emoji -> the ids that picked it. One list per emoji rather than a row per
+   *  reaction: a thread has two participants and the whole map is read every
+   *  time a bubble is drawn. */
+  reactions: Record<string, string[]>;
+  /** Who starred it. A list rather than a flag: the member and the desk star
+   *  for different reasons and must not clear each other's mark. */
+  starred_by: string[];
+  edited_at: string | null;
+  forwarded: boolean;
 };
 
 export type DB = {

@@ -262,6 +262,11 @@ function seedInto(db: DB): DB {
         // with a badge on it.
         read_at: sender === 'admin' ? new Date(now - hoursAgo * 3600_000).toISOString() : null,
         created_at: new Date(now - hoursAgo * 3600_000).toISOString(),
+        reply_to: null,
+        reactions: {},
+        starred_by: [],
+        edited_at: null,
+        forwarded: false,
       });
     }
   };
@@ -954,15 +959,22 @@ export const messagesFor = (userId: string) =>
     .filter((m) => m.user_id === userId)
     .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
 
+/** Sending, with everything the message menu can attach. */
 export function sendMessage(
   userId: string,
   sender: 'user' | 'admin',
   body: string,
   authorName = '',
+  options: { replyTo?: string | null; forwarded?: boolean } = {},
 ) {
   const text = body.trim();
   if (!text) throw new Error('Write a message first.');
   const db = load();
+  // A quote must belong to the same thread. The strip renders its text
+  // verbatim, so one lifted from another conversation would leak it.
+  const quoted = options.replyTo
+    ? db.messages.find((m) => m.id === options.replyTo && m.user_id === userId)
+    : null;
   db.messages.push({
     id: uid('msg'),
     user_id: userId,
@@ -971,7 +983,59 @@ export function sendMessage(
     body: text,
     read_at: null,
     created_at: new Date().toISOString(),
+    reply_to: quoted?.id ?? null,
+    reactions: {},
+    starred_by: [],
+    edited_at: null,
+    forwarded: Boolean(options.forwarded),
   });
+  save();
+}
+
+/** One reaction per person: a second choice replaces the first, and the same
+ *  one again clears it. Holding two at once has no meaning here. */
+export function toggleReaction(messageId: string, viewerId: string, emoji: string) {
+  const db = load();
+  const message = db.messages.find((m) => m.id === messageId);
+  if (!message) return;
+  const reactions: Record<string, string[]> = { ...(message.reactions ?? {}) };
+  let had: string | null = null;
+  for (const [existing, ids] of Object.entries(reactions)) {
+    if (ids.includes(viewerId)) {
+      had = existing;
+      const left = ids.filter((i) => i !== viewerId);
+      if (left.length) reactions[existing] = left;
+      else delete reactions[existing];
+    }
+  }
+  if (had !== emoji) reactions[emoji] = [...(reactions[emoji] ?? []), viewerId];
+  message.reactions = reactions;
+  save();
+}
+
+export function toggleStar(messageId: string, viewerId: string) {
+  const db = load();
+  const message = db.messages.find((m) => m.id === messageId);
+  if (!message) return;
+  const starred = message.starred_by ?? [];
+  message.starred_by = starred.includes(viewerId)
+    ? starred.filter((i) => i !== viewerId)
+    : [...starred, viewerId];
+  save();
+}
+
+/** Only your own words, and only while the other side has not read them.
+ *  Editing something somebody already acted on rewrites history. */
+export function editMessage(messageId: string, viewerSender: 'user' | 'admin', body: string) {
+  const text = body.trim();
+  if (!text) throw new Error('A message cannot be emptied — delete it instead.');
+  const db = load();
+  const message = db.messages.find((m) => m.id === messageId);
+  if (!message) return;
+  if (message.sender !== viewerSender) throw new Error('You can only edit your own messages.');
+  if (message.read_at) throw new Error('This has already been read — send a correction instead.');
+  message.body = text;
+  message.edited_at = new Date().toISOString();
   save();
 }
 

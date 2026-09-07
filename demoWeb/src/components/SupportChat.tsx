@@ -1,20 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, MessageCircle, Send, X } from 'lucide-react';
+import { ArrowUpRight, MessageCircle, X } from 'lucide-react';
 
-import ChatMessage from '@/components/ChatMessage';
+import ChatThread from '@/components/ChatThread';
 import { useAuth } from '@/lib/auth';
-import {
-  deleteMessage, markThreadRead, messagesFor, sendMessage, subscribe, unreadForMember,
-} from '@/lib/store';
+import { markThreadRead, sendMessage, subscribe, unreadForMember } from '@/lib/store';
 
 /**
  * Floating support launcher — a real thread now, not a handoff.
  *
  * It used to compose a message and open WhatsApp, because there was no inbox
  * behind it. There is one now: what is typed here lands in the desk's queue
- * and the reply comes back into this same panel, so the widget no longer has
- * to send anybody somewhere else.
+ * and the reply comes back into this same panel, with the same message menu
+ * the full page has.
  *
  * Signed out there is nothing to attach a thread to, so the launcher does not
  * render at all rather than collecting words it cannot deliver.
@@ -28,10 +26,8 @@ const QUICK = [
 export default function SupportChat() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState('');
   const [, tick] = useState(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => subscribe(() => tick((n) => n + 1)), []);
 
@@ -58,20 +54,9 @@ export default function SupportChat() {
     if (open && user) markThreadRead(user.id, 'user');
   }, [open, user]);
 
-  useEffect(() => {
-    if (open) endRef.current?.scrollIntoView({ block: 'end' });
-  });
-
   if (!user) return null;
 
-  const messages = messagesFor(user.id);
   const unread = unreadForMember(user.id);
-
-  function send(body: string) {
-    if (!body.trim()) return;
-    sendMessage(user!.id, 'user', body);
-    setText('');
-  }
 
   return (
     <div
@@ -79,8 +64,8 @@ export default function SupportChat() {
       className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden"
     >
       {open && (
-        <div className="panel flex w-[min(92vw,360px)] animate-fade-up flex-col overflow-hidden rounded-2xl">
-          <div className="flex items-center gap-3 border-b border-white/[0.07] bg-accent/10 px-4 py-3">
+        <div className="panel flex h-[min(70vh,540px)] w-[min(92vw,370px)] animate-fade-up flex-col overflow-hidden rounded-2xl">
+          <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.07] bg-accent/10 px-4 py-3">
             <span className="relative grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-accent">
               <MessageCircle size={17} />
               <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-bg-card bg-success" />
@@ -106,8 +91,12 @@ export default function SupportChat() {
             </button>
           </div>
 
-          <div className="max-h-[46vh] min-h-[140px] space-y-3 overflow-y-auto px-4 py-4">
-            {messages.length === 0 ? (
+          <ChatThread
+            threadUserId={user.id}
+            viewer="user"
+            viewerId={user.id}
+            compact
+            emptyHint={
               <div className="space-y-2">
                 <p className="text-xs leading-relaxed text-text-muted">
                   Ask anything — the desk answers here, and you will see the
@@ -116,7 +105,7 @@ export default function SupportChat() {
                 {QUICK.map((q) => (
                   <button
                     key={q}
-                    onClick={() => send(q)}
+                    onClick={() => sendMessage(user.id, 'user', q)}
                     className="block w-full rounded-xl border border-border bg-white/[0.03] px-3 py-2.5 text-left
                                text-[13px] leading-snug text-text-muted transition
                                hover:border-accent/40 hover:text-text"
@@ -125,46 +114,8 @@ export default function SupportChat() {
                   </button>
                 ))}
               </div>
-            ) : (
-              <>
-                {messages.map((m) => (
-                  <ChatMessage
-                    key={m.id}
-                    message={m}
-                    mine={m.sender === 'user'}
-                    canDelete={m.sender === 'user'}
-                    onDelete={deleteMessage}
-                  />
-                ))}
-                <div ref={endRef} />
-              </>
-            )}
-          </div>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(text);
-            }}
-            className="flex items-center gap-2 border-t border-white/[0.07] px-3 py-3"
-          >
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Type your message…"
-              aria-label="Message to support"
-              className="input flex-1 px-3 py-2 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={!text.trim()}
-              aria-label="Send"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-[#1b1403]
-                         transition hover:brightness-110 disabled:opacity-40"
-            >
-              <Send size={16} />
-            </button>
-          </form>
+            }
+          />
         </div>
       )}
 
@@ -177,9 +128,11 @@ export default function SupportChat() {
                    hover:scale-105 active:scale-95"
       >
         {!open && unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 z-10 grid h-5 min-w-[20px] place-items-center
-                           rounded-full border-2 border-bg px-1 text-[10px] font-bold text-white"
-                style={{ background: '#e11d48' }}>
+          <span
+            className="absolute -right-0.5 -top-0.5 z-10 grid h-5 min-w-[20px] place-items-center
+                       rounded-full border-2 border-bg px-1 text-[10px] font-bold text-white"
+            style={{ background: '#e11d48' }}
+          >
             {unread}
           </span>
         )}

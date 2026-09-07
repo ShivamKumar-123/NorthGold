@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, MessageCircle, Search, Send, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { MessageCircle, Search, Trash2, X } from 'lucide-react';
 
+import ChatThread from '@/components/ChatThread';
 import { Alert, EmptyState, Modal, PageLoader, StatusBadge } from '@/components/ui';
-import { ApiError, api, dateTime, shortDate } from '@/lib/api';
+import { ApiError, api, shortDate } from '@/lib/api';
 import { useRequireAdmin } from '@/lib/auth';
 
 type Thread = {
@@ -17,15 +18,6 @@ type Thread = {
   last_at: string;
   last_sender: string;
   last_body: string;
-};
-
-type Message = {
-  id: string;
-  sender: 'user' | 'admin';
-  author_name: string;
-  body: string;
-  read_at: string | null;
-  created_at: string;
 };
 
 const POLL = 12000;
@@ -46,15 +38,12 @@ export default function MessagesPage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [reply, setReply] = useState('');
   const [clearing, setClearing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const endRef = useRef<HTMLDivElement | null>(null);
 
   const loadThreads = useCallback(async () => {
     try {
@@ -67,36 +56,12 @@ export default function MessagesPage() {
     }
   }, []);
 
-  const loadThread = useCallback(async () => {
-    if (!openId) return;
-    const params = new URLSearchParams();
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    const query = params.toString();
-    try {
-      const res = await api.get<{ items: Message[] }>(
-        `/support/admin/threads/${openId}/${query ? `?${query}` : ''}`,
-      );
-      setMessages(res.items);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not load that conversation.');
-    }
-  }, [openId, from, to]);
-
   useEffect(() => {
     if (!admin) return;
     void loadThreads();
     const timer = window.setInterval(loadThreads, POLL);
     return () => window.clearInterval(timer);
   }, [admin, loadThreads]);
-
-  useEffect(() => {
-    void loadThread();
-  }, [loadThread]);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages.length]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -112,34 +77,11 @@ export default function MessagesPage() {
   const active = threads.find((t) => t.user_id === openId) ?? null;
   const filteredByDate = Boolean(from || to);
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
-    if (!openId || !reply.trim()) return;
-    try {
-      await api.post(`/support/admin/threads/${openId}/`, { body: reply });
-      setReply('');
-      await Promise.all([loadThread(), loadThreads()]);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not send that reply.');
-    }
-  }
-
-  async function removeMessage(id: string) {
-    try {
-      await api.del(`/support/admin/messages/${id}/`);
-      setNotice('Message deleted.');
-      await Promise.all([loadThread(), loadThreads()]);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not delete that message.');
-    }
-  }
-
   async function removeThread() {
     if (!openId) return;
     try {
       await api.del(`/support/admin/threads/${openId}/`);
       setOpenId(null);
-      setMessages([]);
       setNotice('Conversation deleted.');
       await loadThreads();
     } catch (err) {
@@ -262,48 +204,18 @@ export default function MessagesPage() {
                     </button>
                   )}
                   <span className="ml-auto text-xs text-text-dim">
-                    {messages.length} of {active.messages} message{active.messages === 1 ? '' : 's'}
+                    {active.messages} message{active.messages === 1 ? '' : 's'}
                   </span>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-                  {messages.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-text-dim">
-                      {filteredByDate ? 'Nothing in that date range.' : 'No messages.'}
-                    </p>
-                  ) : (
-                    <>
-                      {messages.map((m) => (
-                        <Bubble
-                          key={m.id}
-                          message={m}
-                          onDelete={() => void removeMessage(m.id)}
-                        />
-                      ))}
-                      <div ref={endRef} />
-                    </>
-                  )}
-                </div>
-
-                <form onSubmit={send} className="flex items-end gap-2 border-t border-border px-4 py-3">
-                  <textarea
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void send(e as unknown as React.FormEvent);
-                      }
-                    }}
-                    rows={1}
-                    placeholder={`Reply to ${active.name}…`}
-                    aria-label="Reply"
-                    className="input max-h-32 min-h-[44px] flex-1 resize-y py-2.5 text-sm"
-                  />
-                  <button type="submit" disabled={!reply.trim()} className="btn-primary h-11 shrink-0 px-4">
-                    <Send size={16} /> Send
-                  </button>
-                </form>
+                <ChatThread
+                  viewer="admin"
+                  threadUserId={active.user_id}
+                  dateFrom={from}
+                  dateTo={to}
+                  pollMs={12000}
+                  onChanged={() => void loadThreads()}
+                />
               </>
             )}
           </section>
@@ -335,68 +247,6 @@ export default function MessagesPage() {
             : ''}
         </p>
       </Modal>
-    </div>
-  );
-}
-
-/**
- * One bubble. The desk's own replies hang right in this window — `mine` is
- * about which side of the screen it sits on, not who wrote it.
- */
-function Bubble({ message, onDelete }: { message: Message; onDelete: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const mine = message.sender === 'admin';
-
-  useEffect(() => {
-    if (!copied) return;
-    const timer = window.setTimeout(() => setCopied(false), 1400);
-    return () => window.clearTimeout(timer);
-  }, [copied]);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(message.body);
-      setCopied(true);
-    } catch {
-      /* clipboard is refused on insecure origins; the text stays selectable */
-    }
-  }
-
-  return (
-    <div className={`group flex flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
-      <div
-        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-e1 ${
-          mine
-            ? 'rounded-br-md border border-accent/25 bg-accent/12 text-text'
-            : 'rounded-bl-md border border-border bg-bg-card text-text'
-        }`}
-      >
-        <p className="whitespace-pre-wrap break-words">{message.body}</p>
-      </div>
-
-      <div className={`flex items-center gap-2 text-[10px] text-text-dim ${mine ? 'flex-row-reverse' : ''}`}>
-        <span>{dateTime(message.created_at)}</span>
-        {mine && message.author_name && <span className="text-accent">{message.author_name}</span>}
-        <span className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150
-                         focus-within:opacity-100 group-hover:opacity-100">
-          <button
-            onClick={() => void copy()}
-            title="Copy this message"
-            aria-label="Copy this message"
-            className="rounded p-1 transition hover:bg-white/10 hover:text-text"
-          >
-            {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
-          </button>
-          <button
-            onClick={onDelete}
-            title="Delete this message"
-            aria-label="Delete this message"
-            className="rounded p-1 transition hover:bg-danger/15 hover:text-danger"
-          >
-            <Trash2 size={12} />
-          </button>
-        </span>
-      </div>
     </div>
   );
 }

@@ -37,6 +37,23 @@ class SupportMessage(TimeStampedUUIDModel):
     # so this only ever tracks the opposite party.
     read_at = models.DateTimeField(null=True, blank=True)
 
+    # --- What the message menu writes ------------------------------------
+    reply_to = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="replies",
+        help_text="The message this one quotes.",
+    )
+    # {"👍": ["<user id>", …]} — one list per emoji rather than a row per
+    # reaction, because a thread has two participants and the whole map is
+    # read every time a bubble is drawn.
+    reactions = models.JSONField(default=dict, blank=True)
+    # User ids that starred it. A list rather than a flag: the member and the
+    # desk star for different reasons and must not clear each other's mark.
+    starred_by = models.JSONField(default=list, blank=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
+    forwarded = models.BooleanField(
+        default=False, help_text="Carried over from another conversation.",
+    )
+
     class Meta:
         db_table = "support_messages"
         ordering = ["created_at"]

@@ -113,10 +113,17 @@ id, so the two views cannot disagree. Administrators answer from **Admin →
 Messages**, which lists one row per member who has written in, filters by name
 or email, and filters an open conversation by date range.
 
+Clicking a message opens its menu: reply with a quote, react, forward, copy,
+star, edit and delete. Replies carry a tappable quote of what they answer, and
+a quote lifted from another thread is dropped rather than rendered — the strip
+shows its text verbatim. Reactions are one per person, so a second choice
+replaces the first. Stars are per side, so the desk and the member can each
+mark what matters to them without clearing the other's. Editing is limited to
+your own words and only until the other side has read them.
+
 Deleting is asymmetric on purpose. A member may remove their own messages but
 never the reply they were given; an administrator may remove any message, or
-clear a whole conversation, and both are written to the audit log. Every
-message can be copied on its own.
+clear a whole conversation, and both are written to the audit log.
 
 ## How money moves
 
@@ -201,7 +208,7 @@ support degrades rather than showing a frozen board.
 cd backend && python manage.py test
 ```
 
-55 tests. The money path (`apps.investments`) covers slab selection,
+68 tests. The money path (`apps.investments`) covers slab selection,
 deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
 indirect commission, qualification gating, idempotency of both the sweep and the
 commission engine, withdrawal holds and refunds, tree assembly, and ledger
@@ -210,7 +217,9 @@ any document creates no account at all, and that a member turns `approved` only
 once every one of their documents has been. `apps.instruments` covers the price
 feed and the WebSocket fan-out. `apps.support` covers the chat's asymmetric
 delete rules — a member may remove their own words but not the answer they were
-given, and one member's thread never leaks into another's.
+given — that one member's thread never leaks into another's, and the message
+menu: quote scoping, one reaction per person, per-side stars and the edit
+window.
 
 ## Before going live
 
