@@ -2,6 +2,12 @@
  *  minus anything that only exists to satisfy a database. */
 
 export type KycStatus = 'unverified' | 'pending' | 'approved' | 'rejected';
+
+/** `archived` is closed, not erased: sign-in is refused and the account drops
+ *  out of the member list, but its deposits, payouts and the commission it
+ *  generated for its upline stay in the books. Deleting the row outright would
+ *  take somebody else's earnings with it. */
+export type UserStatus = 'active' | 'blocked' | 'archived';
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 export type TxKind =
   | 'deposit'
@@ -11,7 +17,9 @@ export type TxKind =
   | 'commission'
   | 'principal_return'
   | 'withdrawal_hold'
-  | 'withdrawal_refund';
+  | 'withdrawal_refund'
+  /** A manual correction by the desk. Signed, and always carrying a reason. */
+  | 'adjustment';
 
 export type User = {
   id: string;
@@ -27,6 +35,7 @@ export type User = {
   city: string;
   address: string;
   is_staff: boolean;
+  status: UserStatus;
   kyc_status: KycStatus;
   referral_code: string;
   /** The user who introduced them. `null` for a root account. */

@@ -19,9 +19,9 @@ from .serializers import (
     TransactionSerializer, WithdrawalSerializer,
 )
 from .services import (
-    WalletError, admin_adjust_balance, approve_deposit, approve_withdrawal,
-    create_deposit_request, create_withdrawal_request, reject_deposit,
-    reject_withdrawal,
+    WalletError, admin_adjust_balance, admin_set_balance, approve_deposit,
+    approve_withdrawal, create_deposit_request, create_withdrawal_request,
+    reject_deposit, reject_withdrawal,
 )
 
 
@@ -278,23 +278,44 @@ class AdminAdjustBalanceView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request, user_id):
+        """`amount` moves the balance; `set_to` names where it should land.
+
+        Both write one ledger row. The second exists because "make it 500" is a
+        different intent from "add 300", and turning the first into the second
+        in the browser races anything that credits the wallet in between.
+        """
         user = User.objects.filter(id=user_id).first()
         if user is None:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            amount = Decimal(str(request.data.get("amount")))
-        except (TypeError, InvalidOperation):
-            return Response({"detail": "A numeric amount is required."},
+
+        raw_target = request.data.get("set_to")
+        raw_amount = request.data.get("amount")
+        if raw_target is None and raw_amount is None:
+            return Response({"detail": "Give either an amount to move or a balance to set."},
                             status=status.HTTP_400_BAD_REQUEST)
+
         description = (request.data.get("description") or "").strip()
         if not description:
             return Response({"detail": "A description is required for manual adjustments."},
                             status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            tx = admin_adjust_balance(
-                user=user, amount=amount, admin=request.user,
-                description=description, ip_address=client_ip(request),
-            )
+            value = Decimal(str(raw_target if raw_target is not None else raw_amount))
+        except (TypeError, InvalidOperation):
+            return Response({"detail": "A numeric amount is required."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            if raw_target is not None:
+                tx = admin_set_balance(
+                    user=user, target=value, admin=request.user,
+                    description=description, ip_address=client_ip(request),
+                )
+            else:
+                tx = admin_adjust_balance(
+                    user=user, amount=value, admin=request.user,
+                    description=description, ip_address=client_ip(request),
+                )
         except WalletError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(TransactionSerializer(tx).data, status=status.HTTP_201_CREATED)

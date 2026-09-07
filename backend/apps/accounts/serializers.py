@@ -156,6 +156,21 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 
+class AdminSetPasswordSerializer(serializers.Serializer):
+    """No current password: the whole point is that somebody lost access to it.
+
+    Django's validators still run, and against the target's own details, so an
+    administrator cannot quietly set a member's password to their email
+    address.
+    """
+
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_new_password(self, value):
+        validate_password(value, self.context["target"])
+        return value
+
+
 class KYCDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = KYCDocument

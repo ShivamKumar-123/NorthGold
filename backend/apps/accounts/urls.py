@@ -2,8 +2,8 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .views import (
-    AdminKYCReviewView, AdminLoginView, AdminUserDetailView, AdminUserListView,
-    AdminUserTreeView, ChangePasswordView, DownlineUserDetailView, KYCView,
+    AdminKYCReviewView, AdminLoginView, AdminSetPasswordView, AdminUserDetailView,
+    AdminUserListView, AdminUserTreeView, ChangePasswordView, DownlineUserDetailView, KYCView,
     LoginView, LogoutView, MeView, MyNetworkSummaryView, MyReferralsView,
     MyTreeView, RegisterView,
 )
@@ -28,6 +28,7 @@ urlpatterns = [
     path("admin/users/", AdminUserListView.as_view(), name="admin-users"),
     path("admin/users/<uuid:user_id>/", AdminUserDetailView.as_view(), name="admin-user-detail"),
     path("admin/users/<uuid:user_id>/tree/", AdminUserTreeView.as_view(), name="admin-user-tree"),
+    path("admin/users/<uuid:user_id>/password/", AdminSetPasswordView.as_view(), name="admin-set-password"),
     path("admin/kyc/", AdminKYCReviewView.as_view(), name="admin-kyc"),
     path("admin/kyc/<uuid:doc_id>/", AdminKYCReviewView.as_view(), name="admin-kyc-review"),
 ]

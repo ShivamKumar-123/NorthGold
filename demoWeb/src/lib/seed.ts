@@ -156,8 +156,9 @@ export const EMPTY_DB: Omit<
   // 3: the office address moved to Sydney. Settings live inside the stored
   //    database, so a reseed is what actually delivers the new one.
   // 4: support threads, so the admin inbox opens with something in it.
+  // 5: accounts carry a status, so the desk can block or close one.
   // A database stored under an older version is reseeded, not migrated.
-  version: 4,
+  version: 5,
   plans: ROI_PLANS,
   levels: MLM_LEVELS,
   issuers: ISSUERS,

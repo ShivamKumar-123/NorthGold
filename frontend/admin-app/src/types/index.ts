@@ -19,7 +19,10 @@ export interface User {
   address: string;
   avatar: string | null;
   role: 'user' | 'admin' | 'superadmin';
-  status: 'active' | 'suspended' | 'blocked';
+  /** 'archived' is closed, not erased: sign-in is refused and the account
+   *  drops out of the member list, but its deposits, payouts and the
+   *  commission it generated for its upline stay in the books. */
+  status: 'active' | 'suspended' | 'blocked' | 'archived';
   kyc_status: 'pending' | 'submitted' | 'approved' | 'rejected';
   email_verified: boolean;
   referral_code: string;

@@ -3,7 +3,7 @@ import {
 } from './seed';
 import type {
   Commission, DB, Deposit, Investment, KycDoc, RoiPayout, RoiPlan, SupportMessage, Transaction,
-  TreeNode, User, Withdrawal,
+  TreeNode, User, UserStatus, Withdrawal,
 } from './types';
 
 /**
@@ -145,6 +145,7 @@ function seedInto(db: DB): DB {
     city: '',
     address: '',
     is_staff: true,
+    status: 'active',
     kyc_status: 'approved',
     referral_code: referralCode(),
     sponsor_id: null,
@@ -169,6 +170,7 @@ function seedInto(db: DB): DB {
       city: 'Mumbai',
       address: '',
       is_staff: false,
+      status: 'active',
       kyc_status: i < 4 ? 'approved' : 'pending',
       referral_code: referralCode(),
       sponsor_id: sponsor?.id ?? null,
@@ -353,6 +355,8 @@ export function findByEmail(email: string) {
 export function login(email: string, password: string): User {
   const user = findByEmail(email);
   if (!user || user.password !== password) throw new Error('Those credentials do not match an account.');
+  if (user.status === 'blocked') throw new Error('This account has been blocked. Contact support.');
+  if (user.status === 'archived') throw new Error('This account has been closed.');
   return user;
 }
 
@@ -405,6 +409,7 @@ export function register(input: {
     city: '',
     address: '',
     is_staff: false,
+    status: 'active',
     // Straight to `pending`: the documents go in with the account below, so
     // the review queue has something in it from the very first moment.
     kyc_status: 'pending',
@@ -948,6 +953,109 @@ export function changePassword(userId: string, current: string, next: string) {
   if (next.length < 8) throw new Error('Your new password must be at least 8 characters.');
   user.password = next;
   save();
+}
+
+/* ── Admin actions on a member ─────────────────────────────────────────────
+   Every money action writes one ledger row, exactly as the member's own
+   deposits and payouts do — an adjustment nobody can trace is worse than no
+   adjustment at all. */
+
+function adjustIn(db: DB, userId: string, delta: number, note: string) {
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) throw new Error('No such account.');
+  const amount = floor2(delta);
+  if (amount === 0) throw new Error('Enter an amount.');
+  const next = round2(user.wallet_balance + amount);
+  if (next < 0) throw new Error('That would leave a negative balance.');
+  user.wallet_balance = next;
+  db.transactions.push({
+    id: uid('tx'),
+    user_id: user.id,
+    kind: 'adjustment',
+    amount,
+    balance_after: next,
+    note: note || 'Administrator adjustment',
+    created_at: new Date().toISOString(),
+  });
+}
+
+/** Move a wallet by an amount. Negative takes money out. */
+export function adminAdjustBalance(userId: string, amount: number, note: string) {
+  const db = load();
+  adjustIn(db, userId, amount, note);
+  save();
+}
+
+/** Set a wallet to an exact figure.
+ *
+ *  The difference is worked out here rather than in the screen that called it:
+ *  "make it 800" is a different instruction from "add 300", and turning the
+ *  first into the second against a figure read a moment ago would overwrite
+ *  anything credited in between. */
+export function adminSetBalance(userId: string, target: number, note: string) {
+  const db = load();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) throw new Error('No such account.');
+  if (target < 0) throw new Error('A balance cannot be set below zero.');
+  const delta = round2(floor2(target) - user.wallet_balance);
+  if (delta === 0) throw new Error('That is already the balance.');
+  adjustIn(db, userId, delta, note || `Balance set to ${floor2(target)}`);
+  save();
+}
+
+export function adminSetPassword(userId: string, next: string) {
+  if (next.trim().length < 8) throw new Error('Use at least 8 characters.');
+  const db = load();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) throw new Error('No such account.');
+  user.password = next.trim();
+  save();
+}
+
+export function setUserStatus(userId: string, status: UserStatus) {
+  const db = load();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) throw new Error('No such account.');
+  if (user.is_staff) throw new Error('An administrator account cannot be blocked or closed here.');
+  user.status = status;
+  save();
+}
+
+/** Everything the desk needs about one member, in the shape the detail panel
+ *  draws. Assembled here so the screen does not have to know which table each
+ *  figure lives in. */
+export function memberDetail(userId: string) {
+  const db = load();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) return null;
+
+  const deposits = db.deposits.filter((d) => d.user_id === userId);
+  const withdrawals = db.withdrawals.filter((w) => w.user_id === userId);
+  const investments = db.investments.filter((i) => i.user_id === userId);
+  const payouts = db.payouts.filter((p) => p.user_id === userId);
+  const commissions = db.commissions.filter((c) => c.earner_id === userId && !c.skipped_reason);
+  const network = downlineSummary(userId);
+
+  return {
+    user,
+    sponsor: db.users.find((u) => u.id === user.sponsor_id) ?? null,
+    deposited: round2(deposits.filter((d) => d.status === 'approved')
+      .reduce((n, d) => n + d.amount, 0)),
+    pending_deposits: deposits.filter((d) => d.status === 'pending').length,
+    withdrawn: round2(withdrawals.filter((w) => w.status === 'approved')
+      .reduce((n, w) => n + w.amount, 0)),
+    pending_withdrawals: withdrawals.filter((w) => w.status === 'pending').length,
+    active_investments: investments.filter((i) => i.status === 'active').length,
+    roi_earned: round2(payouts.reduce((n, p) => n + p.amount, 0)),
+    commission_earned: round2(commissions.reduce((n, c) => n + c.amount, 0)),
+    kyc: db.kyc.filter((d) => d.user_id === userId),
+    messages: db.messages.filter((m) => m.user_id === userId).length,
+    network,
+    recent: db.transactions
+      .filter((t) => t.user_id === userId)
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 8),
+  };
 }
 
 /* ── Support chat ──────────────────────────────────────────────────────────

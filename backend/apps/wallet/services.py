@@ -271,6 +271,43 @@ def reject_withdrawal(withdrawal, admin, *, reason="", ip_address=None):
 
 
 @transaction.atomic
+def admin_set_balance(*, user, target, admin, description, ip_address=None):
+    """Set a wallet to an exact figure.
+
+    The difference is worked out under the row lock, not in the browser: an
+    admin reading 500 on a stale screen and posting "add 300" would overwrite a
+    payout that landed in between. Asking for the *destination* and computing
+    the delta here means the ledger records the correction that actually
+    happened, whatever the balance was a moment ago.
+    """
+    target = quantize(target)
+    if target < 0:
+        raise WalletError("A balance cannot be set below zero.")
+
+    locked = User.objects.select_for_update().get(pk=user.pk)
+    delta = quantize(target - (locked.wallet_balance or Decimal("0")))
+    if delta == 0:
+        raise WalletError("That is already the balance.")
+
+    locked.wallet_balance = target
+    locked.save(update_fields=["wallet_balance", "updated_at"])
+
+    tx = Transaction.objects.create(
+        user=locked, tx_type="adjustment", amount=delta, balance_after=target,
+        description=description or f"Balance set to {target} by an administrator",
+        reference_type="adjustment", created_by=admin,
+    )
+    notify(locked, title="Balance adjusted",
+           message=f"An administrator set your balance to {target}. {description}",
+           notif_type="adjustment", action_url="/wallet")
+    write_audit(admin, "set_balance", entity_type="user", entity_id=locked.id,
+                new_values={"target": str(target), "delta": str(delta),
+                            "description": description},
+                ip_address=ip_address)
+    return tx
+
+
+@transaction.atomic
 def admin_adjust_balance(*, user, amount, admin, description, ip_address=None):
     """Manual credit or debit. Signed: negative debits."""
     amount = quantize(amount)

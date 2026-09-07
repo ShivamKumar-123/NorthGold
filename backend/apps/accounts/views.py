@@ -11,7 +11,7 @@ from apps.core.services import client_ip, notify, write_audit
 
 from .models import KYCDocument, Referral, User
 from .serializers import (
-    KYC_SIGNUP_DOCS, AdminLoginSerializer, AdminUserSerializer,
+    KYC_SIGNUP_DOCS, AdminLoginSerializer, AdminSetPasswordSerializer, AdminUserSerializer,
     ChangePasswordSerializer, KYCDocumentSerializer, LoginSerializer,
     ProfileUpdateSerializer, ReferralSerializer, RegisterSerializer,
     TokenPairSerializer, UserSerializer,
@@ -241,6 +241,10 @@ class AdminUserListView(ListAPIView):
 
     def get_queryset(self):
         qs = User.objects.select_related("sponsor").all()
+        # Archived accounts are closed; they stay out of the working list
+        # unless somebody asks for them by status.
+        if not self.request.query_params.get("status"):
+            qs = qs.exclude(status="archived")
         q = self.request.query_params.get("q")
         if q:
             qs = qs.filter(
@@ -279,6 +283,42 @@ class AdminUserDetailView(APIView):
                     new_values={k: getattr(user, k) for k in before},
                     ip_address=client_ip(request))
         return Response(AdminUserSerializer(user).data)
+
+
+class AdminSetPasswordView(APIView):
+    """Set a member's password for them.
+
+    The old one is never shown or needed — the point of the screen is that
+    somebody has lost access. An administrator may not reset another
+    administrator's password unless they are a super-admin: a compromised admin
+    account should not be able to take over the rest of the desk.
+    """
+
+    permission_classes = [IsAdmin]
+
+    def post(self, request, user_id):
+        user = User.objects.filter(id=user_id).first()
+        if user is None:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        if user.is_admin and request.user.role != "superadmin":
+            return Response(
+                {"detail": "Only a super-admin can reset another administrator's password."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = AdminSetPasswordSerializer(data=request.data, context={"target": user})
+        serializer.is_valid(raise_exception=True)
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password", "updated_at"])
+
+        notify(user, title="Your password was changed",
+               message="An administrator set a new password on your account. "
+                       "If you did not ask for this, contact support immediately.",
+               notif_type="security", action_url="/profile")
+        # The password itself is never written to the log — only that it moved.
+        write_audit(request.user, "set_password", entity_type="user", entity_id=user.id,
+                    ip_address=client_ip(request))
+        return Response({"detail": "Password updated."})
 
 
 class AdminUserTreeView(APIView):

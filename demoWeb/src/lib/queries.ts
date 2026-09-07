@@ -95,6 +95,7 @@ const TX_LABELS: Record<string, string> = {
   roi_payout: 'ROI payout',
   commission: 'Referral commission',
   principal_return: 'Principal returned',
+  adjustment: 'Administrator adjustment',
 };
 
 export function walletSummary(userId: string): WalletSummaryView {

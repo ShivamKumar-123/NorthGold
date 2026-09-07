@@ -105,6 +105,28 @@ them `rejected` and the reason is shown back to them. Their own dashboard
 carries the same panel, document by document, so they can see exactly what the
 desk is holding.
 
+## What the desk can do to an account
+
+Each row in **Admin → Users** carries a menu: add funds, take funds out, set the
+balance to a figure, change the password, block, and close.
+
+Every money action writes one `Transaction` with a required reason, so it lands
+on the member's own statement rather than appearing from nowhere. **Set balance**
+posts the destination, not a difference worked out in the browser — the API
+computes the delta under a row lock, so a payout arriving between reading the
+screen and pressing the button is not overwritten.
+
+**Closing an account archives it.** Sign-in is refused and it drops out of the
+member list, but its deposits, payouts and the commission it generated for its
+upline stay in the books; deleting the row would take somebody else's earnings
+with it and leave the ledger unable to explain itself. It is reversible, and
+`?status=archived` finds it again.
+
+Passwords are set without asking for the old one — the point is that somebody
+lost access — but Django's validators still run against the target's own
+details, and an administrator cannot reset another administrator's password
+unless they are a super-admin.
+
 ## Talking to the desk
 
 Members write from a floating chat widget or the **Support** page — the same
@@ -208,7 +230,7 @@ support degrades rather than showing a frozen board.
 cd backend && python manage.py test
 ```
 
-69 tests. The money path (`apps.investments`) covers slab selection,
+83 tests. The money path (`apps.investments`) covers slab selection,
 deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
 indirect commission, qualification gating, idempotency of both the sweep and the
 commission engine, withdrawal holds and refunds, tree assembly, and ledger

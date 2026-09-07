@@ -28,6 +28,11 @@ STATUS_CHOICES = [
     ("active", "Active"),
     ("suspended", "Suspended"),
     ("blocked", "Blocked"),
+    # Closed, not erased. Sign-in is refused and the account drops out of the
+    # member list, but every deposit, payout and commission it generated stays
+    # in the books — deleting the row would take the upline's earnings with it
+    # and leave the ledger unable to explain itself.
+    ("archived", "Archived"),
 ]
 
 KYC_CHOICES = [
