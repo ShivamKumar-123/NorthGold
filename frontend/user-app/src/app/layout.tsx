@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#080808',
+  themeColor: '#f7f5f0',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // `suppressHydrationWarning` because the script below mutates the class on
     // <html> before React hydrates; without it React reports a mismatch on
     // every load for a difference that is intentional.
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="light" suppressHydrationWarning>
       <head>
         {/* Runs synchronously, before first paint. Anything later — including
             a useEffect — lands after the browser has already painted, which is

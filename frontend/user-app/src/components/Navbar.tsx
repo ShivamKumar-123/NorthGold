@@ -3,25 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowRight, LayoutDashboard, Menu, X } from 'lucide-react';
+import { ArrowRight, LayoutDashboard } from 'lucide-react';
 
 import Logo from '@/components/Logo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/lib/auth';
 
-const LINKS = [
-  { href: '/calculator#plans', label: 'Plans' },
-  { href: '/calculator', label: 'Calculator' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-];
-
 /**
  * The public, marketing header.
  *
- * Signed-in navigation lives in the sidebar (AppShell); this header only ever
- * appears on the landing page and on publicly browsable routes for signed-out
- * visitors — so it carries marketing links, not app links.
+ * It carries the brand, the theme toggle and the way in — nothing else. The
+ * marketing links it used to hold live in the footer now, which is also why
+ * there is no mobile sheet any more: with no navigation left to reveal, a
+ * hamburger would open onto a single "Sign in" that already fits in the bar.
  *
  * Over the hero it is a floating capsule with nothing behind it; once the page
  * scrolls it widens to the full bar and gains a frosted plate. Two states, one
@@ -30,7 +24,6 @@ const LINKS = [
 export default function Navbar() {
   const { user } = useAuth();
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const onLanding = pathname === '/';
@@ -42,11 +35,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  const solid = scrolled || !onLanding || mobileOpen;
+  const solid = scrolled || !onLanding;
 
   return (
     <header className="sticky top-0 z-50">
@@ -81,26 +70,7 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Capsule nav. The pill is one rounded container so the links read as
-              a single control rather than four loose words. */}
-          <nav className="mx-auto hidden items-center gap-0.5 rounded-full border border-border bg-bg-card/50 p-1 backdrop-blur lg:flex">
-            {LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="relative rounded-full px-4 py-2 text-sm text-text-muted transition-colors duration-200
-                           hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                <span
-                  className="absolute inset-0 rounded-full bg-accent/10 opacity-0 transition-opacity duration-200 hover:opacity-100"
-                  aria-hidden
-                />
-                <span className="relative">{label}</span>
-              </Link>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
 
             {user ? (
@@ -126,44 +96,9 @@ export default function Navbar() {
                 </Link>
               </>
             )}
-
-            <button
-              className="rounded-xl border border-border p-2.5 text-text-muted transition hover:text-text lg:hidden"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Toggle navigation"
-              aria-expanded={mobileOpen}
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
           </div>
         </div>
       </div>
-
-      {mobileOpen && (
-        <nav className="animate-fade-up border-b border-border bg-bg-card/95 px-4 py-3 backdrop-blur-xl lg:hidden">
-          {LINKS.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-between rounded-xl px-3 py-3 text-sm text-text-muted
-                         transition hover:bg-accent/10 hover:text-text"
-            >
-              {label}
-              <ArrowRight size={14} className="text-text-faint" />
-            </Link>
-          ))}
-          {!user && (
-            <Link
-              href="/login"
-              onClick={() => setMobileOpen(false)}
-              className="mt-2 block border-t border-border px-3 pt-4 text-sm font-medium text-accent"
-            >
-              Sign in
-            </Link>
-          )}
-        </nav>
-      )}
     </header>
   );
 }

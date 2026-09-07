@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 
 import Footer from '@/components/Footer';
-import HowItWorksModal from '@/components/HowItWorksModal';
 import Navbar from '@/components/Navbar';
 
 /** Header + footer, signed in or not. The landing, About and Contact are not
@@ -15,9 +14,6 @@ export default function MarketingLayout() {
         <Outlet />
       </main>
       <Footer />
-      {/* Only on the marketing pages. It explains the offer, so opening it
-          over a sign-in form or the dashboard is an interruption, not help. */}
-      <HowItWorksModal />
     </div>
   );
 }

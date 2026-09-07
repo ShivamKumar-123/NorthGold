@@ -19,7 +19,7 @@ function apply(theme: Theme) {
  *  there before first paint. This only reads it back and owns changes. */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() =>
-    typeof document !== 'undefined' && document.documentElement.classList.contains('light') ? 'light' : 'dark',
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light',
   );
 
   useEffect(() => {

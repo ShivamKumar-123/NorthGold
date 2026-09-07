@@ -7,29 +7,16 @@ import Logo from '@/components/Logo';
 
 const COLUMNS = [
   {
-    title: 'Platform',
-    links: [
-      { href: '/about', label: 'How it works' },
-      { href: '/calculator#plans', label: 'Return plans' },
-      { href: '/calculator', label: 'Returns calculator' },
-    ],
-  },
-  {
-    title: 'Account',
-    links: [
-      { href: '/register', label: 'Open an account' },
-      { href: '/login', label: 'Sign in' },
-      { href: '/wallet', label: 'Deposit & withdraw' },
-      { href: '/profile', label: 'Profile & KYC' },
-    ],
-  },
-  {
     title: 'Company',
     links: [
       { href: '/about', label: 'About us' },
       { href: '/contact', label: 'Contact us' },
       { href: '/about', label: 'Security' },
       { href: '/contact', label: 'Help center' },
+      // Lands on sign-in rather than the register form: someone who already
+      // has an account is one tap from it, and the sign-in screen carries its
+      // own link across to signing up.
+      { href: '/login', label: 'Open an account' },
     ],
   },
 ];
@@ -78,15 +65,12 @@ export default function Footer() {
               <Link to="/register" className="btn-primary px-6 py-3.5">
                 Open an account <ArrowRight size={16} />
               </Link>
-              <Link to="/calculator#plans" className="btn-ghost px-6 py-3.5">
-                Explore plans <ArrowRight size={16} />
-              </Link>
             </div>
           </div>
         </div>
 
         {/* ── Columns ────────────────────────────────────────────────── */}
-        <div className="mt-12 grid gap-10 lg:grid-cols-[1.4fr_repeat(3,1fr)_0.9fr]" data-anim="foot-cols">
+        <div className="mt-12 grid gap-10 lg:grid-cols-[1.4fr_1fr_0.9fr]" data-anim="foot-cols">
           <div>
             <Logo className="h-11" />
             <p className="mt-2 text-[10px] uppercase tracking-[0.24em] text-text-dim">

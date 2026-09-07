@@ -23,11 +23,11 @@ const ThemeContext = createContext<ThemeState | null>(null);
  */
 export const themeScript = `(function(){try{
 var s=localStorage.getItem('${STORAGE_KEY}');
-var t=s==='light'||s==='dark'?s:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');
+var t=s==='light'||s==='dark'?s:'light';
 var e=document.documentElement;
 e.classList.toggle('dark',t==='dark');e.classList.toggle('light',t==='light');
 e.style.colorScheme=t;
-}catch(e){document.documentElement.classList.add('dark');}})();`;
+}catch(e){document.documentElement.classList.add('light');}})();`;
 
 function apply(theme: Theme) {
   const el = document.documentElement;
@@ -39,7 +39,7 @@ function apply(theme: Theme) {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Seeded from the class the blocking script already set, so the first React
   // render agrees with the DOM and never causes a hydration flip.
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
     setThemeState(document.documentElement.classList.contains('light') ? 'light' : 'dark');

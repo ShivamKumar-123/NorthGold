@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#080808" />
+    <meta name="theme-color" content="#f7f5f0" />
     <meta
       name="description"
       content="Invest in partner-bank instruments, receive a contracted monthly return, and earn referral commission across your whole network."
@@ -28,18 +28,15 @@
       (function () {
         try {
           var s = localStorage.getItem('ng_theme');
-          var t =
-            s === 'light' || s === 'dark'
-              ? s
-              : window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-                ? 'light'
-                : 'dark';
+          // Light is the default. Only an explicit, stored choice moves
+          // the site off it — the OS preference does not.
+          var t = s === 'light' || s === 'dark' ? s : 'light';
           var e = document.documentElement;
           e.classList.toggle('dark', t === 'dark');
           e.classList.toggle('light', t === 'light');
           e.style.colorScheme = t;
         } catch (e) {
-          document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('light');
         }
       })();
     </script>

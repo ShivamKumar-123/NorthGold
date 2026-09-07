@@ -9,7 +9,6 @@ import GlobalPresence from '@/components/GlobalPresence';
 import LandingMotion from '@/components/LandingMotion';
 import CardPromo from '@/components/CardPromo';
 import Reveal from '@/components/Reveal';
-import OpenStepsButton from '@/components/OpenStepsButton';
 import SplitWords from '@/components/SplitWords';
 import VisionSection from '@/components/VisionSection';
 import PageBackdrop from '@/components/PageBackdrop';
@@ -134,9 +133,6 @@ export default async function LandingPage() {
                   Open an account
                   <ArrowRight size={17} />
                 </Link>
-                <Link href="/calculator" className="btn-ghost px-7 py-3.5 text-base">
-                  See your returns
-                </Link>
               </div>
 
               <div className="relative perspective-lg" data-anim="hero-scene">
@@ -207,10 +203,6 @@ export default async function LandingPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Reopens the four steps rather than going anywhere. It is
-                      the one place the panel can be summoned back after its
-                      single automatic showing. */}
-                  <OpenStepsButton>Get Started</OpenStepsButton>
                   <Link href="/register" className="btn-primary px-7 py-3.5 text-base">
                     Open An Account
                     <ArrowRight size={17} />

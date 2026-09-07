@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 
 import AppShell from '@/components/AppShell';
 import Footer from '@/components/Footer';
-import HowItWorksModal from '@/components/HowItWorksModal';
 import Navbar from '@/components/Navbar';
 import { Spinner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -31,9 +30,6 @@ export default function Chrome({ children }: { children: React.ReactNode }) {
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
-        {/* Only on the marketing pages. It explains the offer, so opening it
-            over a sign-in form or the dashboard is an interruption, not help. */}
-        <HowItWorksModal />
       </div>
     );
   }
