@@ -888,14 +888,24 @@ html.light .plate-footer-bar {
 /* …and the raised objects inside keep their dark treatment, which the generic
    `html.light .panel` / `.card` rules above would otherwise overwrite. */
 html.light .on-dark .panel {
-  background: linear-gradient(168deg, #222120 0%, #131312 100%);
+  /* The texture layer has to be repeated here, not just the colour. Naming
+     only a flat gradient overwrites the whole `background` shorthand, which
+     is what silently dropped the plate out of every dark card the moment the
+     site was switched to light. */
+  background:
+    linear-gradient(168deg, rgba(34, 33, 32, 0.86) 0%, rgba(19, 19, 18, 0.92) 100%),
+    url('/images/dash/right_card.webp') center / cover no-repeat,
+    linear-gradient(168deg, #222120, #131312);
   border-color: rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 12px 28px -10px rgba(0, 0, 0, 0.8),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 html.light .on-dark.card,
 html.light .on-dark .card {
-  background: linear-gradient(168deg, #171714 0%, #111110 55%, #0b0b0a 100%);
+  background:
+    linear-gradient(168deg, rgba(23, 23, 20, 0.86) 0%, rgba(17, 17, 16, 0.9) 55%, rgba(11, 11, 10, 0.94) 100%),
+    url('/images/dash/card.webp') center / cover no-repeat,
+    linear-gradient(168deg, #171714, #111110);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }

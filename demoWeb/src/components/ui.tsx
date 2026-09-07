@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle2, Info, Loader2, X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 import Tilt from './Tilt';
 
@@ -162,6 +162,33 @@ export function EmptyState({
   );
 }
 
+/**
+ * Keyframes for the dialog.
+ *
+ * Inlined with the component so a modal carries its own motion wherever it is
+ * mounted, rather than depending on a global sheet that each app would have to
+ * remember to keep in step. The reduced-motion block flattens every transform
+ * to a plain fade — the dialog still announces itself, it just stops flying.
+ */
+const MODAL_MOTION = `
+@keyframes ng-veil-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes ng-veil-out { from { opacity: 1 } to { opacity: 0 } }
+@keyframes ng-dialog-in {
+  0%   { opacity: 0; transform: translateY(30px) scale(.94) rotateX(-9deg) }
+  55%  { opacity: 1 }
+  100% { opacity: 1; transform: none }
+}
+@keyframes ng-dialog-out {
+  from { opacity: 1; transform: none }
+  to   { opacity: 0; transform: translateY(12px) scale(.975) }
+}
+@keyframes ng-sheen { from { transform: translateX(-130%) } to { transform: translateX(240%) } }
+@media (prefers-reduced-motion: reduce) {
+  @keyframes ng-dialog-in { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes ng-dialog-out { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes ng-sheen { from { opacity: 0 } to { opacity: 0 } }
+}`;
+
 export function Modal({
   open,
   title,
@@ -177,6 +204,27 @@ export function Modal({
   footer?: ReactNode;
   width?: string;
 }) {
+  // The dialog stays mounted for the length of its exit. Unmounting the moment
+  // `open` flips makes it vanish mid-gesture, which reads as a crash rather
+  // than a dismissal.
+  const [mounted, setMounted] = useState(open);
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setLeaving(false);
+      return;
+    }
+    if (!mounted) return;
+    setLeaving(true);
+    const timer = window.setTimeout(() => {
+      setMounted(false);
+      setLeaving(false);
+    }, 190);
+    return () => window.clearTimeout(timer);
+  }, [open, mounted]);
+
   // Escape closes, and the page behind must not scroll while a dialog is open.
   useEffect(() => {
     if (!open) return;
@@ -192,37 +240,128 @@ export function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="perspective fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-md">
+    <div
+      className="perspective fixed inset-0 z-50 flex items-start justify-center overflow-y-auto
+                 bg-black/70 p-4 backdrop-blur-lg"
+      style={{ animation: `ng-veil-${leaving ? 'out' : 'in'} 190ms ease both` }}
+      // Only a press that both starts and ends on the veil dismisses. Without
+      // the target check, releasing a drag that began inside a form would
+      // throw the form away.
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <style>{MODAL_MOTION}</style>
+
       <div
-        className={`glass my-8 w-full rounded-3xl ${width}`}
+        className={`glass relative my-8 w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-e4 ${width}`}
         role="dialog"
         aria-modal="true"
-        // Enters by rotating up from below — the dialog arrives in the scene
-        // rather than appearing flat on top of it.
-        style={{ animation: 'modal-in 340ms cubic-bezier(.22,1,.36,1) both' }}
+        style={{
+          animation: leaving
+            ? 'ng-dialog-out 190ms cubic-bezier(.4,0,1,1) both'
+            : 'ng-dialog-in 420ms cubic-bezier(.16,1,.3,1) both',
+        }}
       >
-        <style>{`@keyframes modal-in{from{opacity:0;transform:translateY(26px) rotateX(-9deg) scale(.97)}to{opacity:1;transform:none}}`}</style>
-        <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4">
-          <h2 className="text-base font-semibold text-text">{title}</h2>
+        {/* Gold hairline along the top edge, with a single sweep across it on
+            entry. It is the one flourish — the dialog is usually carrying a
+            form about money, and anything busier competes with the fields. */}
+        <span
+          className="pointer-events-none absolute inset-x-0 top-0 h-px
+                     bg-gradient-to-r from-transparent via-accent to-transparent"
+          aria-hidden
+        />
+        <span
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 opacity-60"
+          style={{
+            background: 'linear-gradient(100deg, transparent, rgba(217,166,46,.16), transparent)',
+            animation: 'ng-sheen 1100ms cubic-bezier(.22,1,.36,1) 120ms both',
+          }}
+          aria-hidden
+        />
+
+        <div className="relative flex items-center justify-between gap-4 border-b border-white/[0.07] px-6 py-4">
+          <h2 className="flex items-center gap-2.5 text-base font-semibold text-text">
+            <span className="h-4 w-1 rounded-full bg-gradient-to-b from-accent to-accent/30" aria-hidden />
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-text-muted transition hover:bg-white/5 hover:text-text"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/[0.08]
+                       text-text-muted transition-all duration-200 hover:rotate-90 hover:border-accent/40
+                       hover:bg-accent/10 hover:text-accent focus-visible:outline-none
+                       focus-visible:ring-2 focus-visible:ring-accent/40"
             aria-label="Close"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
+
+        <div className="relative px-6 py-5">{children}</div>
+
         {footer && (
-          <div className="flex flex-wrap justify-end gap-2 border-t border-white/[0.07] px-6 py-4">
+          <div className="relative flex flex-wrap justify-end gap-2 border-t border-white/[0.07]
+                          bg-white/[0.02] px-6 py-4">
             {footer}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * A confirmation, as a dialog rather than `window.confirm`.
+ *
+ * The native one cannot be styled, ignores the theme, and lands wherever the
+ * browser feels like putting it — in the middle of a gold-and-black admin
+ * panel it reads as a page error rather than a question.
+ */
+export function ConfirmDialog({
+  open,
+  title,
+  body,
+  confirmLabel = 'Confirm',
+  tone = 'danger',
+  onConfirm,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  body: ReactNode;
+  confirmLabel?: string;
+  tone?: 'danger' | 'primary';
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      title={title}
+      onClose={onClose}
+      width="max-w-md"
+      footer={
+        <>
+          <button onClick={onClose} className="btn-ghost px-4 py-2 text-sm">
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className={`${tone === 'danger' ? 'btn-danger' : 'btn-primary'} px-4 py-2 text-sm`}
+          >
+            {confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p className="text-sm leading-relaxed text-text-muted">{body}</p>
+    </Modal>
   );
 }
 

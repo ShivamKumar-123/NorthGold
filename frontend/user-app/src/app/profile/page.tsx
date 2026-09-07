@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { ShieldCheck, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 
 import { Alert, PageLoader, StatusBadge } from '@/components/ui';
-import { ApiError, api, dateTime } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
 import { useAuth, useRequireAuth } from '@/lib/auth';
-import { KYC_DOC_TYPES as DOC_TYPES, type KycDoc } from '@/lib/kyc';
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useRequireAuth();
@@ -16,9 +16,6 @@ export default function ProfilePage() {
     first_name: '', last_name: '', phone: '', country: '', state: '', city: '', address: '',
   });
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm: '' });
-  const [docs, setDocs] = useState<KycDoc[]>([]);
-  const [docType, setDocType] = useState(DOC_TYPES[0].value);
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState(false);
@@ -32,19 +29,6 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
-
-  const loadKyc = useCallback(async () => {
-    try {
-      const res = await api.get<{ kyc_status: string; documents: KycDoc[] }>('/auth/kyc/');
-      setDocs(res.documents);
-    } catch {
-      /* non-fatal — the rest of the page still works */
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) void loadKyc();
-  }, [user, loadKyc]);
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -80,30 +64,6 @@ export default function ProfilePage() {
       setNotice('Password changed.');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not change your password.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function uploadDoc(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setNotice('');
-    if (!file) {
-      setError('Choose a file to upload.');
-      return;
-    }
-    setSaving(true);
-    try {
-      const data = new FormData();
-      data.append('doc_type', docType);
-      data.append('file', file);
-      await api.postForm('/auth/kyc/', data);
-      setFile(null);
-      await Promise.all([loadKyc(), refreshUser()]);
-      setNotice('Document uploaded and queued for review.');
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not upload the document.');
     } finally {
       setSaving(false);
     }
@@ -175,69 +135,20 @@ export default function ProfilePage() {
         </form>
       </section>
 
-      <section className="mt-6 card p-5">
-        <h2 className="flex items-center gap-2 font-semibold">
-          <ShieldCheck size={17} className="text-accent" /> Identity verification
-        </h2>
-        <p className="mt-1 text-sm text-text-muted">
-          Upload each document once. An administrator reviews them individually.
-        </p>
-
-        <form onSubmit={uploadDoc} className="mt-4 flex flex-wrap items-end gap-3">
-          <div className="min-w-[180px] flex-1">
-            <label className="label" htmlFor="doc_type">Document type</label>
-            <select id="doc_type" value={docType} onChange={(e) => setDocType(e.target.value)} className="input">
-              {DOC_TYPES.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="min-w-[220px] flex-1">
-            <label className="label" htmlFor="doc_file">File</label>
-            <input
-              id="doc_file"
-              type="file"
-              accept="image/*,.pdf"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="input file:mr-3 file:rounded file:border-0 file:bg-bg-elevated file:px-2 file:py-1 file:text-xs file:text-text"
-            />
-          </div>
-          <button type="submit" disabled={saving} className="btn-primary">
-            <Upload size={15} /> Upload
-          </button>
-        </form>
-
-        {docs.length > 0 && (
-          <div className="table-wrap mt-5">
-            <table className="data">
-              <thead>
-                <tr>
-                  <th>Document</th>
-                  <th>Uploaded</th>
-                  <th>Reviewed</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {docs.map((d) => (
-                  <tr key={d.id}>
-                    <td>{DOC_TYPES.find((t) => t.value === d.doc_type)?.label ?? d.doc_type}</td>
-                    <td className="text-text-muted">{dateTime(d.created_at)}</td>
-                    <td className="text-text-muted">{d.reviewed_at ? dateTime(d.reviewed_at) : '—'}</td>
-                    <td>
-                      <StatusBadge status={d.status} />
-                      {d.rejection_reason && (
-                        <p className="mt-1 max-w-[240px] whitespace-normal text-xs text-danger">
-                          {d.rejection_reason}
-                        </p>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* Verification lives on its own page now — it is a step in opening
+          the account, not a profile field. */}
+      <section className="mt-6 card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 className="flex items-center gap-2 font-semibold">
+            <ShieldCheck size={17} className="text-accent" /> Identity verification
+          </h2>
+          <p className="mt-1 text-sm text-text-muted">
+            Your documents, their status, and anything the desk still needs.
+          </p>
+        </div>
+        <Link href="/kyc" className="btn-ghost">
+          Open verification
+        </Link>
       </section>
 
       <section className="mt-6 card p-5">

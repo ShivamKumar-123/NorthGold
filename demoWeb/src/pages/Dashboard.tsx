@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
         {!kycApproved && (
           <Link
-            to="/profile"
+            to="/kyc"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
           >
             Manage documents <ArrowRight size={14} />

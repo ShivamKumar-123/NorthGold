@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 
-import { Alert, EmptyState, StatusBadge } from '@/components/ui';
+import { Alert, EmptyState, Modal, StatusBadge } from '@/components/ui';
 import { dateTime } from '@/lib/format';
 import { KYC_DOC_TYPES, allKyc, getUsers, reviewKyc } from '@/lib/store';
+import type { KycDoc } from '@/lib/types';
 
 type Filter = 'pending' | 'all';
 
@@ -20,6 +21,11 @@ const LABELS = Object.fromEntries(KYC_DOC_TYPES.map((d) => [d.value, d.label]));
 export default function AdminKyc() {
   const [filter, setFilter] = useState<Filter>('pending');
   const [message, setMessage] = useState('');
+  // The document being rejected, and the reason being written for it. A
+  // rejection without a reason leaves the member with nothing to fix, so it is
+  // collected in a dialog rather than assumed.
+  const [rejecting, setRejecting] = useState<KycDoc | null>(null);
+  const [reason, setReason] = useState('');
 
   const docs = allKyc();
   const users = getUsers();
@@ -112,10 +118,8 @@ export default function AdminKyc() {
                     </button>
                     <button
                       onClick={() => {
-                        const reason = window.prompt('Why is this being rejected? The member sees it.');
-                        if (!reason?.trim()) return;
-                        reviewKyc(doc.id, false, reason.trim());
-                        setMessage('Document rejected.');
+                        setRejecting(doc);
+                        setReason('');
                       }}
                       className="btn-danger px-4 py-2 text-xs"
                     >
@@ -130,6 +134,54 @@ export default function AdminKyc() {
           })}
         </div>
       )}
+
+      <Modal
+        open={Boolean(rejecting)}
+        title="Reject this document"
+        onClose={() => setRejecting(null)}
+        width="max-w-md"
+        footer={
+          <>
+            <button onClick={() => setRejecting(null)} className="btn-ghost px-4 py-2 text-sm">
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (!rejecting || !reason.trim()) return;
+                reviewKyc(rejecting.id, false, reason.trim());
+                setRejecting(null);
+                setMessage('Document rejected.');
+              }}
+              disabled={!reason.trim()}
+              className="btn-danger px-4 py-2 text-sm"
+            >
+              Reject document
+            </button>
+          </>
+        }
+      >
+        <p className="text-sm text-text-muted">
+          {rejecting && (
+            <>
+              {LABELS[rejecting.doc_type] ?? rejecting.doc_type} from{' '}
+              <strong className="text-text">
+                {users.find((u) => u.id === rejecting.user_id)?.email ?? 'this member'}
+              </strong>.
+            </>
+          )}
+        </p>
+        <label className="label mt-4" htmlFor="kyc-reason">
+          Why? The member sees this
+        </label>
+        <textarea
+          id="kyc-reason"
+          rows={3}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="input resize-none"
+          placeholder="The photo is cut off — please re-upload with all four corners visible."
+        />
+      </Modal>
     </div>
   );
 }

@@ -61,10 +61,15 @@ export default function VisionSection() {
       <WaveDivider position="bottom" />
       {/* The card render that used to sit over the return schedule. Outside
           the flow on purpose: it must never push the heading around or
-          intercept a click, and it only appears at `2xl`, where the container
-          leaves margin for it to sit in. */}
+          intercept a click.
+
+          It hangs in the gutter beside the container, so it only appears once
+          that gutter is genuinely wider than the card. At 1800px the 1280px
+          container leaves 260px a side and a 230px card clears it; below that
+          it either covered the copy or — with the negative offset it used to
+          carry — was sliced in half by the section's own overflow clip. */}
       <div
-        className="pointer-events-none absolute -right-16 top-6 hidden w-[350px] rotate-6 opacity-90 2xl:block"
+        className="pointer-events-none absolute right-5 top-32 hidden w-[230px] rotate-6 opacity-90 min-[1800px]:block"
         data-anim="drift"
         aria-hidden
       >

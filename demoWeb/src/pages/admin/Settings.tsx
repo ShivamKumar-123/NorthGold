@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { RotateCcw, Save } from 'lucide-react';
 
-import { Alert } from '@/components/ui';
+import { Alert, ConfirmDialog } from '@/components/ui';
 import { getSettings, resetDemo, saveSettings } from '@/lib/store';
 import type { Settings as SettingsShape } from '@/lib/types';
 
 export default function AdminSettings() {
   const [form, setForm] = useState<SettingsShape>(() => getSettings());
   const [message, setMessage] = useState('');
+  const [resetOpen, setResetOpen] = useState(false);
 
   function set<K extends keyof SettingsShape>(key: K, value: SettingsShape[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -112,12 +113,7 @@ export default function AdminSettings() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            onClick={() => {
-              if (!window.confirm('Reset the demo database back to its seeded state?')) return;
-              resetDemo();
-              setForm(getSettings());
-              setMessage('Demo data reset.');
-            }}
+            onClick={() => setResetOpen(true)}
             className="btn-ghost"
           >
             <RotateCcw size={15} /> Reset demo data
@@ -127,6 +123,19 @@ export default function AdminSettings() {
           </button>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={resetOpen}
+        title="Reset the demo data?"
+        body="Every member, deposit, investment and payout goes back to the seeded set. Anything created while exploring the demo is lost."
+        confirmLabel="Reset everything"
+        onConfirm={() => {
+          resetDemo();
+          setForm(getSettings());
+          setMessage('Demo data reset.');
+        }}
+        onClose={() => setResetOpen(false)}
+      />
     </div>
   );
 }

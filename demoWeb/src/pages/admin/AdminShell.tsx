@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 import Logo from '@/components/Logo';
+import { ConfirmDialog } from '@/components/ui';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/lib/auth';
 import { displayName } from '@/lib/format';
@@ -52,6 +53,7 @@ export default function AdminShell() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
   const [, tick] = useState(0);
 
   useEffect(() => subscribe(() => tick((n) => n + 1)), []);
@@ -146,14 +148,9 @@ export default function AdminShell() {
           </div>
 
           <button
-            onClick={() => {
-              // Destructive and irreversible, so it asks first — the whole
-              // demo database goes back to the seed.
-              if (window.confirm('Reset the demo database back to its seeded state?')) {
-                resetDemo();
-                navigate('/admin', { replace: true });
-              }
-            }}
+            // Destructive and irreversible, so it asks first — the whole
+            // demo database goes back to the seed.
+            onClick={() => setResetOpen(true)}
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm
                        text-text-muted transition hover:bg-white/[0.045] hover:text-text"
           >
@@ -198,6 +195,18 @@ export default function AdminShell() {
           <Outlet />
         </main>
       </div>
+
+      <ConfirmDialog
+        open={resetOpen}
+        title="Reset the demo data?"
+        body="Every member, deposit, investment and payout goes back to the seeded set. Anything created while exploring the demo is lost."
+        confirmLabel="Reset everything"
+        onConfirm={() => {
+          resetDemo();
+          navigate('/admin', { replace: true });
+        }}
+        onClose={() => setResetOpen(false)}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Dashboard from '@/pages/Dashboard';
 import Investments from '@/pages/Investments';
+import Kyc from '@/pages/Kyc';
 import Calculator from '@/pages/Calculator';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/investments" element={<Investments />} />
               <Route path="/referrals" element={<Referrals />} />
+              <Route path="/kyc" element={<Kyc />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
 

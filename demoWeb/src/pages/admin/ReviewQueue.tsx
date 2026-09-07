@@ -53,6 +53,7 @@ export default function ReviewQueue({
   const [filter, setFilter] = useState<'pending' | 'all'>('pending');
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+  const [problem, setProblem] = useState('');
 
   const users = getUsers();
   const nameFor = (id: string) => {
@@ -86,6 +87,12 @@ export default function ReviewQueue({
           )}
         </div>
       </header>
+
+      {problem && (
+        <div className="mt-5">
+          <Alert kind="error" onDismiss={() => setProblem('')}>{problem}</Alert>
+        </div>
+      )}
 
       {message && (
         <div className="mt-5">
@@ -175,9 +182,10 @@ export default function ReviewQueue({
                         const reason = notes[row.id]?.trim();
                         if (!reason) {
                           setMessage('');
-                          window.alert('Give a reason before rejecting — the member sees it.');
+                          setProblem('Give a reason before rejecting — the member sees it.');
                           return;
                         }
+                        setProblem('');
                         onReject(row.id, reason);
                         setMessage('Rejected.');
                       }}
