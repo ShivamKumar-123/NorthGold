@@ -344,6 +344,28 @@ html.dark ::selection {
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.75), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   }
 
+  /* Native select popups are drawn by the browser, not by us.
+     `.input` paints a gradient, which is a background *image* — it leaves
+     `background-color` transparent, so Chrome falls back to white for the
+     option list and the inherited near-white text vanishes into it. Naming a
+     real colour on the options is the only thing that popup reads.
+
+     `color-scheme` on the control itself is what darkens the rest of the
+     furniture the browser draws: the popup's own scrollbar, the dropdown
+     arrow, and the calendar a date field opens. */
+  select.input,
+  input.input[type='date'],
+  input.input[type='time'],
+  input.input[type='datetime-local'] {
+    color-scheme: dark;
+  }
+
+  select.input option,
+  select.input optgroup {
+    background-color: #161615;
+    color: rgb(var(--c-text));
+  }
+
   .label {
     @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted;
   }
@@ -480,6 +502,19 @@ html.dark ::selection {
 
   /* Recessed still, but the inset shadow is a warm grey — pure black inside a
      white field looks like dirt, not depth. */
+  html.light select.input,
+  html.light input.input[type='date'],
+  html.light input.input[type='time'],
+  html.light input.input[type='datetime-local'] {
+    color-scheme: light;
+  }
+
+  html.light select.input option,
+  html.light select.input optgroup {
+    background-color: #ffffff;
+    color: rgb(var(--c-text));
+  }
+
   html.light .input {
     background: linear-gradient(180deg, #f4f1ea 0%, #ffffff 100%);
     box-shadow: inset 0 2px 4px rgba(38, 32, 20, 0.09), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
