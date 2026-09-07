@@ -84,11 +84,13 @@ export default function DashboardPage() {
         </div>
 
         <p className="mt-1.5 text-sm text-text-muted">
-          {kycApproved
-            ? 'All your documents have been approved. Nothing further is needed.'
-            : kycRejected
-              ? 'One or more documents were not accepted. Re-upload them from your profile.'
-              : 'Your documents are with our verification desk. Each one is reviewed separately.'}
+          {kycDocs.length === 0
+            ? 'No documents on file yet. Upload them and the desk will review each one.'
+            : kycApproved
+              ? 'All your documents have been approved. Nothing further is needed.'
+              : kycRejected
+                ? 'One or more documents were not accepted. Re-upload them below.'
+                : 'Your documents are with our verification desk. Each one is reviewed separately.'}
         </p>
 
         <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

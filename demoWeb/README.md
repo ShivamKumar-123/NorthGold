@@ -23,6 +23,12 @@ file first. Every seeded member uses `demo1234`:
 `priya`, `arjun`, `rahul`, `sneha`, `neha`, `vikram`, `anita` — all
 `@northgold.demo`. The admin panel is at `/admin`.
 
+**The administrator is not a member.** It has no wallet, no deposits and no
+network of its own, so signing in as the admin and opening a member screen would
+show nothing but zeros — which is why a staff account is sent to the panel
+instead. To see a member's money either open their row in **Users & network**,
+or sign in as them.
+
 **Reset the data** from the admin sidebar or Settings. That reseeds from
 scratch, which is also what happens automatically if the stored shape is from
 an older version.

@@ -119,7 +119,9 @@ export default function KycPage() {
         </div>
 
         <p className="mt-3 text-sm text-text-muted">
-          {user.kyc_status === 'approved'
+          {missing === KYC_DOC_TYPES.length
+            ? 'No documents on file yet. Upload them below and the desk will review each one.'
+            : user.kyc_status === 'approved' && missing === 0
             ? 'Every document has been approved. Nothing further is needed.'
             : rejected > 0
               ? 'One or more documents were not accepted. Re-upload them below and the desk will look again.'

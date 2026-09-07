@@ -105,7 +105,17 @@ export function useRequireAuth(staffOnly = false) {
       });
       return;
     }
-    if (staffOnly && !user.is_staff) navigate('/dashboard', { replace: true });
+    if (staffOnly && !user.is_staff) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+    // …and the same rule the other way. In the production build these are two
+    // separate applications and the question cannot arise; here they share one
+    // session, so a signed-in administrator opening a member screen was shown
+    // the administrator's OWN member account — every figure zero, because the
+    // desk has no wallet. That reads as the member side being broken rather
+    // than as looking at the wrong account.
+    if (!staffOnly && user.is_staff) navigate('/admin', { replace: true });
   }, [user, loading, staffOnly, navigate, location.pathname]);
 
   return { user, loading };

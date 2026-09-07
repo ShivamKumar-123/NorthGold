@@ -19,8 +19,10 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // A staff account signing in here belongs in the panel, not in a member
+  // dashboard that would show the desk's own empty wallet.
   useEffect(() => {
-    if (!authLoading && user) navigate(next, { replace: true });
+    if (!authLoading && user) navigate(user.is_staff ? '/admin' : next, { replace: true });
   }, [authLoading, user, navigate, next]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -28,8 +30,8 @@ export default function LoginForm() {
     setError('');
     setSubmitting(true);
     try {
-      await login(email, password);
-      navigate(next);
+      const signedIn = await login(email, password);
+      navigate(signedIn.is_staff ? '/admin' : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
     } finally {
