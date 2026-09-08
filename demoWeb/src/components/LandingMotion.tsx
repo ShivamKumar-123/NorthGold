@@ -305,16 +305,6 @@ export default function LandingMotion() {
         });
       });
 
-      const footRisk = gsap.utils.toArray<HTMLElement>('[data-anim="foot-risk"]');
-      hide(footRisk, { opacity: 0, y: 22 });
-      gsap.to(footRisk, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        ease: EASE,
-        scrollTrigger: { trigger: footRisk[0] ?? 'footer', start: 'top 95%', once: true },
-      });
-
       const footRule = gsap.utils.toArray<HTMLElement>('[data-anim="foot-rule"]');
       hide(footRule, { scaleX: 0, transformOrigin: 'left center' });
       gsap.to(footRule, {

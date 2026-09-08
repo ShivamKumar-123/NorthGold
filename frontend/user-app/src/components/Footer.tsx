@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import {
-  AlertTriangle, ArrowRight, ArrowUpRight, Instagram, Linkedin, Twitter, Youtube,
-} from 'lucide-react';
+import { ArrowRight, Instagram, Linkedin, Twitter, Youtube } from 'lucide-react';
 
 import Logo from '@/components/Logo';
 
@@ -131,25 +129,6 @@ export default function Footer() {
             </p>
             <span className="mt-4 block h-px w-12 bg-gradient-to-r from-accent to-transparent" data-anim="foot-rule" />
           </div>
-        </div>
-
-        {/* ── Risk notice ────────────────────────────────────────────── */}
-        <div className="mt-12 flex flex-col gap-5 rounded-2xl border border-warn/25 bg-[rgba(249,115,22,.07)] p-5 backdrop-blur-sm lg:flex-row lg:items-center lg:gap-6" data-anim="foot-risk">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-warn/30 bg-warn-soft text-warn">
-            <AlertTriangle size={18} />
-          </span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-warn">Risk notice</p>
-            <p className="mt-1 text-xs leading-relaxed text-text-muted">
-              Returns shown are the contracted schedule for each plan and are not
-              a guarantee of future performance. Capital is at risk. Read the plan
-              terms in full before investing, and never invest money you cannot
-              afford to lose.
-            </p>
-          </div>
-          <Link href="/calculator#plans" className="btn-ghost shrink-0 px-5 py-3 text-xs text-warn">
-            Read full disclosure <ArrowUpRight size={14} />
-          </Link>
         </div>
       </div>
 
