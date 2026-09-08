@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>NorthGold — Web Platform Quotation</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 14mm 15mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --gold: #A87516;
+    --gold-bright: #D9A62E;
+    --ink: #16150f;
+    --muted: #5b574c;
+    --rule: #e4dfd3;
+    --wash: #faf8f3;
+    --green: #3f7d3f;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font: 10.2pt/1.5 "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif; color: var(--ink); }
+
+  h1, h2, h3, h4 { line-height: 1.2; margin: 0; font-weight: 650; }
+  h2 { font-size: 16pt; margin: 0 0 3.5mm; padding-bottom: 2.2mm; border-bottom: 2px solid var(--gold); }
+  h3 { font-size: 11.6pt; margin: 6mm 0 2mm; color: var(--gold); }
+  h4 { font-size: 10.2pt; margin: 4mm 0 1.2mm; }
+  h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 2.6mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 3.5mm; font-size: 9.3pt; page-break-inside: avoid; }
+  th, td { text-align: left; padding: 1.9mm 2.4mm; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--wash); font-weight: 650; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.sub td { background: #fdfcf9; font-weight: 650; }
+  tr.total td { background: var(--wash); font-weight: 700; border-top: 2px solid var(--gold); border-bottom: 0; font-size: 10pt; }
+  td.desc { color: var(--muted); font-size: 8.8pt; }
+
+  .page { page-break-after: always; }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* ── Cover ─────────────────────────────────────────────────────────── */
+  .cover { height: 297mm; padding: 30mm 24mm 18mm; background: #0b0b0a; color: #f3efe4; display: flex; flex-direction: column; }
+  .cover .mark { width: 24mm; height: 24mm; margin-bottom: 10mm; }
+  .cover .kicker { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .2em; color: var(--gold-bright); margin-bottom: 4mm; }
+  .cover h1 { font-size: 32pt; letter-spacing: -0.02em; }
+  .cover h1 span { color: var(--gold-bright); }
+  .cover .rule { width: 40mm; height: 2px; background: linear-gradient(90deg, var(--gold-bright), transparent); margin: 9mm 0; }
+  .cover .sub { font-size: 12pt; color: #b8b2a3; max-width: 122mm; line-height: 1.5; }
+  .cover .headline {
+    margin: 12mm 0 0; padding: 6mm 7mm; border: 1px solid rgba(217,166,46,.32); border-radius: 5px;
+    background: rgba(217,166,46,.07);
+  }
+  .cover .figures { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 6mm; align-items: start; }
+  .cover .figures .bar { background: rgba(217,166,46,.28); align-self: stretch; }
+  .cover .headline .label { font-size: 8pt; text-transform: uppercase; letter-spacing: .14em; color: #9a948a; }
+  .cover .headline .amount { font-size: 23pt; font-weight: 700; color: var(--gold-bright); margin-top: 2mm; line-height: 1.1; }
+  .cover .headline .amount.alt { color: #e8e2d4; }
+  .cover .headline .qual { font-size: 8.5pt; color: #85806f; margin-top: 1.2mm; }
+  /* Its own class, not `.note` — the global callout paints an ivory
+     background, which on a black cover reads as a sticker. */
+  .cover .headline .combined {
+    margin-top: 5mm; padding-top: 3.5mm; border-top: 1px solid rgba(255,255,255,.1);
+    font-size: 9.5pt; color: #c9c2b1;
+  }
+  .cover .headline .combined strong { color: var(--gold-bright); }
+  .cover dl { margin: auto 0 0; display: grid; grid-template-columns: 34mm 1fr; gap: 2.2mm 4mm; font-size: 9.3pt; }
+  .cover dt { color: #7e796d; text-transform: uppercase; letter-spacing: .1em; font-size: 7.8pt; padding-top: .6mm; }
+  .cover dd { margin: 0; color: #ded8c9; }
+
+  /* ── Callouts ──────────────────────────────────────────────────────── */
+  .note, .warn, .key { padding: 2.8mm 3.6mm; border-radius: 4px; margin: 0 0 3.5mm; font-size: 9.4pt; page-break-inside: avoid; }
+  .note { background: var(--wash); border-left: 3px solid var(--gold); }
+  .warn { background: #fdf4ec; border-left: 3px solid #c2610a; }
+  .key { background: #f7f9f5; border-left: 3px solid var(--green); }
+  .note strong, .warn strong, .key strong { display: block; margin-bottom: 1mm; }
+
+  .lede { font-size: 11pt; color: var(--muted); margin-bottom: 4mm; }
+  .small { font-size: 9pt; color: var(--muted); }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm; }
+  .card { border: 1px solid var(--rule); border-top: 3px solid var(--gold); border-radius: 4px; padding: 4mm; page-break-inside: avoid; }
+  .card .label { font-size: 8.2pt; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+  .card .amount { font-size: 17pt; font-weight: 700; margin-top: 1.5mm; }
+  .card .note { font-size: 8.8pt; color: var(--muted); margin-top: 1.5mm; }
+
+  .milestones { counter-reset: ms; list-style: none; padding: 0; }
+  .milestones li { position: relative; padding-left: 9mm; margin-bottom: 2.6mm; page-break-inside: avoid; }
+  .milestones li::before {
+    counter-increment: ms; content: counter(ms);
+    position: absolute; left: 0; top: .3mm; width: 6mm; height: 6mm; border-radius: 50%;
+    background: var(--gold); color: #fff; font-size: 8pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .sig { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; margin-top: 12mm; }
+  .sig div { border-top: 1px solid var(--ink); padding-top: 2mm; font-size: 9pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══ Cover ══════════════════════════════════════════════════════════ -->
+<section class="cover page">
+  <img class="mark" src="../frontend/user-app/public/icons/icon-192.png" alt="" />
+  <h1>NorthGold<br /><span>Web Platform</span></h1>
+  <div class="rule"></div>
+  <p class="sub">
+    Member website, administrator panel, and the servers and services that keep
+    both running. No mobile application.
+  </p>
+  <dl>
+    <dt>One-time development</dt><dd>&#8377;5,13,300 &nbsp;·&nbsp; website and administrator panel, incl. GST</dd>
+    <dt>Server &amp; services</dt><dd>&#8377;1,35,228 &nbsp;·&nbsp; first year, incl. GST</dd>
+    <dt>First-year total</dt><dd>&#8377;6,48,528</dd>
+    <dt>Prepared for</dt><dd>________________________________</dd>
+    <dt>Prepared by</dt><dd>________________________________</dd>
+    <dt>Date</dt><dd>________________________________</dd>
+    <dt>Valid until</dt><dd>30 days from the date above</dd>
+  </dl>
+</section>
+
+<!-- ══ 1 · Summary ════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>1 &middot; Summary</h2>
+  <p class="lede">
+    A complete investment platform for the browser: a public website and member
+    portal, a staff administration panel, and the infrastructure underneath
+    both. Everything is reachable from any modern browser on a phone, tablet or
+    desktop &mdash; the member screens are built mobile-first, so a phone is a
+    first-class way to use the platform without an app being involved.
+  </p>
+
+  <table>
+    <tr>
+      <th>One-time development</th>
+      <td class="num"><strong>&#8377;4,35,000</strong></td>
+      <td>Design, backend, member website, administrator panel, verification and support desk, testing and launch. Before GST.</td>
+    </tr>
+    <tr>
+      <th>First-year running cost</th>
+      <td class="num"><strong>&#8377;1,14,600</strong></td>
+      <td>Servers, database, cache, storage, backups, monitoring, messaging. Before GST.</td>
+    </tr>
+  </table>
+
+  <h3>What the total is made of</h3>
+  <table>
+    <thead>
+      <tr><th>Part</th><th>What it covers</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>A &middot; Web platform</strong></td>
+        <td>Design system, backend and business logic, member website, administrator panel, identity verification, support desk, testing</td>
+        <td class="num">&#8377;4,35,000</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>One-time development, before GST</strong></td>
+        <td class="num"><strong>&#8377;4,35,000</strong></td>
+      </tr>
+      <tr>
+        <td>GST</td><td>At 18% on services</td><td class="num">&#8377;78,300</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>One-time development, payable</strong></td>
+        <td class="num"><strong>&#8377;5,13,300</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr><th>Recurring</th><th>What it covers</th><th class="num">First year</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>B &middot; Infrastructure</strong></td>
+        <td>Application server, database, cache, storage, backups, monitoring, domain</td>
+        <td class="num">&#8377;94,800</td>
+      </tr>
+      <tr>
+        <td><strong>C &middot; Services</strong></td>
+        <td>WhatsApp, transactional email, SMS and OTP</td>
+        <td class="num">&#8377;19,800</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>Running cost, before GST</strong></td>
+        <td class="num"><strong>&#8377;1,14,600</strong></td>
+      </tr>
+      <tr>
+        <td>GST</td><td>At 18%</td><td class="num">&#8377;20,628</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>First-year running cost, payable</strong></td>
+        <td class="num"><strong>&#8377;1,35,228</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>No mobile application is included</strong>
+    This quotation covers the web platform only. The two store fees that
+    appeared in the earlier proposal &mdash; Google Play Console and the Apple
+    Developer Program &mdash; are gone with it, and so is the app build itself.
+    Should an app be wanted later, the backend quoted here already serves it:
+    the applications would be new front-ends over the same API, not a second
+    platform.
+  </div>
+
+  <div class="key">
+    <strong>Maintenance is quoted separately and is optional</strong>
+    An annual support contract is set out in section 5. It is not included in
+    either figure above, so the totals here are what it costs to build the
+    platform and to keep it running &mdash; nothing more.
+  </div>
+</section>
+
+<!-- ══ 2 · Part A ═════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>2 &middot; Part A &mdash; Web platform</h2>
+  <p class="lede">
+    Everything a member and your staff use from a browser, and the system
+    underneath that does the calculating.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Included</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Design</strong></td>
+        <td>Complete visual identity, colour and type system, light and dark themes, and every screen designed for desktop and mobile before a line is built.</td>
+        <td class="num">&#8377;45,000</td>
+      </tr>
+      <tr>
+        <td><strong>Backend &amp; business logic</strong></td>
+        <td>Accounts and authentication, the investment plan engine, the monthly payout schedule, the wallet and its permanent transaction record, deposit and withdrawal approval, the five-level referral calculation, and the administrator interfaces behind every screen.</td>
+        <td class="num">&#8377;1,10,000</td>
+      </tr>
+      <tr>
+        <td><strong>Member website</strong></td>
+        <td>Public landing page with plan comparison and returns calculator, about and contact pages, sign-up and sign-in, member dashboard, wallet with invest and withdraw, investments, referral network with a visual tree, and profile.</td>
+        <td class="num">&#8377;85,000</td>
+      </tr>
+      <tr>
+        <td><strong>Administrator panel</strong></td>
+        <td>Deposit and withdrawal approval queues, platform-wide dashboard, plan and rate editor, referral level configuration, member directory with network view, payment channels, and settings.</td>
+        <td class="num">&#8377;50,000</td>
+      </tr>
+      <tr>
+        <td><strong>Identity verification</strong></td>
+        <td>Five documents collected as part of opening an account, a member page showing what each one is doing, and a review desk where staff approve or reject each document on its own with a reason the member sees.</td>
+        <td class="num">&#8377;45,000</td>
+      </tr>
+      <tr>
+        <td><strong>Support desk</strong></td>
+        <td>In-app chat between members and staff: a floating widget and a full page on the member side, and an inbox on the staff side that filters by member and by date. Reply, react, forward, star, edit, copy and delete on every message.</td>
+        <td class="num">&#8377;55,000</td>
+      </tr>
+      <tr>
+        <td><strong>Member administration</strong></td>
+        <td>Add or remove funds, set a balance to an exact figure, reset a password, block an account, and close one &mdash; each writing a permanent record the member can see on their own statement.</td>
+        <td class="num">&#8377;25,000</td>
+      </tr>
+      <tr>
+        <td><strong>Testing &amp; handover</strong></td>
+        <td>Automated tests over the money calculations, cross-browser and mobile checking, deployment to your server, and a walkthrough with your team.</td>
+        <td class="num">&#8377;20,000</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>Part A subtotal</strong></td>
+        <td class="num"><strong>&#8377;4,35,000</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Why the backend is the largest single line</h3>
+  <p>
+    Most of what this platform does is arithmetic that has to be right every
+    time and has to be able to explain itself afterwards. A monthly return is
+    not one percentage &mdash; it is a rate that depends on how much was
+    deposited <em>and</em> how long it has been held, fixed at the moment of
+    purchase so that editing a plan never changes what an existing investor was
+    promised. Referral commission walks five levels up the network on two
+    separate events, and records the ones it deliberately skipped along with the
+    reason. Every balance change writes one row carrying the resulting balance,
+    so a statement can be reconciled without replaying history.
+  </p>
+  <p>
+    None of that is visible on a screen, and all of it is what makes the screens
+    trustworthy.
+  </p>
+</section>
+
+<!-- ══ 3 · Running the platform ═══════════════════════════════════════ -->
+<section class="page">
+  <h2>3 &middot; Parts B and C &mdash; Running the platform</h2>
+  <p class="lede">
+    These are ongoing costs, billed by the providers rather than by us. They are
+    listed at current market rates so you can see the real cost of running the
+    platform.
+  </p>
+
+  <h3>B &middot; Servers and infrastructure</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Specification</th><th class="num">Monthly</th><th class="num">Yearly</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Application server</strong></td>
+        <td>4 vCPU, 8 GB RAM, 160 GB SSD, with room to grow. Runs the website and the panel.</td>
+        <td class="num">&#8377;2,700</td><td class="num">&#8377;32,400</td>
+      </tr>
+      <tr>
+        <td><strong>Database</strong></td>
+        <td>Managed PostgreSQL with automatic failover and a standby replica.</td>
+        <td class="num">&#8377;2,200</td><td class="num">&#8377;26,400</td>
+      </tr>
+      <tr>
+        <td><strong>Cache &amp; job queue</strong></td>
+        <td>Redis. Runs the monthly payout schedule and live price updates.</td>
+        <td class="num">&#8377;750</td><td class="num">&#8377;9,000</td>
+      </tr>
+      <tr>
+        <td><strong>File storage &amp; delivery</strong></td>
+        <td>Receipts, identity documents and images, served from a content network.</td>
+        <td class="num">&#8377;850</td><td class="num">&#8377;10,200</td>
+      </tr>
+      <tr>
+        <td><strong>Backups</strong></td>
+        <td>Daily database snapshots kept for 90 days, plus weekly off-site copies.</td>
+        <td class="num">&#8377;650</td><td class="num">&#8377;7,800</td>
+      </tr>
+      <tr>
+        <td><strong>Monitoring &amp; alerts</strong></td>
+        <td>Uptime checks, error tracking and alerts to your team when something breaks &mdash; before a member reports it.</td>
+        <td class="num">&#8377;600</td><td class="num">&#8377;7,200</td>
+      </tr>
+      <tr>
+        <td><strong>Domain &amp; certificate</strong></td>
+        <td>One .com domain with WHOIS privacy. Security certificate renewed automatically.</td>
+        <td class="num">&#8377;150</td><td class="num">&#8377;1,800</td>
+      </tr>
+      <tr>
+        <td colspan="3"><strong>Part B subtotal, per year</strong></td>
+        <td class="num"><strong>&#8377;94,800</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>C &middot; Services</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Notes</th><th class="num">First year</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>WhatsApp Business</strong></td>
+        <td>For the support button and member messages. Charged per conversation; estimate at moderate volume.</td>
+        <td class="num">&#8377;7,200</td>
+      </tr>
+      <tr>
+        <td><strong>Transactional email</strong></td>
+        <td>Sign-up confirmation, approvals, payment notices. Up to roughly 50,000 emails a year.</td>
+        <td class="num">&#8377;3,600</td>
+      </tr>
+      <tr>
+        <td><strong>SMS and OTP</strong></td>
+        <td>Charged per message. Estimate at roughly 30,000 messages a year.</td>
+        <td class="num">&#8377;9,000</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>Part C subtotal, first year</strong></td>
+        <td class="num"><strong>&#8377;19,800</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="warn">
+    <strong>All three of these rise with usage</strong>
+    WhatsApp, email and SMS are charged per message &mdash; at ten times the
+    members, expect roughly ten times those three lines. Server, database and
+    storage hold steady until traffic grows enough to need a larger machine.
+    Unlike the earlier proposal there is no one-time store fee here, so year two
+    costs the same as year one at the same volume.
+  </div>
+</section>
+
+<!-- ══ 4 · Schedule ═══════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>4 &middot; Payment schedule and timeline</h2>
+
+  <h3>Payment in four stages</h3>
+  <table>
+    <thead>
+      <tr><th>Stage</th><th>Due when</th><th class="num">Share</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1 &middot; Advance</strong></td><td>On signing, before work begins</td><td class="num">25%</td><td class="num">&#8377;1,08,750</td></tr>
+      <tr><td><strong>2 &middot; Design &amp; backend</strong></td><td>On approval of the designs and the working calculation engine</td><td class="num">25%</td><td class="num">&#8377;1,08,750</td></tr>
+      <tr><td><strong>3 &middot; Member website</strong></td><td>On the member website going live</td><td class="num">25%</td><td class="num">&#8377;1,08,750</td></tr>
+      <tr><td><strong>4 &middot; Panel &amp; handover</strong></td><td>On the administrator panel, verification desk and support desk being delivered</td><td class="num">25%</td><td class="num">&#8377;1,08,750</td></tr>
+      <tr><td colspan="3"><strong>Total, before GST</strong></td><td class="num"><strong>&#8377;4,35,000</strong></td></tr>
+    </tbody>
+  </table>
+  <p class="small">GST is added to each invoice at the prevailing rate.</p>
+
+  <h3>Indicative timeline</h3>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Work</th><th class="num">Weeks</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Requirements confirmed, design of every web screen</td><td class="num">2</td></tr>
+      <tr><td>2</td><td>Backend, calculation engine, administrator interfaces</td><td class="num">4</td></tr>
+      <tr><td>3</td><td>Member website</td><td class="num">3</td></tr>
+      <tr><td>4</td><td>Administrator panel, verification desk, support desk</td><td class="num">3</td></tr>
+      <tr><td>5</td><td>Testing, deployment and handover</td><td class="num">2</td></tr>
+      <tr><td colspan="2"><strong>Total, with phases 3 and 4 partly overlapping</strong></td><td class="num"><strong>10&ndash;12</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Two to four weeks shorter than the version with apps</strong>
+    Dropping the applications removes the four-week build phase and, with it,
+    store review &mdash; the one part of the earlier schedule that belonged to
+    Google and Apple rather than to either of us. What is left is entirely
+    within our control and yours.
+  </div>
+
+  <h4>What moves this date</h4>
+  <p>
+    Two things, and both sit on your side: how quickly designs and each stage
+    are approved, and how quickly the content, business details and any licences
+    are supplied.
+  </p>
+</section>
+
+<!-- ══ 5 · Inclusions ═════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>5 &middot; What is and is not included</h2>
+
+  <h3>Included in the quoted price</h3>
+  <ul>
+    <li>All source code, handed over and owned by you outright</li>
+    <li>Two rounds of revisions at each design stage</li>
+    <li>Deployment to your server</li>
+    <li>Training for your staff on the administrator panel</li>
+    <li>60 days of free bug fixing after handover &mdash; anything that does not work as specified is corrected at no charge</li>
+  </ul>
+
+  <h3>Not included</h3>
+  <ul>
+    <li>The infrastructure and service costs in parts B and C, which are billed by the providers</li>
+    <li>Any mobile application, and the store accounts that would go with one</li>
+    <li>Content: written copy, photography, and any legal text such as terms, a privacy policy or a risk disclosure</li>
+    <li>Business registration, financial licences, or regulatory approvals</li>
+    <li>Payment gateway integration &mdash; the platform settles in cash by design, verified by an administrator</li>
+    <li>A licensed market data feed, should live instrument prices be wanted from a real provider</li>
+  </ul>
+
+  <h3>Optional &mdash; annual maintenance</h3>
+  <table>
+    <thead>
+      <tr><th>Cover</th><th>What it includes</th><th class="num">Per year</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Standard</strong></td>
+        <td>Security patches and dependency updates, monitoring of the alerts, restoring from backup if needed, and up to 8 hours a month of small changes.</td>
+        <td class="num">&#8377;72,000</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small">
+    Quoted separately and entirely optional. Without it the platform keeps
+    running; what lapses is somebody watching it and keeping it current.
+  </p>
+
+  <h3>Terms</h3>
+  <ul>
+    <li>Prices are in Indian Rupees and hold for 30 days from the date on the cover.</li>
+    <li>GST is charged at the prevailing rate on all development invoices.</li>
+    <li>Infrastructure and service costs are estimates at current provider rates; they are billed by those providers directly to you, and move with their pricing and your usage.</li>
+    <li>Work on each stage begins once the previous stage is approved in writing.</li>
+    <li>Anything outside the scope set out in section 2 is quoted separately before it is started.</li>
+  </ul>
+</section>
+
+</body>
+</html>
