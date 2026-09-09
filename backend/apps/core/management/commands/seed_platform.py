@@ -109,7 +109,7 @@ PLACEHOLDER_SETTINGS = {
 CHANNELS = [
     {"name": "Cash Collection - Head Office", "channel_type": "cash",
      "contact_person": "Accounts Desk", "contact_phone": "+91 00000 00000",
-     "office_address": "Grosvenor Place, Level 15, 2205 George St, Sydney NSW 2000, Australia",
+     "office_address": "Grosvenor Place\nLevel 15, 2205 George St, Sydney NSW 2000, Australia",
      "instructions": "Hand the cash over at the counter, collect a receipt, then "
                      "file a deposit request describing the handover.",
      "min_amount": Decimal("100")},

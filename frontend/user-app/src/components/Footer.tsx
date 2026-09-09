@@ -1,7 +1,11 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowRight, Instagram, Linkedin, Twitter, Youtube } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Instagram, Linkedin, MapPin, Twitter, Youtube } from 'lucide-react';
 
 import Logo from '@/components/Logo';
+import { API_BASE } from '@/lib/api';
 
 const COLUMNS = [
   {
@@ -27,6 +31,19 @@ const SOCIALS = [
 ];
 
 export default function Footer() {
+  const [address, setAddress] = useState('');
+
+  // The footer sits inside the client-side chrome and stays mounted across
+  // navigations, so this runs once per full page load rather than per route.
+  // A failure leaves the block unrendered — an address is worth showing, and
+  // not worth a broken panel or an error over.
+  useEffect(() => {
+    fetch(`${API_BASE}/core/public-settings/`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setAddress(data?.support_address ?? ''))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="relative isolate mt-auto overflow-hidden border-t border-border">
       {/* Mountain plate. The gradient runs left-to-right so the half carrying
@@ -80,6 +97,16 @@ export default function Footer() {
               monthly returns and a referral programme that pays across your
               whole network.
             </p>
+
+            {/* The office, under the identity it belongs to. Read from the same
+                setting the contact page uses rather than typed in again, so an
+                administrator changing it changes it everywhere. */}
+            {address && (
+              <p className="mt-5 flex max-w-xs items-start gap-2 text-sm leading-relaxed text-text-muted">
+                <MapPin size={14} className="mt-0.5 shrink-0 text-accent" />
+                <span className="whitespace-pre-line">{address}</span>
+              </p>
+            )}
 
             <div className="mt-6 flex gap-2.5" data-anim="foot-social">
               {SOCIALS.map(({ href, label, Icon }) => (

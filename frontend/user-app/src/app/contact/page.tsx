@@ -129,7 +129,7 @@ export default async function ContactPage() {
                 <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-text-dim">
                   <MapPin size={13} /> Counter
                 </p>
-                <p className="mt-2 leading-relaxed text-text">{s.support_address || '—'}</p>
+                <p className="mt-2 whitespace-pre-line leading-relaxed text-text">{s.support_address || '—'}</p>
               </div>
               <div>
                 <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-text-dim">

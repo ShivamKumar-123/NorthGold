@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Instagram, Linkedin, Twitter, Youtube } from 'lucide-react';
+import { ArrowRight, Instagram, Linkedin, MapPin, Twitter, Youtube } from 'lucide-react';
 
 import Logo from '@/components/Logo';
+import { getSettings } from '@/lib/store';
 
 const COLUMNS = [
   {
@@ -27,6 +28,8 @@ const SOCIALS = [
 ];
 
 export default function Footer() {
+  const address = getSettings().support_address;
+
   return (
     <footer className="relative isolate mt-auto overflow-hidden border-t border-border">
       {/* Mountain plate. The gradient runs left-to-right so the half carrying
@@ -79,6 +82,16 @@ export default function Footer() {
               monthly returns and a referral programme that pays across your
               whole network.
             </p>
+
+            {/* The office, under the identity it belongs to. Read from the same
+                setting the contact page uses rather than typed in again, so an
+                administrator changing it changes it everywhere. */}
+            {address && (
+              <p className="mt-5 flex max-w-xs items-start gap-2 text-sm leading-relaxed text-text-muted">
+                <MapPin size={14} className="mt-0.5 shrink-0 text-accent" />
+                <span className="whitespace-pre-line">{address}</span>
+              </p>
+            )}
 
             <div className="mt-6 flex gap-2.5" data-anim="foot-social">
               {SOCIALS.map(({ href, label, Icon }) => (

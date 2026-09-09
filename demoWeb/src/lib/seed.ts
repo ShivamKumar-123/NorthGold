@@ -107,7 +107,7 @@ export const SETTINGS: Settings = {
   support_phone: '+91 98765 43210',
   support_whatsapp: '919876543210',
   support_hours: 'Mon–Sat, 10:00–19:00 IST',
-  support_address: 'Grosvenor Place, Level 15, 2205 George St, Sydney NSW 2000, Australia',
+  support_address: 'Grosvenor Place\nLevel 15, 2205 George St, Sydney NSW 2000, Australia',
   deposit_min_amount: 100,
   withdrawal_min_amount: 10,
   auto_invest_on_deposit: true,
@@ -157,8 +157,9 @@ export const EMPTY_DB: Omit<
   //    database, so a reseed is what actually delivers the new one.
   // 4: support threads, so the admin inbox opens with something in it.
   // 5: accounts carry a status, so the desk can block or close one.
+  // 6: the office address is stored across two lines, the way it is written.
   // A database stored under an older version is reseeded, not migrated.
-  version: 5,
+  version: 6,
   plans: ROI_PLANS,
   levels: MLM_LEVELS,
   issuers: ISSUERS,
