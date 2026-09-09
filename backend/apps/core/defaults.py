@@ -17,7 +17,8 @@ SETTING_DEFAULTS = {
     # --- Wallet ------------------------------------------------------------
     "withdrawal_min_amount": "10",
     "withdrawal_fee_percent": "0",
-    "deposit_min_amount": "100",
+    # Silver is the entry tier, so nothing below its slab can be invested.
+    "deposit_min_amount": "1000",
     # --- Branding ----------------------------------------------------------
     "platform_name": "NorthGold",
     # --- Support -----------------------------------------------------------

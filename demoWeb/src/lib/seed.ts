@@ -17,24 +17,13 @@ export const MLM_LEVELS: MlmLevel[] = [
 // holding longer earns more, which is the incentive to stay invested.
 export const ROI_PLANS: RoiPlan[] = [
   {
-    id: 'plan-starter',
-    name: 'Starter',
-    description: 'Entry tier for deposits from $100 to $999.',
-    min_amount: 100,
-    max_amount: 999,
-    tenure_months: 12,
-    display_order: 1,
-    months: [1, 1, 1, 1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.25, 1.25, 1.5],
-    is_active: true,
-  },
-  {
     id: 'plan-silver',
     name: 'Silver',
     description: 'For deposits from $1,000 to $4,999.',
     min_amount: 1000,
     max_amount: 4999,
     tenure_months: 12,
-    display_order: 2,
+    display_order: 1,
     months: [1, 1.25, 1.25, 1.5, 1.5, 1.5, 1.75, 1.75, 1.75, 2, 2, 2.5],
     is_active: true,
   },
@@ -45,7 +34,7 @@ export const ROI_PLANS: RoiPlan[] = [
     min_amount: 5000,
     max_amount: 24999,
     tenure_months: 12,
-    display_order: 3,
+    display_order: 2,
     months: [1.5, 1.5, 1.75, 1.75, 2, 2, 2, 2.25, 2.25, 2.5, 2.5, 3],
     is_active: true,
   },
@@ -56,7 +45,7 @@ export const ROI_PLANS: RoiPlan[] = [
     min_amount: 25000,
     max_amount: null,
     tenure_months: 12,
-    display_order: 4,
+    display_order: 3,
     months: [2, 2, 2.25, 2.25, 2.5, 2.5, 2.75, 2.75, 3, 3, 3.25, 3.5],
     is_active: true,
   },
@@ -78,7 +67,7 @@ export const INSTRUMENTS: Instrument[] = [
   {
     id: 'ins-2', symbol: 'MRD-RD12', name: 'Meridian Recurring Deposit',
     issuer_name: 'Meridian Bank', category_label: 'Recurring Deposit', interest_rate: 7.2,
-    tenure_months: 12, min_investment: 100, currency: 'USD', current_price: 100,
+    tenure_months: 12, min_investment: 1000, currency: 'USD', current_price: 100,
     change_percent: 0, price_source: 'manual', is_featured: false,
   },
   {
@@ -108,7 +97,7 @@ export const SETTINGS: Settings = {
   support_whatsapp: '919876543210',
   support_hours: 'Mon–Sat, 10:00–19:00 IST',
   support_address: 'Grosvenor Place\nLevel 15, 2205 George St, Sydney NSW 2000, Australia',
-  deposit_min_amount: 100,
+  deposit_min_amount: 1000,
   withdrawal_min_amount: 10,
   auto_invest_on_deposit: true,
   mlm_deposit_enabled: true,
@@ -133,7 +122,7 @@ export const DEMO_PEOPLE: Array<{
   { key: 'sneha', email: 'sneha@northgold.demo', first: 'Sneha', last: 'Kapoor', sponsor: 'priya', deposit: 1500, monthsAgo: 3 },
   { key: 'neha', email: 'neha@northgold.demo', first: 'Neha', last: 'Verma', sponsor: 'arjun', deposit: 26000, monthsAgo: 2 },
   { key: 'vikram', email: 'vikram@northgold.demo', first: 'Vikram', last: 'Rao', sponsor: 'neha', deposit: 5500, monthsAgo: 1 },
-  { key: 'anita', email: 'anita@northgold.demo', first: 'Anita', last: 'Desai', sponsor: 'rahul', deposit: 900, monthsAgo: 1 },
+  { key: 'anita', email: 'anita@northgold.demo', first: 'Anita', last: 'Desai', sponsor: 'rahul', deposit: 1200, monthsAgo: 1 },
 ];
 
 export const ADMIN: Pick<User, 'email' | 'password' | 'first_name' | 'last_name'> = {
@@ -158,8 +147,9 @@ export const EMPTY_DB: Omit<
   // 4: support threads, so the admin inbox opens with something in it.
   // 5: accounts carry a status, so the desk can block or close one.
   // 6: the office address is stored across two lines, the way it is written.
+  // 7: the Starter tier is gone; Silver's $1,000 is the entry point.
   // A database stored under an older version is reseeded, not migrated.
-  version: 6,
+  version: 7,
   plans: ROI_PLANS,
   levels: MLM_LEVELS,
   issuers: ISSUERS,
