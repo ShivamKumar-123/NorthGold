@@ -56,15 +56,20 @@ export default function LandingMotion() {
       // invisible for good. Stating both ends removes the sampling entirely.
       hero = gsap
         .timeline({ defaults: { ease: EASE, duration: 0.9 } })
-        .fromTo('[data-anim="hero-chip"]',
-          { y: 16, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6 })
-        // The greeting arrives as a widening line rather than a fade: the
-        // tracking closing to its resting value is what makes it read as a
-        // masthead settling in, not another paragraph appearing.
+        // The greeting arrives first and as a widening line rather than a
+        // fade: the tracking closing to its resting value is what makes it read
+        // as a masthead settling in, not another paragraph appearing.
+        //
+        // That resting value has to equal the tracking on the element itself.
+        // GSAP leaves an inline letter-spacing behind when it finishes, and an
+        // inline style beats a class — so a mismatch here silently overrides
+        // whatever the markup asked for.
         .fromTo('[data-anim="hero-welcome"]',
           { y: 14, opacity: 0, letterSpacing: '0.42em' },
-          { y: 0, opacity: 1, letterSpacing: '0.22em', duration: 0.75 }, '-=0.35')
+          { y: 0, opacity: 1, letterSpacing: '0.18em', duration: 0.75 })
+        .fromTo('[data-anim="hero-chip"]',
+          { y: 16, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6 }, '-=0.4')
         .fromTo(
           '[data-anim="hero-title"] .word',
           { yPercent: 115, opacity: 0 },

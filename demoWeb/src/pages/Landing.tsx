@@ -46,28 +46,35 @@ export default function LandingPage() {
               {/* The hero is above the fold, so it is driven by the load
                   timeline in LandingMotion — not by `Reveal`, which waits for
                   a scroll that has not happened yet. */}
-              <span className="chip mx-auto lg:mx-0" data-anim="hero-chip">
+              {/* The greeting leads. It is the masthead, so it sits above the
+                  chip rather than wedged between it and the headline — and it
+                  is set large enough to read as one. Folding it into the h1
+                  would put a salutation inside the sentence the page is
+                  actually there to make.
+
+                  The tracking here has to match the value the load timeline
+                  animates it to, or GSAP's inline style wins and the class is
+                  ignored. */}
+              <p
+                className="text-base font-semibold uppercase tracking-[0.18em] text-gradient-gold
+                           sm:text-lg lg:text-xl"
+                data-anim="hero-welcome"
+              >
+                Welcome to Net financing
+              </p>
+
+              <span className="chip mx-auto mt-5 lg:mx-0" data-anim="hero-chip">
                 <Sparkles size={12} className="text-gold" />
                 Verified partner-bank instruments
                 <span className="mx-1 h-3 w-px bg-white/15" />
                 <span className="text-success">Monthly payouts</span>
               </span>
 
-              {/* The greeting is its own line above the headline. Folding it
-                  into the h1 would put a salutation inside the sentence the
-                  page is actually there to make. */}
-              <p
-                className="mt-7 text-sm font-semibold uppercase tracking-[0.22em] text-gradient-gold"
-                data-anim="hero-welcome"
-              >
-                Welcome to Net financing
-              </p>
-
               {/* Solid body, gradient only on the phrase that matters.
                   Running .text-gradient across every span gives each its own
                   ramp, which turns the opening words muddy. */}
               <h1
-                className="mt-3 text-balance text-display font-semibold text-text text-3d [overflow-wrap:break-word]"
+                className="mt-5 text-balance text-display font-semibold text-text text-3d [overflow-wrap:break-word]"
                 data-anim="hero-title"
               >
                 <SplitWords text="Instant access to investing," />{' '}
