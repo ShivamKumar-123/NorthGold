@@ -134,15 +134,8 @@ export default function Footer() {
 
       {/* ── Bottom bar ───────────────────────────────────────────────── */}
       <div className="plate-footer-bar relative border-t border-border/80 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-text-dim sm:flex-row sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-5 text-xs text-text-dim sm:px-6">
           <p>&copy; {new Date().getFullYear()} NorthGold. All rights reserved.</p>
-          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            {['Privacy Policy', 'Terms of Service', 'Risk Disclosure', 'Cookies'].map((item) => (
-              <Link key={item} href="/calculator#plans" className="transition hover:text-text-muted">
-                {item}
-              </Link>
-            ))}
-          </nav>
         </div>
       </div>
     </footer>
