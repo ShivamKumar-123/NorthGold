@@ -24,23 +24,27 @@ Every cell is editable from **Admin → ROI plans**. Terms are **frozen onto eac
 investment at purchase**, so editing a plan never changes what an existing
 investor was promised.
 
-**2. Referral commission pays up the sponsor chain, on two events.**
+**2. The sponsor earns a share of what their referral deposited, every month.**
 
-Level 1 is a **direct** referral; levels 2+ are **indirect**. Each level has two
-independent rates:
+When a member's investment pays its month-N return, that member's **direct
+sponsor** is paid a percentage of the **deposit** — not of the return. Two
+things decide the rate, and both are the administrator's to set from
+**Admin -> Referral rates**:
 
-| Level | Kind | On their deposit | On their monthly return | Unlocks at |
-|---|---|---|---|---|
-| L1 | direct | 5.0% | 10.0% | immediately |
-| L2 | indirect | 3.0% | 5.0% | 1 direct referral |
-| L3 | indirect | 2.0% | 3.0% | 2 direct referrals |
-| L4 | indirect | 1.0% | 2.0% | 3 direct referrals |
-| L5 | indirect | 0.5% | 1.0% | 4 direct referrals |
+| If they deposit | Sponsor earns each month | Over 12 months |
+|---|---|---|
+| $1,000 - 4,999 | 1.00% | 12.00% |
+| $5,000 - 24,999 | 1.50% | 18.00% |
+| $25,000+ | 2.00% | 24.00% |
 
-Editable from **Admin → MLM levels**. The deposit commission is one-off; the ROI
-commission recurs every month the downline member is paid. An upline that fails
-a level's qualification is recorded as `skipped` **with the reason**, never
-silently dropped.
+A $1,000 referral at 1% pays its sponsor $10 a month for the term of the
+investment. Every cell above is a placeholder — the matrix holds one percentage
+per month per slab, so a rate can ramp or stay flat, and none of it is derived
+from the ROI rates.
+
+There are no levels. Nobody above the direct sponsor earns anything, and
+approving a deposit pays nobody: the programme pays monthly, against the
+investment.
 
 ## Quick start
 
@@ -184,7 +188,7 @@ backend/
   apps/instruments/  Issuer, Instrument, PriceTick, live-price consumer + ticker
   apps/investments/  RoiPlan, RoiPlanMonth, Investment, RoiPayout, the payout runner
   apps/wallet/       PaymentChannel, Deposit, Withdrawal, Transaction, verification
-  apps/mlm/          MlmLevelConfig, Commission, the chain-walking engine
+  apps/mlm/          ReferralPlan, Commission, the monthly referral engine
   apps/support/      SupportMessage — one thread per member, and the desk's inbox
 frontend/user-app/   Next.js 15 — landing board, calculator, wallet, network tree
 frontend/admin-app/  Next.js 15 — verification queues, KYC desk, support inbox, plans
@@ -229,7 +233,7 @@ support degrades rather than showing a frozen board.
 cd backend && python manage.py test
 ```
 
-83 tests. The money path (`apps.investments`) covers slab selection,
+87 tests. The money path (`apps.investments`) covers slab selection,
 deposit-relative month maturity (including Jan 31 → Feb 28 clamping), direct and
 indirect commission, qualification gating, idempotency of both the sweep and the
 commission engine, withdrawal holds and refunds, tree assembly, and ledger

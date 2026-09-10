@@ -23,6 +23,8 @@ export type RegisterPayload = {
   phone?: string;
   country?: string;
   referral_code?: string;
+  /** Which identity document the two ID pages are. Asked once, stored on both. */
+  proofType: string;
   /** doc_type -> file, keyed by `KYC_DOC_TYPES`. The API refuses a signup that
    *  is missing any of them, so the account and the documents it was opened
    *  against are always created together. */
@@ -66,11 +68,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (payload: RegisterPayload) => {
     // Multipart rather than JSON: the identity documents go up with the rest
     // of the form, in the one request that creates the account.
-    const { documents, ...fields } = payload;
+    const { documents, proofType, ...fields } = payload;
     const form = new FormData();
     Object.entries(fields).forEach(([key, value]) => {
       if (value) form.append(key, value);
     });
+    // The API field is snake_case; the prop is not, so it is mapped rather
+    // than spread with the rest.
+    form.append('proof_type', proofType);
     Object.entries(documents).forEach(([docType, file]) => form.append(docType, file));
 
     const res = await api.postForm<AuthResponse>('/auth/register/', form, { auth: false });

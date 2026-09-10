@@ -252,8 +252,7 @@ export default function AdminUserDetailPage() {
                   <tr>
                     <th>Date</th>
                     <th>From</th>
-                    <th>Level</th>
-                    <th>Event</th>
+                    <th>Month</th>
                     <th className="text-right">Base</th>
                     <th className="text-right">Rate</th>
                     <th className="text-right">Amount</th>
@@ -269,15 +268,10 @@ export default function AdminUserDetailPage() {
                         <p className="text-xs text-text-muted">{c.source_email}</p>
                       </td>
                       <td>
-                        <span
-                          className={`badge ${
-                            c.kind === 'direct' ? 'bg-accent/15 text-accent' : 'bg-gold/15 text-gold'
-                          }`}
-                        >
-                          L{c.level}
+                        <span className="badge bg-accent/15 text-accent">
+                          Month {c.month_index}
                         </span>
                       </td>
-                      <td className="text-text-muted">{c.trigger_label}</td>
                       <td className="text-right tabular-nums text-text-muted">{money(c.base_amount)}</td>
                       <td className="text-right tabular-nums">{num(c.percent, 2)}%</td>
                       <td className="text-right tabular-nums text-success">{money(c.amount)}</td>

@@ -30,7 +30,14 @@ def a_file(name="doc.png"):
 
 
 def full_signup(**overrides):
-    payload = {**DETAILS, **{doc: a_file(f"{doc}.png") for doc in KYC_SIGNUP_DOCS}}
+    payload = {
+        **DETAILS,
+        # Which identity document the two ID pages are. Asked once, stored on
+        # both, and required — a reviewer cannot check a number format without
+        # knowing which document they are holding.
+        "proof_type": "aadhaar",
+        **{doc: a_file(f"{doc}.png") for doc in KYC_SIGNUP_DOCS},
+    }
     payload.update(overrides)
     return payload
 
@@ -77,6 +84,31 @@ class RegistrationKYCTests(TestCase):
             sorted(docs.values_list("doc_type", flat=True)), sorted(KYC_SIGNUP_DOCS),
         )
         self.assertTrue(all(d.status == "submitted" for d in docs))
+
+        # The choice rides on the two ID pages and nothing else.
+        self.assertEqual(
+            sorted(docs.filter(proof_type="aadhaar").values_list("doc_type", flat=True)),
+            ["id_back", "id_front"],
+        )
+        self.assertTrue(all(d.proof_type == "" for d in docs.exclude(
+            doc_type__in=["id_front", "id_back"])))
+
+    def test_signup_without_a_proof_type_is_refused(self):
+        payload = full_signup()
+        payload.pop("proof_type")
+
+        res = self.client.post(self.url, payload, format="multipart")
+
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("proof_type", res.data)
+        self.assertFalse(User.objects.filter(email=DETAILS["email"]).exists())
+
+    def test_an_unknown_proof_type_is_refused(self):
+        res = self.client.post(
+            self.url, full_signup(proof_type="driving_licence"), format="multipart",
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("proof_type", res.data)
 
     def test_an_oversized_document_is_refused(self):
         from django.core.files.uploadedfile import SimpleUploadedFile

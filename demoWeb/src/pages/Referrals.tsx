@@ -163,7 +163,6 @@ export default function ReferralsPage() {
             {treeView === 'graph' ? (
               <NetworkGraph
                 nodes={treeNodes}
-                levels={earnings.structure ?? []}
                 rootName={displayName(user)}
               />
             ) : (
@@ -221,29 +220,32 @@ export default function ReferralsPage() {
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Level</th>
-                      <th className="text-right">On deposit</th>
-                      <th className="text-right">On monthly return</th>
-                      <th className="text-right">You earned</th>
+                      <th>If they deposit</th>
+                      <th className="text-right">You earn each month</th>
+                      <th className="text-right">Over the term</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(earnings.structure ?? []).map((level) => {
-                      const earned = earnings.by_level.find((b: EarningsView['by_level'][number]) => b.level === level.level);
+                    {(earnings.structure ?? []).map((plan) => {
+                      // A flat slab shows one figure; a ramped one shows its
+                      // span, because quoting only the first month would
+                      // understate what the slab actually pays.
+                      const low = Math.min(...plan.months);
+                      const high = Math.max(...plan.months);
+                      const total = plan.months.reduce((s, m) => s + m, 0);
                       return (
-                        <tr key={level.level}>
+                        <tr key={plan.id}>
                           <td className="font-medium">
-                            L{level.level}
-                            <span className="ml-2 text-xs text-text-dim">{level.level === 1 ? 'direct' : 'indirect'}</span>
+                            {money(plan.min_amount)}
+                            {plan.max_amount === null ? '+' : ` – ${money(plan.max_amount)}`}
                           </td>
                           <td className="text-right tabular-nums text-gold">
-                            {num(level.deposit_percent, 2)}%
-                          </td>
-                          <td className="text-right tabular-nums text-gold">
-                            {num(level.roi_percent, 2)}%
+                            {low === high
+                              ? `${num(low, 2)}%`
+                              : `${num(low, 2)}–${num(high, 2)}%`}
                           </td>
                           <td className="text-right tabular-nums text-success">
-                            {money(earned?.total ?? 0)}
+                            {num(total, 2)}%
                           </td>
                         </tr>
                       );
@@ -314,12 +316,8 @@ export default function ReferralsPage() {
                         <p className="text-xs text-text-muted">{c.source_email}</p>
                       </td>
                       <td>
-                        <span
-                          className={`badge ${
-                            c.kind === 'direct' ? 'bg-accent/15 text-accent' : 'bg-gold/15 text-gold'
-                          }`}
-                        >
-                          L{c.level} {c.kind}
+                        <span className="badge bg-accent/15 text-accent">
+                          Month {c.month_index}
                         </span>
                       </td>
                       <td className="text-text-muted">{c.trigger_label}</td>

@@ -30,7 +30,7 @@ const GROUPS = [
     title: 'Configuration',
     items: [
       { href: '/roi-plans', label: 'ROI plans', icon: SlidersHorizontal },
-      { href: '/mlm-config', label: 'MLM levels', icon: Network },
+      { href: '/referral-rates', label: 'Referral rates', icon: Network },
       { href: '/instruments', label: 'Instruments', icon: CandlestickChart },
       { href: '/channels', label: 'Payment channels', icon: Wallet },
     ],

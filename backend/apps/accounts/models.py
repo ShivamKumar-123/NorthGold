@@ -208,8 +208,22 @@ class KYCDocument(TimeStampedUUIDModel):
         ("bank_proof", "Bank Proof"),
     ]
 
+    # WHICH identity document the ID pages are. `doc_type` says it is the front
+    # of an ID; this says the ID is an Aadhaar. A reviewer needs both — the
+    # number format, the layout and what can be checked against it all differ.
+    # Blank on documents where the question does not arise, such as a selfie.
+    PROOF_TYPES = [
+        ("aadhaar", "Aadhaar card"),
+        ("pan", "PAN card"),
+        ("national_id", "National ID"),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kyc_documents")
     doc_type = models.CharField(max_length=30, choices=DOC_TYPES)
+    proof_type = models.CharField(
+        max_length=20, choices=PROOF_TYPES, blank=True,
+        help_text="Which identity document this is. Only set on the ID pages.",
+    )
     file = models.FileField(upload_to="kyc/")
     status = models.CharField(max_length=20, choices=KYC_CHOICES, default="submitted")
     rejection_reason = models.TextField(blank=True)

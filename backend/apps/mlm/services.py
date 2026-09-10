@@ -1,13 +1,17 @@
-"""The commission engine.
+"""The referral engine.
 
-Walks up the sponsor chain from whoever generated the money and pays each
-ancestor their configured share — the same shape as the reference platform's
-`distribute_ib_commission`, but driven by deposits and monthly ROI payouts
-instead of trade lots.
+One payment, to one person, once a month.
 
-Everything here is idempotent: `Commission` carries a unique constraint on
-(earner, trigger, reference_id), so a retried Celery task, a double-clicked
-approve button, or two overlapping sweeps all converge on one payment.
+When a member's investment pays its month-N return, the member's direct
+sponsor earns a percentage of what that member *deposited* — not of the return
+they just received. The percentage comes from the referral matrix: the deposit
+picks a slab, the slab holds a rate for each month.
+
+This replaced a five-level chain that paid on two separate events at five
+depths. What is gone with it: indirect levels, qualification gates, and the
+one-off payment on the deposit itself. What is kept: idempotency. `Commission`
+is unique on (earner, trigger, reference_id) keyed to the payout, so a retried
+task or two overlapping sweeps converge on exactly one payment.
 """
 import logging
 from decimal import ROUND_DOWN, Decimal
@@ -18,164 +22,117 @@ from django.db.models import Count, Sum
 from apps.accounts.models import User
 from apps.core.services import get_setting, notify
 
-from .models import Commission, MlmLevelConfig
+from .models import Commission, ReferralPlan
 
 logger = logging.getLogger(__name__)
 
 CENT = Decimal("0.01")
 
-TRIGGER_SETTING = {
-    "deposit": "mlm_deposit_enabled",
-    "investment": "mlm_deposit_enabled",
-    "roi": "mlm_roi_enabled",
-}
-
 
 def quantize(amount):
-    """Round DOWN to cents. Rounding up would let the platform pay out fractions
-    of a cent more than it collected on every single payout."""
+    """Round DOWN to cents. Rounding up would let the platform pay out
+    fractions of a cent more than it collected, on every single payment."""
     return Decimal(str(amount)).quantize(CENT, rounding=ROUND_DOWN)
 
 
-def active_level_configs():
-    return {c.level: c for c in MlmLevelConfig.objects.filter(is_active=True)}
-
-
-def _qualifies(upline, config):
-    """Returns (ok, reason). A failing upline is recorded as skipped, not
-    silently dropped — otherwise nobody can explain a missing payout."""
-    if config.min_direct_referrals:
-        directs = User.objects.filter(sponsor=upline, status="active").count()
-        if directs < config.min_direct_referrals:
-            return False, (f"Needs {config.min_direct_referrals} direct referrals, has {directs}")
-
-    required = config.min_self_investment or Decimal("0")
-    if get_setting("mlm_require_active_investment") and required <= 0:
-        required = Decimal("0.01")
-    if required > 0:
-        from apps.investments.models import Investment
-        held = Investment.objects.filter(
-            user=upline, status="active",
-        ).aggregate(t=Sum("principal"))["t"] or Decimal("0")
-        if held < required:
-            return False, f"Needs {required} active principal, holds {held}"
-
-    if upline.status != "active":
-        return False, f"Upline account is {upline.status}"
-
-    return True, ""
-
-
 @transaction.atomic
-def distribute_commission(*, source_user, base_amount, trigger, reference_id,
-                          reference_type="", description=""):
-    """Pay the upline chain above `source_user`.
+def pay_referral_commission(*, investment, month_index, reference_id,
+                            reference_type="roi_payout"):
+    """Pay the direct sponsor for one month of one investment.
 
-    Returns the list of Commission rows created (paid and skipped alike).
-    Callers should treat a raised exception as fatal to their own transaction —
-    money must not move for the source event if the chain half-paid.
+    Returns the Commission row, or None when there is nothing to pay — no
+    sponsor, no slab covering the deposit, an unconfigured month, or a rate
+    that rounds to nothing.
+
+    The base is the investment principal, so a $1,000 deposit at 1% earns the
+    sponsor $10 in that month regardless of what the investor's own return was.
     """
-    base_amount = Decimal(str(base_amount or 0))
-    if base_amount <= 0:
-        return []
+    if not get_setting("referral_enabled"):
+        logger.info("Referral payouts disabled by setting; skipping")
+        return None
 
-    setting_key = TRIGGER_SETTING.get(trigger)
-    if setting_key and not get_setting(setting_key):
-        logger.info("MLM %s payouts disabled by setting; skipping", trigger)
-        return []
-
-    max_levels = int(get_setting("mlm_max_levels") or 5)
-    configs = active_level_configs()
-    if not configs:
-        logger.warning("No active MLM level configuration; nothing to distribute")
-        return []
-
-    chain = source_user.upline_chain(max_levels)
-    if not chain:
-        return []
-
-    created = []
-    for level, upline in enumerate(chain, start=1):
-        config = configs.get(level)
-        if config is None:
-            continue
-
-        percent = config.percent_for(trigger)
-        if percent is None or percent <= 0:
-            continue
-
-        ok, reason = _qualifies(upline, config)
-        amount = quantize(base_amount * percent / Decimal("100"))
-
-        if not ok or amount <= 0:
-            row = _record(
-                earner=upline, source_user=source_user, level=level, trigger=trigger,
-                base_amount=base_amount, percent=percent, amount=Decimal("0"),
-                status="skipped",
-                skip_reason=reason or "Computed amount rounded to zero",
-                reference_id=reference_id, reference_type=reference_type,
-                description=description,
-            )
-            if row:
-                created.append(row)
-            continue
-
-        row = _record(
-            earner=upline, source_user=source_user, level=level, trigger=trigger,
-            base_amount=base_amount, percent=percent, amount=amount, status="paid",
+    member = investment.user
+    sponsor = member.sponsor
+    if sponsor is None:
+        return None
+    if sponsor.status != "active":
+        # Recorded rather than dropped: a sponsor asking why a month is
+        # missing deserves an answer that is written down.
+        return _record(
+            earner=sponsor, source_user=member, month_index=month_index,
+            base_amount=investment.principal, percent=Decimal("0"),
+            amount=Decimal("0"), status="skipped",
+            skip_reason=f"Sponsor account is {sponsor.status}",
             reference_id=reference_id, reference_type=reference_type,
-            description=description,
+            description=f"Month {month_index} referral commission",
         )
-        if row is None:
-            # Already paid for this event — a retry. Nothing more to do.
-            continue
 
-        _credit(upline, amount, row, source_user, level, trigger)
-        created.append(row)
+    plan = ReferralPlan.for_amount(investment.principal)
+    if plan is None:
+        logger.warning("No referral slab covers %s; nothing to pay",
+                       investment.principal)
+        return None
 
-    return created
+    percent = plan.percent_for_month(month_index)
+    if percent is None or percent <= 0:
+        return None
+
+    amount = quantize(investment.principal * percent / Decimal("100"))
+    if amount <= 0:
+        return None
+
+    row = _record(
+        earner=sponsor, source_user=member, month_index=month_index,
+        base_amount=investment.principal, percent=percent, amount=amount,
+        status="paid", reference_id=reference_id, reference_type=reference_type,
+        description=f"Month {month_index} referral commission ({plan.name})",
+    )
+    if row is None:
+        # Already paid for this payout — a retry. Nothing more to do.
+        return None
+
+    _credit(sponsor, amount, row, member, month_index)
+    return row
 
 
 def _record(**kwargs):
-    """Insert one Commission row, or return None if this event already paid this
-    earner (the unique constraint fires)."""
+    """Insert one Commission row, or return None if this payout already paid
+    this sponsor (the unique constraint fires)."""
     try:
         with transaction.atomic():
             return Commission.objects.create(**kwargs)
     except IntegrityError:
         logger.info(
-            "Commission already recorded earner=%s trigger=%s ref=%s",
-            kwargs.get("earner").id, kwargs.get("trigger"), kwargs.get("reference_id"),
+            "Referral commission already recorded earner=%s ref=%s",
+            kwargs.get("earner").id, kwargs.get("reference_id"),
         )
         return None
 
 
-def _credit(upline, amount, commission, source_user, level, trigger):
-    """Move the money. Row-locks the earner so two concurrent payouts to the
-    same upline cannot both read the same stale balance."""
+def _credit(sponsor, amount, commission, member, month_index):
+    """Move the money. Row-locks the earner so two concurrent payments to the
+    same sponsor cannot both read a stale balance."""
     from apps.wallet.models import Transaction
 
-    locked = User.objects.select_for_update().get(pk=upline.pk)
+    locked = User.objects.select_for_update().get(pk=sponsor.pk)
     locked.wallet_balance = (locked.wallet_balance or Decimal("0")) + amount
     locked.total_commission_earned = (locked.total_commission_earned or Decimal("0")) + amount
     locked.save(update_fields=["wallet_balance", "total_commission_earned", "updated_at"])
 
-    kind = "Direct" if level == 1 else f"Level {level}"
-    label = "deposit" if trigger in ("deposit", "investment") else "monthly ROI"
     Transaction.objects.create(
         user=locked,
         tx_type="commission",
         amount=amount,
         balance_after=locked.wallet_balance,
-        description=f"{kind} referral commission on {source_user.full_name}'s {label}",
+        description=f"Referral commission on {member.full_name}'s deposit, month {month_index}",
         reference_id=commission.id,
         reference_type="commission",
     )
     notify(
         locked,
         title="Referral commission credited",
-        message=(f"You earned {amount} from {source_user.full_name}'s {label} "
-                 f"({kind}, {commission.percent}%)."),
+        message=(f"You earned {amount} from {member.full_name}'s deposit "
+                 f"(month {month_index}, {commission.percent}%)."),
         notif_type="commission",
         action_url="/referrals",
     )
@@ -184,29 +141,52 @@ def _credit(upline, amount, commission, source_user, level, trigger):
 # ─── Reporting ────────────────────────────────────────────────────────────
 
 def earnings_breakdown(user):
-    """Per-level and per-trigger totals for the user's earnings dashboard."""
+    """Totals for the member's referral dashboard.
+
+    Reported per referral rather than per level: with the chain gone, "who is
+    paying me" is the only breakdown that still means anything.
+    """
     paid = Commission.objects.filter(earner=user, status="paid")
 
-    by_level = [
-        {"level": row["level"], "total": float(row["total"] or 0), "count": row["count"]}
-        for row in paid.values("level").annotate(
-            total=Sum("amount"), count=Count("id"),
-        ).order_by("level")
+    by_referral = [
+        {
+            "user_id": str(row["source_user"]),
+            "name": row["source_user__first_name"] + " " + row["source_user__last_name"],
+            "email": row["source_user__email"],
+            "total": float(row["total"] or 0),
+            "months": row["months"],
+        }
+        for row in paid.values(
+            "source_user", "source_user__first_name",
+            "source_user__last_name", "source_user__email",
+        ).annotate(total=Sum("amount"), months=Count("id")).order_by("-total")
     ]
-    by_trigger = {
-        row["trigger"]: float(row["total"] or 0)
-        for row in paid.values("trigger").annotate(total=Sum("amount"))
-    }
     total = paid.aggregate(t=Sum("amount"))["t"] or Decimal("0")
 
     return {
         "total_earned": float(total),
-        "direct_earned": float(
-            paid.filter(level=1).aggregate(t=Sum("amount"))["t"] or 0
-        ),
-        "indirect_earned": float(
-            paid.filter(level__gt=1).aggregate(t=Sum("amount"))["t"] or 0
-        ),
-        "by_level": by_level,
-        "by_trigger": by_trigger,
+        "paying_referrals": len(by_referral),
+        "by_referral": by_referral,
     }
+
+
+def referral_matrix():
+    """The whole matrix, for the public structure endpoint and the editor."""
+    return [
+        {
+            "id": str(plan.id),
+            "name": plan.name,
+            "description": plan.description,
+            "min_amount": float(plan.min_amount),
+            "max_amount": float(plan.max_amount) if plan.max_amount is not None else None,
+            "tenure_months": plan.tenure_months,
+            "is_active": plan.is_active,
+            "display_order": plan.display_order,
+            "total_percent": float(plan.total_percent),
+            "months": [
+                {"month_index": m.month_index, "percent": float(m.percent)}
+                for m in plan.months.all()
+            ],
+        }
+        for plan in ReferralPlan.objects.filter(is_active=True).prefetch_related("months")
+    ]

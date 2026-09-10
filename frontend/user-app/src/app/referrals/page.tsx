@@ -112,15 +112,17 @@ export default function ReferralsPage() {
           icon={<TrendingUp size={17} />}
         />
         <StatCard
-          label="From direct (L1)"
-          value={money(earnings?.direct_earned)}
-          hint="People you personally referred"
+          label="Referrals paying you"
+          value={String(earnings?.paying_referrals ?? 0)}
+          hint="People whose deposits are earning you a monthly share"
           icon={<Users size={17} />}
         />
         <StatCard
-          label="From indirect (L2+)"
-          value={money(earnings?.indirect_earned)}
-          hint="Their referrals, and deeper"
+          label="Months paid"
+          value={String(
+            (earnings?.by_referral ?? []).reduce((sum, r) => sum + r.months, 0),
+          )}
+          hint="One payment per referral, per month their deposit runs"
           tone="gold"
           icon={<Layers size={17} />}
         />
@@ -190,7 +192,6 @@ export default function ReferralsPage() {
             {treeView === 'graph' ? (
               <NetworkGraph
                 nodes={tree?.tree ?? []}
-                levels={earnings?.structure ?? []}
                 rootName={user.first_name || user.name}
               />
             ) : (
@@ -248,29 +249,32 @@ export default function ReferralsPage() {
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Level</th>
-                      <th className="text-right">On deposit</th>
-                      <th className="text-right">On monthly return</th>
-                      <th className="text-right">You earned</th>
+                      <th>If they deposit</th>
+                      <th className="text-right">You earn each month</th>
+                      <th className="text-right">Over the term</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(earnings?.structure ?? []).map((level) => {
-                      const earned = earnings?.by_level.find((b) => b.level === level.level);
+                    {(earnings?.structure ?? []).map((plan) => {
+                      // A flat slab shows one figure; a ramped one shows its
+                      // span, because quoting only month one would understate
+                      // what the slab actually pays.
+                      const rates = plan.months.map((m) => Number(m.percent));
+                      const low = rates.length ? Math.min(...rates) : 0;
+                      const high = rates.length ? Math.max(...rates) : 0;
                       return (
-                        <tr key={level.level}>
+                        <tr key={plan.id}>
                           <td className="font-medium">
-                            L{level.level}
-                            <span className="ml-2 text-xs text-text-dim">{level.kind}</span>
+                            {money(plan.min_amount)}
+                            {plan.max_amount === null ? '+' : ` – ${money(plan.max_amount)}`}
                           </td>
                           <td className="text-right tabular-nums text-gold">
-                            {num(level.deposit_percent, 2)}%
-                          </td>
-                          <td className="text-right tabular-nums text-gold">
-                            {num(level.roi_percent, 2)}%
+                            {low === high
+                              ? `${num(low, 2)}%`
+                              : `${num(low, 2)}–${num(high, 2)}%`}
                           </td>
                           <td className="text-right tabular-nums text-success">
-                            {money(earned?.total ?? 0)}
+                            {num(plan.total_percent, 2)}%
                           </td>
                         </tr>
                       );
@@ -341,15 +345,10 @@ export default function ReferralsPage() {
                         <p className="text-xs text-text-muted">{c.source_email}</p>
                       </td>
                       <td>
-                        <span
-                          className={`badge ${
-                            c.kind === 'direct' ? 'bg-accent/15 text-accent' : 'bg-gold/15 text-gold'
-                          }`}
-                        >
-                          L{c.level} {c.kind}
+                        <span className="badge bg-accent/15 text-accent">
+                          Month {c.month_index}
                         </span>
                       </td>
-                      <td className="text-text-muted">{c.trigger_label}</td>
                       <td className="text-right tabular-nums text-text-muted">{money(c.base_amount)}</td>
                       <td className="text-right tabular-nums">{num(c.percent, 2)}%</td>
                       <td className="text-right tabular-nums font-medium text-success">

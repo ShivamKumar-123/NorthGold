@@ -300,7 +300,6 @@ export default function DashboardPage() {
               </div>
               <NetworkGraph
                 nodes={tree?.tree ?? []}
-                levels={earnings?.structure ?? []}
                 rootName={user.first_name || user.name}
                 maxDepth={2}
               />
@@ -318,8 +317,16 @@ export default function DashboardPage() {
               <Row label="Direct referrals" value={String(earnings?.network.direct_count ?? 0)} />
               <Row label="Total downline" value={String(earnings?.network.total_downline ?? 0)} />
               <Row label="Team business" value={money(earnings?.network.team_business)} />
-              <Row label="From direct" value={money(earnings?.direct_earned)} valueClass="text-success" />
-              <Row label="From indirect" value={money(earnings?.indirect_earned)} valueClass="text-gold" />
+              <Row
+                label="Referral earnings"
+                value={money(earnings?.total_earned)}
+                valueClass="text-success"
+              />
+              <Row
+                label="Referrals paying you"
+                value={String(earnings?.paying_referrals ?? 0)}
+                valueClass="text-gold"
+              />
             </div>
             <Link href="/referrals" className="btn-ghost mt-4 w-full">
               View network tree <ArrowRight size={14} />

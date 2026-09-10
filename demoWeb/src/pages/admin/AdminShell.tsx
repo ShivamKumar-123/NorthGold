@@ -33,7 +33,7 @@ const GROUPS: Array<{ title: string; items: Array<{ to: string; label: string; i
     title: 'Configuration',
     items: [
       { to: '/admin/plans', label: 'ROI plans', icon: Layers },
-      { to: '/admin/levels', label: 'MLM levels', icon: Network },
+      { to: '/admin/referral-rates', label: 'Referral rates', icon: Network },
       { to: '/admin/channels', label: 'Cash counter', icon: Wallet },
     ],
   },

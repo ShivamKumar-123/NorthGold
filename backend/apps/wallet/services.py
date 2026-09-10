@@ -1,10 +1,12 @@
 """Deposit / withdrawal verification and the ledger writes behind them.
 
 Approving a deposit is the single busiest moment in the system. In one atomic
-block it: credits the wallet, writes the ledger row, optionally starts the
-investment that will pay monthly ROI, and pays the upline their one-off deposit
-commission. Any failure rolls the whole thing back — a half-approved deposit is
-far worse than a rejected one.
+block it credits the wallet, writes the ledger row, and optionally starts the
+investment that will pay monthly ROI. Any failure rolls the whole thing back —
+a half-approved deposit is far worse than a rejected one.
+
+No commission is paid here. The referral programme pays the sponsor once a
+month against the investment, not once against the deposit.
 """
 import logging
 from decimal import ROUND_DOWN, Decimal
@@ -66,8 +68,7 @@ def create_deposit_request(*, user, amount, method, channel=None,
 @transaction.atomic
 def approve_deposit(deposit, admin, *, admin_note="", ip_address=None,
                     auto_invest=None, plan=None):
-    """Verify a deposit: credit the wallet, then start the ROI clock and pay
-    the upline.
+    """Verify a deposit: credit the wallet, then start the ROI clock.
 
     `auto_invest` defaults to the platform setting. When it is on, the whole
     deposit is immediately locked into the plan matching its amount slab, which
@@ -120,14 +121,9 @@ def approve_deposit(deposit, admin, *, admin_note="", ip_address=None,
                             f"It is not yet earning: {exc}"),
                    notif_type="deposit", action_url="/wallet")
 
-    # One-off upline commission on the deposit itself.
-    from apps.mlm.services import distribute_commission
-    distribute_commission(
-        source_user=user, base_amount=amount, trigger="deposit",
-        reference_id=locked_deposit.id, reference_type="deposit",
-        description=f"Deposit commission ({locked_deposit.get_method_display()})",
-    )
-
+    # No commission is paid here any more. The referral programme pays the
+    # sponsor once a month against the investment, which is where the rate and
+    # the month index both live — see apps.mlm.services.
     notify(user, title="Deposit approved",
            message=(f"Your deposit of {amount} was verified and credited."
                     + (" It is now earning monthly returns." if investment else "")),

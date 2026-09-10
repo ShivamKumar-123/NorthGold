@@ -10,6 +10,10 @@ from .models import KYCDocument, Referral, User
 # than waiting for them to come back to the profile page later.
 KYC_SIGNUP_DOCS = ["id_front", "id_back", "selfie", "address_proof", "bank_proof"]
 
+# The ID pages are two sides of one document, so the choice is made once and
+# stored on both rather than asked for twice.
+ID_DOCS = ["id_front", "id_back"]
+
 MAX_KYC_FILE_BYTES = 5 * 1024 * 1024
 ALLOWED_KYC_CONTENT_TYPES = {
     "image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic",
@@ -42,6 +46,9 @@ class RegisterSerializer(serializers.Serializer):
     country = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
     # --- KYC, required to open the account -------------------------------
+    proof_type = serializers.ChoiceField(
+        choices=[c[0] for c in KYCDocument.PROOF_TYPES], write_only=True,
+    )
     id_front = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     id_back = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     selfie = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
@@ -172,10 +179,14 @@ class AdminSetPasswordSerializer(serializers.Serializer):
 
 
 class KYCDocumentSerializer(serializers.ModelSerializer):
+    proof_type_label = serializers.CharField(
+        source="get_proof_type_display", read_only=True,
+    )
+
     class Meta:
         model = KYCDocument
-        fields = ["id", "doc_type", "file", "status", "rejection_reason",
-                  "reviewed_at", "created_at"]
+        fields = ["id", "doc_type", "proof_type", "proof_type_label", "file",
+                  "status", "rejection_reason", "reviewed_at", "created_at"]
         read_only_fields = ["status", "rejection_reason", "reviewed_at", "created_at"]
 
 

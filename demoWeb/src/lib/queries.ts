@@ -1,6 +1,6 @@
 import { money } from './format';
 import * as store from './store';
-import type { MlmLevel, TreeNode } from './types';
+import type { ReferralPlan, TreeNode } from './types';
 
 /**
  * View-model layer.
@@ -71,10 +71,10 @@ export type EarningsView = {
     levels: Array<{ level: number; count: number; business: number; invested: number }>;
   };
   /** Commission actually earned at each level. */
-  by_level: Array<{ level: number; total: number; payments: number }>;
+  by_month: Array<{ month: number; total: number; payments: number }>;
   /** Who in the network has generated the most for this member. */
   top_producing_members: Array<{ user_id: string; name: string; email: string; total: number }>;
-  structure: MlmLevel[];
+  structure: ReferralPlan[];
 };
 
 export type TransactionView = {
@@ -193,14 +193,18 @@ export function earnings(userId: string): EarningsView {
         };
       }),
     },
-    by_level: store.getLevels().map((l) => {
-      const rows = commissions.filter((c) => c.level === l.level);
-      return {
-        level: l.level,
-        total: round(rows.reduce((s, c) => s + c.amount, 0)),
-        payments: rows.length,
-      };
-    }),
+    // Broken down by month rather than by level: with the chain gone, "which
+    // month of the term paid this" is the split that still means something.
+    by_month: [...new Set(commissions.map((c) => c.month_index))]
+      .sort((a, b) => a - b)
+      .map((month) => {
+        const rows = commissions.filter((c) => c.month_index === month);
+        return {
+          month,
+          total: round(rows.reduce((s, c) => s + c.amount, 0)),
+          payments: rows.length,
+        };
+      }),
     top_producing_members: [...perMember.entries()]
       .map(([id, total]) => {
         const u = users.find((x) => x.id === id);
@@ -213,7 +217,7 @@ export function earnings(userId: string): EarningsView {
       })
       .sort((a, b) => b.total - a.total)
       .slice(0, 5),
-    structure: store.getLevels(),
+    structure: store.getReferralPlans(),
   };
 }
 
@@ -240,10 +244,8 @@ export function commissionLog(userId: string) {
     const from = users.find((u) => u.id === c.from_user_id);
     return {
       id: c.id,
-      level: c.level,
-      kind: c.level === 1 ? ('direct' as const) : ('indirect' as const),
-      trigger: c.trigger,
-      trigger_label: c.trigger === 'deposit' ? 'Deposit' : 'Monthly return',
+      month_index: c.month_index,
+      trigger_label: `Month ${c.month_index}`,
       base_amount: c.base_amount,
       percent: c.percent,
       amount: c.amount,

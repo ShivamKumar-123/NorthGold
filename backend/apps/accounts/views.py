@@ -43,6 +43,7 @@ class RegisterView(APIView):
                  ("utm_source", "utm_medium", "utm_campaign")},
             ip_address=client_ip(request),
             kyc_files={doc: data[doc] for doc in KYC_SIGNUP_DOCS if doc in data},
+            proof_type=data.get("proof_type", ""),
         )
         return Response(
             {"user": UserSerializer(user).data, "tokens": issue_tokens(user)},
@@ -124,7 +125,12 @@ class KYCView(APIView):
         if not file_obj:
             return Response({"detail": "A file is required."},
                             status=status.HTTP_400_BAD_REQUEST)
-        doc = submit_kyc(request.user, doc_type, file_obj)
+        proof_type = request.data.get("proof_type") or ""
+        valid_proofs = [c[0] for c in KYCDocument.PROOF_TYPES]
+        if proof_type and proof_type not in valid_proofs:
+            return Response({"detail": "proof_type must be one of: " + ", ".join(valid_proofs)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        doc = submit_kyc(request.user, doc_type, file_obj, proof_type=proof_type)
         return Response(KYCDocumentSerializer(doc).data, status=status.HTTP_201_CREATED)
 
 

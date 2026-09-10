@@ -1,20 +1,24 @@
 from django.contrib import admin
 
-from .models import Commission, MlmLevelConfig
+from .models import Commission, ReferralPlan, ReferralPlanMonth
 
 
-@admin.register(MlmLevelConfig)
-class MlmLevelConfigAdmin(admin.ModelAdmin):
-    list_display = ("level", "label", "deposit_percent", "roi_percent",
-                    "min_direct_referrals", "min_self_investment", "is_active")
-    list_editable = ("deposit_percent", "roi_percent", "is_active")
-    ordering = ("level",)
+class ReferralPlanMonthInline(admin.TabularInline):
+    model = ReferralPlanMonth
+    extra = 0
+
+
+@admin.register(ReferralPlan)
+class ReferralPlanAdmin(admin.ModelAdmin):
+    list_display = ("name", "min_amount", "max_amount", "tenure_months", "is_active")
+    list_filter = ("is_active",)
+    inlines = [ReferralPlanMonthInline]
 
 
 @admin.register(Commission)
 class CommissionAdmin(admin.ModelAdmin):
-    list_display = ("earner", "source_user", "level", "trigger", "base_amount",
-                    "percent", "amount", "status", "created_at")
-    list_filter = ("level", "trigger", "status")
+    list_display = ("earner", "source_user", "month_index", "percent", "amount",
+                    "status", "created_at")
+    list_filter = ("status", "created_at")
     search_fields = ("earner__email", "source_user__email")
-    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("earner", "source_user")

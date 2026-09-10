@@ -263,7 +263,6 @@ export default function DashboardPage() {
               </div>
               <NetworkGraph
                 nodes={treeNodes}
-                levels={earnings.structure}
                 rootName={user.first_name || user.email}
                 maxDepth={2}
               />

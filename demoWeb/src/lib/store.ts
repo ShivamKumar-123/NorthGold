@@ -2,8 +2,8 @@ import {
   ADMIN, DEMO_PASSWORD, DEMO_PEOPLE, EMPTY_DB, INSTRUMENTS,
 } from './seed';
 import type {
-  Commission, DB, Deposit, Investment, KycDoc, RoiPayout, RoiPlan, SupportMessage, Transaction,
-  TreeNode, User, UserStatus, Withdrawal,
+  Commission, DB, Deposit, Investment, KycDoc, ReferralPlan, RoiPayout, RoiPlan,
+  ProofType, SupportMessage, Transaction, TreeNode, User, UserStatus, Withdrawal,
 } from './types';
 
 /**
@@ -12,7 +12,8 @@ import type {
  * Every rule the Django services enforce is reimplemented here: slab-matched
  * plans, month-by-month payout schedules frozen at purchase, cash deposits that
  * only move money once an administrator approves them, withdrawals that hold
- * funds at request time, and commission that walks the upline level by level.
+ * funds at request time, and a referral programme that pays the direct sponsor
+ * a percentage of their referral's deposit every month it earns.
  *
  * ── What is deliberately NOT production-grade ──────────────────────────────
  * Passwords are stored in plain text and every check runs client-side, so
@@ -217,6 +218,7 @@ function seedInto(db: DB): DB {
         id: uid('kyc'),
         user_id: user.id,
         doc_type: doc.value,
+        proof_type: ID_DOC_TYPES.includes(doc.value) ? ('aadhaar' as const) : ('' as const),
         file_name: `${person.key}-${doc.value}.jpg`,
         status: user.kyc_status === 'approved' ? 'approved' : 'pending',
         rejection_reason: '',
@@ -318,7 +320,19 @@ function seedInto(db: DB): DB {
 export const getUsers = () => load().users;
 export const getUser = (id: string | null) => (id ? load().users.find((u) => u.id === id) ?? null : null);
 export const getPlans = () => load().plans.filter((p) => p.is_active).sort((a, b) => a.display_order - b.display_order);
-export const getLevels = () => load().levels.slice().sort((a, b) => a.level - b.level);
+export const getReferralPlans = () =>
+  load().referral_plans.slice().sort((a, b) => a.display_order - b.display_order);
+
+/** Replace one slab, matrix included. The months arrive as a complete set:
+ *  saving cell by cell can leave a rate table half-updated, and a half-updated
+ *  rate table pays real money. */
+export function saveReferralPlan(planId: string, patch: Partial<ReferralPlan>) {
+  const db = load();
+  const plan = db.referral_plans.find((p) => p.id === planId);
+  if (!plan) throw new Error('No such referral slab.');
+  Object.assign(plan, patch);
+  save();
+}
 export const getSettings = () => load().settings;
 export const getIssuers = () => load().issuers;
 export const getInstruments = () => load().instruments;
@@ -389,6 +403,16 @@ export function login(email: string, password: string): User {
 /** The identity documents an account cannot be opened without. Shared by the
  *  signup form, the profile page and the admin review queue so all three name
  *  the same five things. */
+/** The identity documents a member can prove themselves with. */
+export const PROOF_TYPES: Array<{ value: ProofType; label: string }> = [
+  { value: 'aadhaar', label: 'Aadhaar card' },
+  { value: 'pan', label: 'PAN card' },
+  { value: 'national_id', label: 'National ID' },
+];
+
+/** The two pages that carry a proof type. A selfie is not an Aadhaar. */
+export const ID_DOC_TYPES = ['id_front', 'id_back'];
+
 export const KYC_DOC_TYPES = [
   { value: 'id_front', label: 'ID — front' },
   { value: 'id_back', label: 'ID — back' },
@@ -405,6 +429,10 @@ export function register(input: {
   phone?: string;
   country?: string;
   referral_code?: string;
+  /** Which identity document the two ID pages are. Asked once, stored on
+   *  both — a reviewer cannot check a number format without knowing which
+   *  document they are holding. */
+  proof_type: ProofType;
   /** doc_type -> file name. All five are required: the account and the
    *  documents it was opened against are written together, so nobody can
    *  exist here without something for an administrator to verify. */
@@ -454,6 +482,7 @@ export function register(input: {
       id: uid('kyc'),
       user_id: user.id,
       doc_type: doc.value,
+      proof_type: ID_DOC_TYPES.includes(doc.value) ? input.proof_type : '',
       file_name: input.documents[doc.value].trim(),
       status: 'pending',
       rejection_reason: '',
@@ -534,9 +563,8 @@ function approveDepositIn(db: DB, depositId: string, note: string, at?: string) 
   if (db.settings.auto_invest_on_deposit) {
     openInvestmentIn(db, user, deposit.amount, when);
   }
-  if (db.settings.mlm_deposit_enabled) {
-    distributeIn(db, user, deposit.amount, 'deposit', when);
-  }
+  // No commission is paid here any more: the programme pays the sponsor once
+  // a month against the investment, where the rate and the month both live.
 }
 
 export function approveDeposit(depositId: string, note = '') {
@@ -654,7 +682,7 @@ function runDuePayoutsIn(db: DB): number {
         inv.total_returned = round2(inv.total_returned + amount);
         paid += 1;
 
-        if (db.settings.mlm_roi_enabled) distributeIn(db, user, amount, 'roi', due);
+        payReferralIn(db, user, inv, monthIndex, due);
       }
 
       if (inv.months_paid >= months.length) {
@@ -750,62 +778,74 @@ export function rejectWithdrawal(id: string, note = '') {
   save();
 }
 
-/* ── MLM ───────────────────────────────────────────────────────────────── */
+/* ── Referrals ─────────────────────────────────────────────────────────────
+   One payment, to one person, once a month.
 
-/** Walks up the sponsor chain paying each level its configured share.
- *  Cycle-guarded: a corrupted sponsor loop would otherwise hang the tab. */
-function distributeIn(db: DB, from: User, base: number, trigger: 'deposit' | 'roi', at: string) {
-  const levels = db.levels.slice().sort((a, b) => a.level - b.level);
-  const maxLevels = Math.min(db.settings.mlm_max_levels, levels.length);
+   When a member's investment pays its month-N return, that member's DIRECT
+   sponsor earns a percentage of what the member deposited — not of the return
+   they just received. The percentage comes from the referral matrix: the
+   deposit picks a slab, the slab holds a rate for each month.
 
-  const seen = new Set<string>([from.id]);
-  let current = from.sponsor_id ? db.users.find((u) => u.id === from.sponsor_id) ?? null : null;
-  let depth = 1;
+   There are no levels and no qualification gates. Nobody above the sponsor
+   earns anything, and approving a deposit pays nobody at all. */
 
-  while (current && depth <= maxLevels) {
-    if (seen.has(current.id)) break;
-    seen.add(current.id);
+/** The active slab covering an amount. Ties break to the higher floor, so
+ *  overlapping slabs resolve to the most specific rather than an arbitrary
+ *  one. */
+export function referralPlanForAmount(amount: number): ReferralPlan | null {
+  return (
+    getReferralPlans()
+      .filter((p) => amount >= p.min_amount && (p.max_amount === null || amount <= p.max_amount))
+      .sort((a, b) => b.min_amount - a.min_amount)[0] ?? null
+  );
+}
 
-    const config = levels.find((l) => l.level === depth);
-    if (!config) break;
+function payReferralIn(db: DB, investor: User, investment: Investment, monthIndex: number, at: string) {
+  if (!db.settings.referral_enabled) return;
 
-    const percent = trigger === 'deposit' ? config.deposit_percent : config.roi_percent;
-    const directs = db.users.filter((u) => u.sponsor_id === current!.id).length;
+  const sponsor = investor.sponsor_id
+    ? db.users.find((u) => u.id === investor.sponsor_id) ?? null
+    : null;
+  if (!sponsor) return;
 
-    let amount = 0;
-    let skipped: string | null = null;
+  const plan = db.referral_plans
+    .filter((p) => p.is_active)
+    .filter((p) => investment.amount >= p.min_amount
+      && (p.max_amount === null || investment.amount <= p.max_amount))
+    .sort((a, b) => b.min_amount - a.min_amount)[0];
+  if (!plan) return;
 
-    if (directs < config.min_directs) {
-      skipped = `Needs ${config.min_directs} direct referrals to unlock level ${depth}`;
-    } else if (percent <= 0) {
-      skipped = 'Level pays nothing on this trigger';
-    } else {
-      amount = floor2((base * percent) / 100);
-      if (amount <= 0) skipped = 'Rounds to zero';
-    }
+  const percent = plan.months[monthIndex - 1] ?? 0;
+  if (percent <= 0) return;
 
-    db.commissions.push({
-      id: uid('com'),
-      earner_id: current.id,
-      from_user_id: from.id,
-      level: depth,
-      trigger,
-      base_amount: round2(base),
-      percent,
-      amount,
-      skipped_reason: skipped,
-      created_at: at,
-    });
+  // The base is the DEPOSIT, not the return the investor just received.
+  const amount = floor2((investment.amount * percent) / 100);
+  if (amount <= 0) return;
 
-    if (!skipped && amount > 0) {
-      credit(db, current, amount, 'commission',
-        `Level ${depth} ${trigger === 'deposit' ? 'deposit' : 'return'} commission from ${current.first_name === from.first_name ? from.email : `${from.first_name} ${from.last_name}`}`,
-        at);
-    }
+  const already = db.commissions.some(
+    (c) => c.earner_id === sponsor.id
+      && c.from_user_id === investor.id
+      && c.month_index === monthIndex
+      && c.investment_id === investment.id,
+  );
+  if (already) return;
 
-    current = current.sponsor_id ? db.users.find((u) => u.id === current!.sponsor_id) ?? null : null;
-    depth += 1;
-  }
+  db.commissions.push({
+    id: uid('com'),
+    earner_id: sponsor.id,
+    from_user_id: investor.id,
+    investment_id: investment.id,
+    month_index: monthIndex,
+    base_amount: round2(investment.amount),
+    percent,
+    amount,
+    skipped_reason: null,
+    created_at: at,
+  });
+
+  credit(db, sponsor, amount, 'commission',
+    `Referral commission on ${investor.first_name} ${investor.last_name}'s deposit, month ${monthIndex}`,
+    at);
 }
 
 /** The referral tree under a user, to a depth. The root itself is level 0 and
@@ -869,8 +909,9 @@ export function downlineSummary(rootId: string) {
     direct: flat.filter((n) => n.level === 1).length,
     total: flat.length,
     team_business: round2(flat.reduce((s, n) => s + n.invested_balance, 0)),
-    from_direct: round2(commissions.filter((c) => c.level === 1).reduce((s, c) => s + c.amount, 0)),
-    from_indirect: round2(commissions.filter((c) => c.level > 1).reduce((s, c) => s + c.amount, 0)),
+    // Every payment is direct now — there is nothing else to split it into.
+    from_direct: round2(commissions.reduce((s, c) => s + c.amount, 0)),
+    from_indirect: 0,
     earned: round2(commissions.reduce((s, c) => s + c.amount, 0)),
     members: flat,
   };
@@ -933,12 +974,19 @@ export const pendingKyc = () => load().kyc.filter((d) => d.status === 'pending')
  *  vanishing out of the queue. */
 export const allKyc = () => load().kyc.slice().sort(byNewest);
 
-export function uploadKyc(userId: string, docType: string, fileName: string) {
+export function uploadKyc(
+  userId: string,
+  docType: string,
+  fileName: string,
+  proofType: ProofType | '' = '',
+) {
   const db = load();
   db.kyc.push({
     id: uid('kyc'),
     user_id: userId,
     doc_type: docType,
+    // Only the ID pages carry it, whatever the caller passed.
+    proof_type: ID_DOC_TYPES.includes(docType) ? proofType : '',
     file_name: fileName,
     status: 'pending',
     rejection_reason: '',
@@ -1254,8 +1302,9 @@ export function platformStats() {
     invested_members: members.filter((u) => u.invested_balance > 0).length,
     roi_paid: round2(db.payouts.reduce((s, p) => s + p.amount, 0)),
     commission_paid: round2(commissions.reduce((s, c) => s + c.amount, 0)),
-    commission_direct: round2(commissions.filter((c) => c.level === 1).reduce((s, c) => s + c.amount, 0)),
-    commission_indirect: round2(commissions.filter((c) => c.level > 1).reduce((s, c) => s + c.amount, 0)),
+    // Every payment is to a direct sponsor now, so there is no split to make.
+    commission_direct: round2(commissions.reduce((s, c) => s + c.amount, 0)),
+    commission_indirect: 0,
     with_sponsor: members.filter((u) => u.sponsor_id).length,
     pending_deposits: db.deposits.filter((d) => d.status === 'pending').length,
     pending_deposit_amount: round2(
@@ -1265,14 +1314,15 @@ export function platformStats() {
     pending_withdrawal_amount: round2(
       db.withdrawals.filter((w) => w.status === 'pending').reduce((s, w) => s + w.amount, 0),
     ),
-    by_level: db.levels.map((l) => ({
-      level: l.level,
-      label: l.label,
-      payments: commissions.filter((c) => c.level === l.level).length,
-      amount: round2(
-        commissions.filter((c) => c.level === l.level).reduce((s, c) => s + c.amount, 0),
-      ),
-    })),
+    by_month: [...new Set(commissions.map((c) => c.month_index))]
+      .sort((a, b) => a - b)
+      .map((month) => ({
+        month,
+        payments: commissions.filter((c) => c.month_index === month).length,
+        amount: round2(
+          commissions.filter((c) => c.month_index === month).reduce((s, c) => s + c.amount, 0),
+        ),
+      })),
     top_sponsors: members
       .map((u) => ({ user: u, directs: db.users.filter((x) => x.sponsor_id === u.id).length }))
       .filter((r) => r.directs > 0)
@@ -1289,9 +1339,9 @@ export function savePlan(plan: RoiPlan) {
   save();
 }
 
-export function saveLevels(levels: DB['levels']) {
+export function saveReferralPlans(plans: DB['referral_plans']) {
   const db = load();
-  db.levels = levels;
+  db.referral_plans = plans;
   save();
 }
 

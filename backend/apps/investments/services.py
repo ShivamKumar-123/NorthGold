@@ -148,7 +148,7 @@ def pay_investment_month(investment, month_index, now=None):
     Returns the RoiPayout, or None when it was already paid (idempotent retry)
     or the configured percent is zero.
     """
-    from apps.mlm.services import distribute_commission
+    from apps.mlm.services import pay_referral_commission
     from apps.wallet.models import Transaction
 
     now = now or timezone.now()
@@ -224,14 +224,15 @@ def pay_investment_month(investment, month_index, now=None):
         action_url="/investments",
     )
 
-    # The upline override rides on the payout the downline just received.
-    distribute_commission(
-        source_user=locked,
-        base_amount=amount,
-        trigger="roi",
+    # The sponsor's month rides on this payout, and is keyed to it — which is
+    # what makes a retried sweep pay them once. The base is the principal, not
+    # the return just credited: the referral matrix is a rate on what was
+    # deposited.
+    pay_referral_commission(
+        investment=investment,
+        month_index=month_index,
         reference_id=payout.id,
         reference_type="roi_payout",
-        description=f"Month {month_index} ROI override",
     )
     return payout
 

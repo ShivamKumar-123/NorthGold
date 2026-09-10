@@ -27,7 +27,7 @@ import AdminChannels from '@/pages/admin/Channels';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminDeposits from '@/pages/admin/Deposits';
 import AdminKyc from '@/pages/admin/Kyc';
-import AdminLevels from '@/pages/admin/Levels';
+import AdminReferralRates from '@/pages/admin/ReferralRates';
 import AdminLogin from '@/pages/admin/Login';
 import AdminMessages from '@/pages/admin/Messages';
 import AdminPlans from '@/pages/admin/Plans';
@@ -77,7 +77,7 @@ export default function App() {
               <Route path="kyc" element={<AdminKyc />} />
               <Route path="messages" element={<AdminMessages />} />
               <Route path="plans" element={<AdminPlans />} />
-              <Route path="levels" element={<AdminLevels />} />
+              <Route path="referral-rates" element={<AdminReferralRates />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="channels" element={<AdminChannels />} />
               <Route path="settings" element={<AdminSettings />} />

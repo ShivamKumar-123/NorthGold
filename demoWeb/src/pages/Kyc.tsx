@@ -4,8 +4,8 @@ import { CheckCircle2, Clock, ShieldCheck, Upload, XCircle } from 'lucide-react'
 import { Alert, PageLoader, StatusBadge } from '@/components/ui';
 import { dateTime } from '@/lib/format';
 import { useAuth, useRequireAuth } from '@/lib/auth';
-import { KYC_DOC_TYPES, kycFor, uploadKyc } from '@/lib/store';
-import type { KycDoc } from '@/lib/types';
+import { ID_DOC_TYPES, KYC_DOC_TYPES, PROOF_TYPES, kycFor, uploadKyc } from '@/lib/store';
+import type { KycDoc, ProofType } from '@/lib/types';
 
 /**
  * Identity verification, on its own page.
@@ -25,6 +25,7 @@ export default function KycPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState(false);
+  const [proofType, setProofType] = useState<ProofType>('aadhaar');
 
   const load = useCallback(() => {
     if (user) setDocs(kycFor(user.id));
@@ -55,7 +56,7 @@ export default function KycPage() {
     try {
       // The file itself is not kept — only its name, so the admin queue has
       // something to show. Base64 blobs would exhaust localStorage quickly.
-      uploadKyc(user!.id, docType, file.name);
+      uploadKyc(user!.id, docType, file.name, proofType);
       setPending((p) => ({ ...p, [docType]: null }));
       load();
       refreshUser();
@@ -154,6 +155,23 @@ export default function KycPage() {
 
               {needsUpload && (
                 <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4">
+                  {ID_DOC_TYPES.includes(type.value) && (
+                    <div className="min-w-[160px]">
+                      <label className="label" htmlFor={`proof_${type.value}`}>
+                        Which ID
+                      </label>
+                      <select
+                        id={`proof_${type.value}`}
+                        value={proofType}
+                        onChange={(e) => setProofType(e.target.value as ProofType)}
+                        className="input"
+                      >
+                        {PROOF_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="min-w-[220px] flex-1">
                     <label className="label" htmlFor={`file_${type.value}`}>
                       {doc ? 'Replace this document' : 'Upload this document'}

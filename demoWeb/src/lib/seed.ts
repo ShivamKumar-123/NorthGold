@@ -1,16 +1,51 @@
-import type { DB, Instrument, Issuer, MlmLevel, RoiPlan, Settings, User } from './types';
+import type { DB, Instrument, Issuer, ReferralPlan, RoiPlan, Settings, User } from './types';
 
 /**
  * The seed. Deliberately the same numbers as `seed_platform.py` in the Django
  * build, so a figure on this demo can be checked against the real platform.
  */
 
-export const MLM_LEVELS: MlmLevel[] = [
-  { level: 1, label: 'Direct', deposit_percent: 5, roi_percent: 10, min_directs: 0 },
-  { level: 2, label: 'Indirect L2', deposit_percent: 3, roi_percent: 5, min_directs: 1 },
-  { level: 3, label: 'Indirect L3', deposit_percent: 2, roi_percent: 3, min_directs: 2 },
-  { level: 4, label: 'Indirect L4', deposit_percent: 1, roi_percent: 2, min_directs: 3 },
-  { level: 5, label: 'Indirect L5', deposit_percent: 0.5, roi_percent: 1, min_directs: 4 },
+/**
+ * The referral matrix. STARTING values only — every cell is editable from
+ * Admin -> Referral rates, and these are placeholders chosen to be obviously
+ * round rather than to be right for anyone's margin.
+ *
+ * The slabs mirror the ROI ones so the two line up in the panel.
+ */
+export const REFERRAL_PLANS: ReferralPlan[] = [
+  {
+    id: 'ref-silver',
+    name: 'Silver referral',
+    description: 'Sponsor rate for referrals depositing $1,000 to $4,999.',
+    min_amount: 1000,
+    max_amount: 4999,
+    tenure_months: 12,
+    display_order: 1,
+    months: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    is_active: true,
+  },
+  {
+    id: 'ref-gold',
+    name: 'Gold referral',
+    description: 'Sponsor rate for referrals depositing $5,000 to $24,999.',
+    min_amount: 5000,
+    max_amount: 24999,
+    tenure_months: 12,
+    display_order: 2,
+    months: [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
+    is_active: true,
+  },
+  {
+    id: 'ref-platinum',
+    name: 'Platinum referral',
+    description: 'Sponsor rate for referrals depositing $25,000 and above.',
+    min_amount: 25000,
+    max_amount: null,
+    tenure_months: 12,
+    display_order: 3,
+    months: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    is_active: true,
+  },
 ];
 
 // Each plan is a deposit slab plus its month-by-month curve. The curves ramp:
@@ -100,9 +135,7 @@ export const SETTINGS: Settings = {
   deposit_min_amount: 1000,
   withdrawal_min_amount: 10,
   auto_invest_on_deposit: true,
-  mlm_deposit_enabled: true,
-  mlm_roi_enabled: true,
-  mlm_max_levels: 5,
+  referral_enabled: true,
 };
 
 /** Demo accounts, so the tree and the queues are not empty on first load. */
@@ -148,10 +181,11 @@ export const EMPTY_DB: Omit<
   // 5: accounts carry a status, so the desk can block or close one.
   // 6: the office address is stored across two lines, the way it is written.
   // 7: the Starter tier is gone; Silver's $1,000 is the entry point.
+  // 8: levels replaced by the referral matrix, paid monthly on the deposit.
   // A database stored under an older version is reseeded, not migrated.
-  version: 7,
+  version: 8,
   plans: ROI_PLANS,
-  levels: MLM_LEVELS,
+  referral_plans: REFERRAL_PLANS,
   issuers: ISSUERS,
   instruments: INSTRUMENTS,
   settings: SETTINGS,

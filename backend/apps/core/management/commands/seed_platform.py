@@ -16,16 +16,37 @@ from apps.core.defaults import SETTING_DEFAULTS
 from apps.core.models import SystemSetting
 from apps.instruments.models import Instrument, Issuer
 from apps.investments.models import RoiPlan, RoiPlanMonth
-from apps.mlm.models import MlmLevelConfig
+from apps.mlm.models import ReferralPlan, ReferralPlanMonth
 from apps.wallet.models import PaymentChannel
 
-# level -> (label, deposit %, roi %, min directs to unlock)
-MLM_LEVELS = [
-    (1, "Direct", Decimal("5.000"), Decimal("10.000"), 0),
-    (2, "Indirect L2", Decimal("3.000"), Decimal("5.000"), 1),
-    (3, "Indirect L3", Decimal("2.000"), Decimal("3.000"), 2),
-    (4, "Indirect L4", Decimal("1.000"), Decimal("2.000"), 3),
-    (5, "Indirect L5", Decimal("0.500"), Decimal("1.000"), 4),
+# The referral matrix: a deposit slab, and what the sponsor earns in each
+# month of the term. These are STARTING values only — every cell is editable
+# from Admin -> Referral rates, and the numbers below are placeholders chosen
+# to be obviously round rather than to be right for anyone's margin.
+#
+# The slabs mirror the ROI ones so the two matrices line up in the panel.
+REFERRAL_PLANS = [
+    {
+        "name": "Silver referral",
+        "description": "Sponsor rate for referrals depositing 1,000 to 4,999.",
+        "min_amount": Decimal("1000"), "max_amount": Decimal("4999"),
+        "tenure_months": 12, "display_order": 1,
+        "months": ["1.000"] * 12,
+    },
+    {
+        "name": "Gold referral",
+        "description": "Sponsor rate for referrals depositing 5,000 to 24,999.",
+        "min_amount": Decimal("5000"), "max_amount": Decimal("24999"),
+        "tenure_months": 12, "display_order": 2,
+        "months": ["1.500"] * 12,
+    },
+    {
+        "name": "Platinum referral",
+        "description": "Sponsor rate for referrals depositing 25,000 and above.",
+        "min_amount": Decimal("25000"), "max_amount": None,
+        "tenure_months": 12, "display_order": 3,
+        "months": ["2.000"] * 12,
+    },
 ]
 
 # Each plan is a deposit slab plus its month-by-month curve. The curves ramp:
@@ -160,18 +181,29 @@ class Command(BaseCommand):
                           + (f", {refreshed} placeholder refreshed" if refreshed else ""))
 
     def _seed_mlm(self):
-        for level, label, deposit_pct, roi_pct, min_directs in MLM_LEVELS:
-            MlmLevelConfig.objects.update_or_create(
-                level=level,
-                defaults={
-                    "label": label,
-                    "deposit_percent": deposit_pct,
-                    "roi_percent": roi_pct,
-                    "min_direct_referrals": min_directs,
-                    "is_active": True,
-                },
+        """Create the referral slabs, but never overwrite their rates.
+
+        `update_or_create` on the whole spec would reset every percentage an
+        administrator had set, on every deploy that re-runs the seed. The slab
+        is created if it is missing and left entirely alone if it is not.
+        """
+        created = 0
+        for spec in REFERRAL_PLANS:
+            months = spec.pop("months") if "months" in spec else []
+            plan, made = ReferralPlan.objects.get_or_create(
+                name=spec["name"], defaults={**spec, "is_active": True},
             )
-        self.stdout.write(f"  mlm levels: {len(MLM_LEVELS)} configured")
+            spec["months"] = months
+            if not made:
+                continue
+            created += 1
+            ReferralPlanMonth.objects.bulk_create([
+                ReferralPlanMonth(plan=plan, month_index=i, percent=Decimal(pct))
+                for i, pct in enumerate(months, start=1)
+            ])
+        self.stdout.write(
+            f"  referral slabs: {created} created, "
+            f"{len(REFERRAL_PLANS) - created} already present")
 
     def _seed_plans(self):
         plans = {}

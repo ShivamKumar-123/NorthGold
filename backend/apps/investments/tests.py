@@ -17,7 +17,7 @@ from apps.accounts.services import build_downline_tree, downline_summary, regist
 from apps.investments.models import Investment, RoiPayout, RoiPlan, add_months
 from apps.investments.services import projected_schedule, run_due_payouts
 from apps.mlm.models import Commission
-from apps.mlm.services import distribute_commission, earnings_breakdown
+from apps.mlm.services import earnings_breakdown
 from apps.wallet.models import Transaction
 from apps.wallet.services import (
     WalletError, approve_deposit, approve_withdrawal, create_deposit_request,
@@ -146,40 +146,76 @@ class MoneyFlowTests(TestCase):
         with self.assertRaises(WalletError):
             approve_deposit(deposit, self.admin)
 
-    # --- MLM -------------------------------------------------------------
+    # --- Referrals -------------------------------------------------------
 
-    def test_deposit_pays_direct_and_indirect_upline(self):
-        deposit, _ = self._approved_deposit("1000")
+    def test_approving_a_deposit_pays_nobody(self):
+        """The programme pays monthly now, not on the deposit."""
+        self._approved_deposit("1000")
         self._refresh()
 
-        # Seeded: L1 5% (0 directs needed), L2 3% (1 needed), L3 2% (2 needed).
-        self.assertEqual(self.carol.wallet_balance, Decimal("50.00"))   # direct
-        self.assertEqual(self.bob.wallet_balance, Decimal("30.00"))     # indirect L2
-        # Alice holds only one direct referral, so level 3 stays locked.
+        self.assertEqual(self.carol.wallet_balance, Decimal("0.00"))
+        self.assertEqual(self.bob.wallet_balance, Decimal("0.00"))
+        self.assertFalse(Commission.objects.exists())
+
+    def test_only_the_direct_sponsor_earns(self):
+        _, investment = self._approved_deposit("1000")
+        self._age_investment(investment, 1)
+        run_due_payouts()
+        self._refresh()
+
+        # Seeded Silver referral slab is a flat 1% of the deposit.
+        self.assertEqual(self.carol.wallet_balance, Decimal("10.00"))
+        # Nobody above the sponsor earns anything: there are no levels.
+        self.assertEqual(self.bob.wallet_balance, Decimal("0.00"))
         self.assertEqual(self.alice.wallet_balance, Decimal("0.00"))
 
-        skipped = Commission.objects.get(earner=self.alice, status="skipped")
-        self.assertIn("direct referrals", skipped.skip_reason)
+    def test_the_rate_applies_to_the_deposit_not_the_return(self):
+        """$1,000 at 1% pays the sponsor $10, whatever the investor received.
 
-    def test_commission_is_idempotent_per_source_event(self):
-        deposit, _ = self._approved_deposit()
+        The investor's own month-1 return on Silver is also $10, so the test
+        uses a Gold deposit where the two differ: $5,000 pays the investor
+        1.50% ($75) and the sponsor 1.50% of the DEPOSIT ($75)… so Platinum,
+        where the referral rate is 2% and the ROI rate 2%, would also collide.
+        The rates are read off the matrix instead.
+        """
+        _, investment = self._approved_deposit("5000")
+        self._age_investment(investment, 1)
+        run_due_payouts()
         self.carol.refresh_from_db()
-        before = self.carol.wallet_balance
 
-        replay = distribute_commission(
-            source_user=self.dave, base_amount=Decimal("1000"), trigger="deposit",
-            reference_id=deposit.id, reference_type="deposit",
-        )
+        commission = Commission.objects.get(earner=self.carol, status="paid")
+        # Base is the principal, not the payout the investor just received.
+        self.assertEqual(commission.base_amount, Decimal("5000.00"))
+        self.assertEqual(commission.month_index, 1)
+        self.assertEqual(self.carol.wallet_balance, commission.amount)
+
+    def test_a_month_pays_the_sponsor_once_however_often_it_is_swept(self):
+        _, investment = self._approved_deposit("1000")
+        self._age_investment(investment, 2)
+        run_due_payouts()
         self.carol.refresh_from_db()
-        self.assertEqual(replay, [])
-        self.assertEqual(self.carol.wallet_balance, before)
+        after_first = self.carol.wallet_balance
 
-    def test_earnings_split_direct_from_indirect(self):
-        self._approved_deposit()
-        self.assertEqual(earnings_breakdown(self.carol)["direct_earned"], 50.0)
-        self.assertEqual(earnings_breakdown(self.carol)["indirect_earned"], 0.0)
-        self.assertEqual(earnings_breakdown(self.bob)["indirect_earned"], 30.0)
-        self.assertEqual(earnings_breakdown(self.bob)["direct_earned"], 0.0)
+        run_due_payouts()
+        run_due_payouts()
+
+        self.carol.refresh_from_db()
+        self.assertEqual(self.carol.wallet_balance, after_first)
+        self.assertEqual(Commission.objects.filter(status="paid").count(), 2)
+
+    def test_earnings_are_reported_per_referral(self):
+        _, investment = self._approved_deposit("1000")
+        self._age_investment(investment, 3)
+        run_due_payouts()
+
+        breakdown = earnings_breakdown(self.carol)
+        self.assertEqual(breakdown["total_earned"], 30.0)   # 3 months x $10
+        self.assertEqual(breakdown["paying_referrals"], 1)
+        self.assertEqual(breakdown["by_referral"][0]["email"], "dave@t.local")
+        self.assertEqual(breakdown["by_referral"][0]["months"], 3)
+
+        # The sponsor's sponsor earns nothing at all.
+        self.assertEqual(earnings_breakdown(self.bob)["total_earned"], 0.0)
 
     # --- ROI -------------------------------------------------------------
 
@@ -220,19 +256,20 @@ class MoneyFlowTests(TestCase):
         self.dave.refresh_from_db()
         self.assertEqual(self.dave.wallet_balance, balance)
 
-    def test_roi_payout_pays_the_upline_override(self):
+    def test_each_monthly_payout_carries_the_sponsor_their_month(self):
         _, investment = self._approved_deposit("1000")
         self._age_investment(investment, 3)
         run_due_payouts()
         self._refresh()
 
-        # Overrides are computed per payout and rounded DOWN to the cent:
-        #   carol L1 10%: 1.00 + 1.25 + 1.25 = 3.50
-        #   bob   L2  5%: 0.50 + 0.62 + 0.62 = 1.74  (0.625 truncates twice)
-        self.assertEqual(self.carol.wallet_balance, Decimal("53.50"))
-        self.assertEqual(self.bob.wallet_balance, Decimal("31.74"))
-        self.assertTrue(
-            Commission.objects.filter(earner=self.carol, trigger="roi").exists()
+        # Three months due, each paying the sponsor 1% of the $1,000 deposit.
+        # The rate is flat here, so the arithmetic is 3 x 10.00 rather than the
+        # investor's own ramp.
+        self.assertEqual(self.carol.wallet_balance, Decimal("30.00"))
+        self.assertEqual(
+            sorted(Commission.objects.filter(earner=self.carol)
+                   .values_list("month_index", flat=True)),
+            [1, 2, 3],
         )
 
     def test_maturity_returns_the_principal(self):
@@ -275,8 +312,14 @@ class MoneyFlowTests(TestCase):
     def test_rejected_withdrawal_refunds_the_hold(self):
         from apps.wallet.services import reject_withdrawal
 
-        self._approved_deposit()
+        # Carol is the sponsor, so her balance comes from referral months now
+        # rather than from a one-off payment on the deposit itself.
+        _, investment = self._approved_deposit()
+        self._age_investment(investment, 5)
+        run_due_payouts()
         self.carol.refresh_from_db()
+        self.assertEqual(self.carol.wallet_balance, Decimal("50.00"))
+
         withdrawal = create_withdrawal_request(
             user=self.carol, amount=Decimal("25"), method="upi",
             payout_details={"upi_id": "carol@upi"},

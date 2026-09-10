@@ -6,11 +6,11 @@ database is fully functional before an admin touches anything.
 from decimal import Decimal
 
 SETTING_DEFAULTS = {
-    # --- MLM ---------------------------------------------------------------
-    "mlm_deposit_enabled": True,      # pay upline when a deposit is approved
-    "mlm_roi_enabled": True,          # pay upline on every monthly ROI payout
-    "mlm_max_levels": 5,              # hard ceiling on chain walk depth
-    "mlm_require_active_investment": False,  # upline must hold an active investment to earn
+    # --- Referrals ---------------------------------------------------------
+    # The direct sponsor earns a percentage of their referral's deposit, every
+    # month that investment pays out. The percentages themselves live in the
+    # referral matrix, which the administrator edits.
+    "referral_enabled": True,
     # --- Investments -------------------------------------------------------
     "auto_invest_on_deposit": True,   # approved deposit auto-starts an investment
     "roi_credit_target": "wallet",    # 'wallet' (withdrawable) | 'principal' (compounds)

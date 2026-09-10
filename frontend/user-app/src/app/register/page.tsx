@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight, Check, Gift, ShieldCheck } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { KYC_DOC_TYPES } from '@/lib/kyc';
+import { KYC_DOC_TYPES, PROOF_TYPES, type ProofType } from '@/lib/kyc';
 import { Alert, Spinner } from '@/components/ui';
 
 /**
@@ -36,6 +36,7 @@ function RegisterForm() {
     referral_code: '',
   });
   const [documents, setDocuments] = useState<Record<string, File>>({});
+  const [proofType, setProofType] = useState<ProofType>('aadhaar');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -91,6 +92,7 @@ function RegisterForm() {
         phone: form.phone,
         country: form.country,
         referral_code: form.referral_code,
+        proofType,
         documents,
       });
       router.push('/dashboard');
@@ -266,6 +268,26 @@ function RegisterForm() {
               <p className="mt-1 text-xs leading-relaxed text-text-muted">
                 All five are required. An administrator reviews each one, and
                 your account shows as verified once they have all been approved.
+              </p>
+            </div>
+
+            <div data-auth="field">
+              <label className="label" htmlFor="proof_type">
+                Which ID are you uploading? <span className="text-danger">*</span>
+              </label>
+              <select
+                id="proof_type"
+                value={proofType}
+                onChange={(e) => setProofType(e.target.value as ProofType)}
+                className="input"
+              >
+                {PROOF_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-text-dim">
+                Applies to the front and back below. Photograph both sides of
+                the same document.
               </p>
             </div>
 

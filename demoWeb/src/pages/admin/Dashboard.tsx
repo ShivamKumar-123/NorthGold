@@ -98,20 +98,11 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {s.by_level.map((row) => (
-                  <tr key={row.level}>
-                    <td className="font-medium">
-                      L{row.level}
-                      <span
-                        className={`ml-2 badge ${
-                          row.level === 1 ? 'bg-accent/15 text-accent' : 'bg-bronze/15 text-bronze'
-                        }`}
-                      >
-                        {row.level === 1 ? 'direct' : 'indirect'}
-                      </span>
-                    </td>
+                {s.by_month.map((row) => (
+                  <tr key={row.month}>
+                    <td className="font-medium">Month {row.month}</td>
                     <td className="text-right tabular-nums">{row.payments}</td>
-                    <td className="text-right tabular-nums text-success">{money(row.amount)}</td>
+                    <td className="text-right tabular-nums text-gold">{money(row.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -160,7 +151,7 @@ export default function AdminDashboard() {
         <Link to="/admin/deposits" className="btn-primary">Review deposits</Link>
         <Link to="/admin/withdrawals" className="btn-ghost">Review withdrawals</Link>
         <Link to="/admin/plans" className="btn-ghost">Edit ROI plans</Link>
-        <Link to="/admin/levels" className="btn-ghost">Edit MLM levels</Link>
+        <Link to="/admin/referral-rates" className="btn-ghost">Edit referral rates</Link>
       </div>
     </div>
   );

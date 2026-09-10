@@ -284,30 +284,41 @@ export interface WalletSummary {
 
 // ─── MLM ──────────────────────────────────────────────────────────────────
 
-export interface MlmLevel {
-  level: number;
-  label: string;
-  kind: 'direct' | 'indirect';
-  deposit_percent: string;
-  roi_percent: string;
-  min_direct_referrals: number;
-  min_self_investment: string;
-  is_active: boolean;
+/**
+ * One deposit slab and what the sponsor earns in each month of the term.
+ *
+ * The same shape as `RoiPlan`, because they are the two halves of what the
+ * platform pays out and are edited side by side. Every percentage is the
+ * administrator's — nothing here is derived from the ROI rates.
+ */
+export interface ReferralPlanMonth {
+  month_index: number;
+  percent: string;
 }
 
-export interface MlmStructure {
-  deposit_commission_enabled: boolean;
-  roi_commission_enabled: boolean;
-  max_levels: number;
-  levels: MlmLevel[];
+export interface ReferralPlan {
+  id: string;
+  name: string;
+  description: string;
+  min_amount: string;
+  /** `null` on the open-ended top slab. */
+  max_amount: string | null;
+  tenure_months: number;
+  is_active: boolean;
+  display_order: number;
+  months: ReferralPlanMonth[];
+  total_percent: string;
+}
+
+export interface ReferralStructure {
+  referral_enabled: boolean;
+  plans: ReferralPlan[];
 }
 
 export interface Commission {
   id: string;
-  level: number;
-  kind: 'direct' | 'indirect';
-  trigger: 'deposit' | 'roi' | 'investment';
-  trigger_label: string;
+  /** Which month of the referral's investment this paid for. */
+  month_index: number;
   source_user: string;
   source_name: string;
   source_email: string;
@@ -372,10 +383,15 @@ export interface NetworkSummary {
 
 export interface EarningsResponse {
   total_earned: number;
-  direct_earned: number;
-  indirect_earned: number;
-  by_level: { level: number; total: number; count: number }[];
-  by_trigger: Record<string, number>;
+  /** How many referrals are currently paying this member anything. */
+  paying_referrals: number;
+  by_referral: {
+    user_id: string;
+    name: string;
+    email: string;
+    total: number;
+    months: number;
+  }[];
   network: NetworkSummary;
   referral_code: string;
   top_producing_members: {
@@ -384,7 +400,7 @@ export interface EarningsResponse {
     email: string;
     total: number;
   }[];
-  structure: MlmLevel[];
+  structure: ReferralPlan[];
 }
 
 export interface Notification {

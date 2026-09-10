@@ -91,21 +91,10 @@ export default function AdminSettings() {
               onChange={(v) => set('auto_invest_on_deposit', v)}
             />
             <Toggle
-              label="Pay commission on deposits"
-              checked={form.mlm_deposit_enabled}
-              onChange={(v) => set('mlm_deposit_enabled', v)}
-            />
-            <Toggle
-              label="Pay commission on monthly returns"
-              checked={form.mlm_roi_enabled}
-              onChange={(v) => set('mlm_roi_enabled', v)}
-            />
-            <Field
-              label="Maximum commission depth"
-              type="number"
-              hint="How far up the sponsor chain a payment walks."
-              value={String(form.mlm_max_levels)}
-              onChange={(v) => set('mlm_max_levels', Number(v))}
+              label="Pay referral commission"
+              hint="The direct sponsor earns a percentage of their referral's deposit, every month it pays out. The percentages are set in Referral rates."
+              checked={form.referral_enabled}
+              onChange={(v) => set('referral_enabled', v)}
             />
           </div>
         </section>

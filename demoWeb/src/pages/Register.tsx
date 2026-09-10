@@ -5,7 +5,8 @@ import { ArrowLeft, ArrowRight, Check, Gift, ShieldCheck } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { useAuth } from '@/lib/auth';
 import { Alert, Spinner } from '@/components/ui';
-import { KYC_DOC_TYPES } from '@/lib/store';
+import { KYC_DOC_TYPES, PROOF_TYPES } from '@/lib/store';
+import type { ProofType } from '@/lib/types';
 
 /**
  * Signup, in two steps: who you are, then proof of it.
@@ -33,6 +34,7 @@ export default function RegisterForm() {
   // doc_type -> file name. Only the name is kept: there is no server here, and
   // base64 blobs would exhaust localStorage after a handful of uploads.
   const [documents, setDocuments] = useState<Record<string, string>>({});
+  const [proofType, setProofType] = useState<ProofType>('aadhaar');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -88,6 +90,7 @@ export default function RegisterForm() {
         phone: form.phone,
         country: form.country,
         referral_code: form.referral_code,
+        proof_type: proofType,
         documents,
       });
       navigate('/dashboard');
@@ -261,6 +264,26 @@ export default function RegisterForm() {
               <p className="mt-1 text-xs leading-relaxed text-text-muted">
                 All five are required. An administrator reviews each one, and
                 your account shows as verified once they have all been approved.
+              </p>
+            </div>
+
+            <div data-auth="field">
+              <label className="label" htmlFor="proof_type">
+                Which ID are you uploading? <span className="text-danger">*</span>
+              </label>
+              <select
+                id="proof_type"
+                value={proofType}
+                onChange={(e) => setProofType(e.target.value as ProofType)}
+                className="input"
+              >
+                {PROOF_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-text-dim">
+                Applies to the front and back below. Photograph both sides of
+                the same document.
               </p>
             </div>
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Mail, MapPin, Phone, Users, X } from 'lucide-react';
 
 import { money, num, shortDate } from '@/lib/api';
-import type { MlmLevel, TreeNode } from '@/types';
+import type { TreeNode } from '@/types';
 import { StatusBadge } from './ui';
 
 /* ── Layout constants ─────────────────────────────────────────────────────
@@ -104,12 +104,10 @@ function flatten(node: Positioned, out: Positioned[] = []) {
 
 export default function NetworkGraph({
   nodes,
-  levels = [],
   rootName = 'You',
   maxDepth = 4,
 }: {
   nodes: TreeNode[];
-  levels?: MlmLevel[];
   rootName?: string;
   maxDepth?: number;
 }) {
@@ -209,7 +207,6 @@ export default function NetworkGraph({
 
             {/* ── Level rails ────────────────────────────────────────── */}
             {Array.from({ length: depth }, (_, i) => i + 1).map((lvl) => {
-              const config = levels.find((l) => l.level === lvl);
               const ly = PAD_TOP + lvl * LEVEL_H;
               return (
                 <g key={`rail-${lvl}`}>
@@ -225,11 +222,6 @@ export default function NetworkGraph({
                   <text x={10} y={ly - 6} fontSize="10" fill="#6E6E69" letterSpacing="1.2">
                     L{lvl}
                   </text>
-                  {config && (
-                    <text x={10} y={ly + 8} fontSize="11" fontWeight="600" fill={colorFor(lvl)}>
-                      {num(config.roi_percent, 1)}%
-                    </text>
-                  )}
                 </g>
               );
             })}

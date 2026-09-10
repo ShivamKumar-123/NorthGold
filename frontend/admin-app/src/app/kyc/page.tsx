@@ -18,6 +18,10 @@ const DOC_LABELS: Record<string, string> = {
 type KycRow = {
   id: string;
   doc_type: string;
+  /** Which identity document the ID pages are — the reviewer needs it to know
+   *  what number format they are checking against. Empty on a selfie. */
+  proof_type: string;
+  proof_type_label: string;
   file: string | null;
   status: string;
   rejection_reason: string;
@@ -153,6 +157,11 @@ export default function KycPage() {
                 </p>
                 <p className="mt-0.5 text-xs text-text-muted">
                   {DOC_LABELS[doc.doc_type] ?? doc.doc_type.replace(/_/g, ' ')}
+                  {doc.proof_type_label && (
+                    <span className="ml-2 badge bg-accent/15 text-accent">
+                      {doc.proof_type_label}
+                    </span>
+                  )}
                   {doc.file && (
                     <>
                       {' · '}

@@ -36,7 +36,7 @@ def resolve_sponsor(referral_code):
 @transaction.atomic
 def register_user(*, email, password, first_name="", last_name="", phone="",
                   country="", referral_code="", utm=None, ip_address=None,
-                  kyc_files=None):
+                  kyc_files=None, proof_type=""):
     """Create a user and wire them into the tree under `referral_code`.
 
     `kyc_files` is a {doc_type: uploaded file} mapping collected by the signup
@@ -74,6 +74,9 @@ def register_user(*, email, password, first_name="", last_name="", phone="",
             continue
         KYCDocument.objects.create(
             user=user, doc_type=doc_type, file=file_obj, status="submitted",
+            # Only the two ID pages carry it: a selfie is not an Aadhaar, and a
+            # bank statement is not a PAN card.
+            proof_type=proof_type if doc_type in ("id_front", "id_back") else "",
         )
     if kyc_files:
         # Straight to `submitted`: the queue has something in it from the very
@@ -271,8 +274,12 @@ def downline_summary(root, max_depth=MAX_TREE_DEPTH):
     }
 
 
-def submit_kyc(user, doc_type, file_obj):
-    doc = KYCDocument.objects.create(user=user, doc_type=doc_type, file=file_obj)
+def submit_kyc(user, doc_type, file_obj, proof_type=""):
+    doc = KYCDocument.objects.create(
+        user=user, doc_type=doc_type, file=file_obj,
+        # Only the ID pages carry it; a selfie is not an Aadhaar.
+        proof_type=proof_type if doc_type in ("id_front", "id_back") else "",
+    )
     if user.kyc_status in ("pending", "rejected"):
         user.kyc_status = "submitted"
         user.save(update_fields=["kyc_status", "updated_at"])

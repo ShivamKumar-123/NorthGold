@@ -23,10 +23,9 @@ type WalletStats = {
 
 type NetworkStats = {
   total_commission_paid: number;
-  direct_paid: number;
-  indirect_paid: number;
+  payments_made: number;
   skipped_count: number;
-  by_level: { level: number; total: number; count: number }[];
+  by_month: { month_index: number; total: number; count: number }[];
   by_trigger: Record<string, number>;
   users_with_sponsor: number;
   users_without_sponsor: number;
@@ -153,7 +152,7 @@ export default function AdminDashboard() {
         <StatCard
           label="Commission paid out"
           value={money(wallet?.total_commission_paid)}
-          hint={`${money(network?.direct_paid)} direct · ${money(network?.indirect_paid)} indirect`}
+          hint={`${network?.payments_made ?? 0} monthly payments`}
           tone="gold"
           icon={<Network size={17} />}
         />
@@ -172,31 +171,22 @@ export default function AdminDashboard() {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
-            Commission by level
+            Commission by month of term
           </h2>
-          {network?.by_level.length ? (
+          {network?.by_month.length ? (
             <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Level</th>
+                    <th>Month</th>
                     <th className="text-right">Payments</th>
                     <th className="text-right">Total paid</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {network.by_level.map((row) => (
-                    <tr key={row.level}>
-                      <td className="font-medium">
-                        L{row.level}
-                        <span
-                          className={`ml-2 badge ${
-                            row.level === 1 ? 'bg-accent/15 text-accent' : 'bg-gold/15 text-gold'
-                          }`}
-                        >
-                          {row.level === 1 ? 'direct' : 'indirect'}
-                        </span>
-                      </td>
+                  {network.by_month.map((row) => (
+                    <tr key={row.month_index}>
+                      <td className="font-medium">Month {row.month_index}</td>
                       <td className="text-right tabular-nums">{row.count}</td>
                       <td className="text-right tabular-nums text-success">{money(row.total)}</td>
                     </tr>
@@ -214,7 +204,7 @@ export default function AdminDashboard() {
             <p className="mt-3 text-xs text-text-muted">
               {network.skipped_count} commission event(s) were skipped because the
               upline had not met that level&apos;s qualification — see{' '}
-              <Link href="/mlm-config" className="text-accent underline">MLM levels</Link>.
+              <Link href="/referral-rates" className="text-accent underline">Referral rates</Link>.
             </p>
           )}
         </section>
@@ -261,7 +251,7 @@ export default function AdminDashboard() {
         <Link href="/deposits" className="btn-primary">Review deposits</Link>
         <Link href="/withdrawals" className="btn-ghost">Review withdrawals</Link>
         <Link href="/roi-plans" className="btn-ghost">Edit ROI plans</Link>
-        <Link href="/mlm-config" className="btn-ghost">Edit MLM levels</Link>
+        <Link href="/referral-rates" className="btn-ghost">Edit referral rates</Link>
       </div>
     </div>
   );

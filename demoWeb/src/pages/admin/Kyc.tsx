@@ -3,12 +3,16 @@ import { ShieldCheck } from 'lucide-react';
 
 import { Alert, EmptyState, Modal, StatusBadge } from '@/components/ui';
 import { dateTime } from '@/lib/format';
-import { KYC_DOC_TYPES, allKyc, getUsers, reviewKyc } from '@/lib/store';
+import { allKyc, getUsers, KYC_DOC_TYPES, PROOF_TYPES, reviewKyc } from '@/lib/store';
 import type { KycDoc } from '@/lib/types';
 
 type Filter = 'pending' | 'all';
 
 const LABELS = Object.fromEntries(KYC_DOC_TYPES.map((d) => [d.value, d.label]));
+
+/** Which identity document the ID pages are — a reviewer needs it to know what
+ *  number format they are checking against. */
+const PROOF_LABELS = Object.fromEntries(PROOF_TYPES.map((p) => [p.value, p.label]));
 
 /**
  * The identity verification desk.
@@ -95,6 +99,11 @@ export default function AdminKyc() {
                   </p>
                   <p className="mt-0.5 text-xs text-text-muted">
                     {LABELS[doc.doc_type] ?? doc.doc_type.replace(/_/g, ' ')} · {doc.file_name}
+                    {doc.proof_type && (
+                      <span className="ml-2 badge bg-accent/15 text-accent">
+                        {PROOF_LABELS[doc.proof_type] ?? doc.proof_type}
+                      </span>
+                    )}
                   </p>
                   <p className="mt-0.5 text-xs text-text-dim">
                     {owner?.email} · submitted {dateTime(doc.created_at)}

@@ -1,65 +1,77 @@
 from rest_framework import serializers
 
-from .models import Commission, MlmLevelConfig
+from .models import Commission, ReferralPlan, ReferralPlanMonth
 
 
-class MlmLevelConfigSerializer(serializers.ModelSerializer):
-    kind = serializers.SerializerMethodField()
+class ReferralPlanMonthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReferralPlanMonth
+        fields = ["month_index", "percent"]
+
+
+class ReferralPlanSerializer(serializers.ModelSerializer):
+    months = ReferralPlanMonthSerializer(many=True, read_only=True)
+    total_percent = serializers.DecimalField(
+        max_digits=8, decimal_places=3, read_only=True,
+    )
 
     class Meta:
-        model = MlmLevelConfig
-        fields = ["level", "label", "kind", "deposit_percent", "roi_percent",
-                  "min_direct_referrals", "min_self_investment", "is_active"]
+        model = ReferralPlan
+        fields = [
+            "id", "name", "description", "min_amount", "max_amount",
+            "tenure_months", "is_active", "display_order", "months",
+            "total_percent",
+        ]
+        read_only_fields = ["id", "months", "total_percent"]
 
-    def get_kind(self, obj) -> str:
-        return "direct" if obj.level == 1 else "indirect"
 
+class ReferralPlanWriteSerializer(serializers.Serializer):
+    """A whole slab, matrix included, written in one call.
 
-class MlmConfigWriteSerializer(serializers.Serializer):
-    """Replace the whole level table in one call.
-
-    Levels are meaningful only as a set — editing them one row at a time is how
-    you end up with a gap at level 3 that silently stops paying.
+    The months arrive as a complete set rather than a patch: an editor that
+    saves cell by cell can leave a matrix half-updated if the tab is closed
+    between two of them, and a half-updated rate table pays real money.
     """
 
-    levels = MlmLevelConfigSerializer(many=True)
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    min_amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=0)
+    max_amount = serializers.DecimalField(
+        max_digits=18, decimal_places=2, required=False, allow_null=True,
+    )
+    tenure_months = serializers.IntegerField(min_value=1, max_value=120)
+    is_active = serializers.BooleanField(required=False, default=True)
+    display_order = serializers.IntegerField(required=False, default=0)
+    months = serializers.ListField(
+        child=serializers.DecimalField(max_digits=6, decimal_places=3, min_value=0),
+        allow_empty=False,
+    )
 
-    def validate_levels(self, value):
-        if not value:
-            raise serializers.ValidationError("At least one level is required.")
-        seen = set()
-        for row in value:
-            level = row["level"]
-            if level < 1:
-                raise serializers.ValidationError("Levels start at 1.")
-            if level in seen:
-                raise serializers.ValidationError(f"Duplicate entry for level {level}.")
-            seen.add(level)
-
-        expected = set(range(1, max(seen) + 1))
-        missing = sorted(expected - seen)
-        if missing:
+    def validate(self, attrs):
+        top = attrs.get("max_amount")
+        if top is not None and top < attrs["min_amount"]:
             raise serializers.ValidationError(
-                "Levels must be contiguous from 1. Missing: "
-                + ", ".join(str(m) for m in missing)
+                "The top of a slab cannot sit below its floor.",
             )
-        return value
+        if len(attrs["months"]) != attrs["tenure_months"]:
+            raise serializers.ValidationError(
+                f"Give one percentage per month: {attrs['tenure_months']} expected, "
+                f"{len(attrs['months'])} given.",
+            )
+        return attrs
 
 
 class CommissionSerializer(serializers.ModelSerializer):
-    source_name = serializers.CharField(source="source_user.full_name", read_only=True)
-    source_email = serializers.CharField(source="source_user.email", read_only=True)
-    kind = serializers.SerializerMethodField()
-    trigger_label = serializers.CharField(source="get_trigger_display", read_only=True)
+    from_name = serializers.CharField(source="source_user.full_name", read_only=True)
+    from_email = serializers.CharField(source="source_user.email", read_only=True)
 
     class Meta:
         model = Commission
-        fields = ["id", "level", "kind", "trigger", "trigger_label", "source_user",
-                  "source_name", "source_email", "base_amount", "percent", "amount",
-                  "status", "skip_reason", "description", "created_at"]
-
-    def get_kind(self, obj) -> str:
-        return "direct" if obj.level == 1 else "indirect"
+        fields = [
+            "id", "from_name", "from_email", "month_index", "base_amount",
+            "percent", "amount", "status", "skip_reason", "description",
+            "created_at",
+        ]
 
 
 class AdminCommissionSerializer(CommissionSerializer):
@@ -67,4 +79,4 @@ class AdminCommissionSerializer(CommissionSerializer):
     earner_email = serializers.CharField(source="earner.email", read_only=True)
 
     class Meta(CommissionSerializer.Meta):
-        fields = CommissionSerializer.Meta.fields + ["earner", "earner_name", "earner_email"]
+        fields = CommissionSerializer.Meta.fields + ["earner_name", "earner_email"]

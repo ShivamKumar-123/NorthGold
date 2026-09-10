@@ -128,20 +128,36 @@ export type Transaction = {
   created_at: string;
 };
 
-export type MlmLevel = {
-  level: number;
-  label: string;
-  deposit_percent: number;
-  roi_percent: number;
-  min_directs: number;
+/**
+ * One deposit slab and what the sponsor earns in each month of the term.
+ *
+ * Deliberately the same shape as `RoiPlan`: two matrices edited side by side,
+ * and an administrator who has understood one has understood the other. Every
+ * percentage is theirs to set — nothing here is derived from the ROI rates.
+ */
+export type ReferralPlan = {
+  id: string;
+  name: string;
+  description: string;
+  min_amount: number;
+  /** `null` on the open-ended top slab. */
+  max_amount: number | null;
+  tenure_months: number;
+  display_order: number;
+  /** One percent per month, index 0 = month 1. */
+  months: number[];
+  is_active: boolean;
 };
 
 export type Commission = {
   id: string;
   earner_id: string;
   from_user_id: string;
-  level: number;
-  trigger: 'deposit' | 'roi';
+  /** The investment being paid on. Together with the month it identifies the
+   *  payment, which is what stops a re-run paying the same month twice. */
+  investment_id: string;
+  /** Which month of the referral's investment this paid for. */
+  month_index: number;
   /** The amount the percentage was applied to — a payment is unauditable
    *  without it, since the rate alone does not say what it was a rate OF. */
   base_amount: number;
@@ -152,10 +168,17 @@ export type Commission = {
   created_at: string;
 };
 
+/** Which identity document the ID pages are. `doc_type` says it is the front
+ *  of an ID; this says the ID is an Aadhaar. A reviewer needs both — the
+ *  number format and what can be checked against it differ per document. */
+export type ProofType = 'aadhaar' | 'pan' | 'national_id';
+
 export type KycDoc = {
   id: string;
   user_id: string;
   doc_type: string;
+  /** Empty on documents where the question does not arise, such as a selfie. */
+  proof_type: ProofType | '';
   /** The file NAME only. Storing the bytes as base64 would fill localStorage
    *  after a handful of uploads, and there is no server here to hold them. */
   file_name: string;
@@ -193,9 +216,7 @@ export type Settings = {
   deposit_min_amount: number;
   withdrawal_min_amount: number;
   auto_invest_on_deposit: boolean;
-  mlm_deposit_enabled: boolean;
-  mlm_roi_enabled: boolean;
-  mlm_max_levels: number;
+  referral_enabled: boolean;
 };
 
 /**
@@ -237,7 +258,7 @@ export type DB = {
   deposits: Deposit[];
   withdrawals: Withdrawal[];
   transactions: Transaction[];
-  levels: MlmLevel[];
+  referral_plans: ReferralPlan[];
   commissions: Commission[];
   kyc: KycDoc[];
   messages: SupportMessage[];
