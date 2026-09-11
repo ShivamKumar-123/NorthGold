@@ -210,7 +210,7 @@ function seedInto(db: DB): DB {
     byKey.set(person.key, user);
 
     // Every account here was opened the way the signup form now opens one, so
-    // each member carries the same five documents. Their state follows the
+    // each member carries the same documents. Their state follows the
     // member's own: the approved ones are approved throughout, and the rest
     // are still sitting in the queue for somebody to work through.
     for (const doc of KYC_DOC_TYPES) {
@@ -402,7 +402,7 @@ export function login(email: string, password: string): User {
 
 /** The identity documents an account cannot be opened without. Shared by the
  *  signup form, the profile page and the admin review queue so all three name
- *  the same five things. */
+ *  the same things. */
 /** The identity documents a member can prove themselves with. */
 export const PROOF_TYPES: Array<{ value: ProofType; label: string }> = [
   { value: 'aadhaar', label: 'Aadhaar card' },
@@ -417,8 +417,6 @@ export const KYC_DOC_TYPES = [
   { value: 'id_front', label: 'ID — front' },
   { value: 'id_back', label: 'ID — back' },
   { value: 'selfie', label: 'Selfie with ID' },
-  { value: 'address_proof', label: 'Proof of address' },
-  { value: 'bank_proof', label: 'Bank proof' },
 ] as const;
 
 export function register(input: {
@@ -433,7 +431,7 @@ export function register(input: {
    *  both — a reviewer cannot check a number format without knowing which
    *  document they are holding. */
   proof_type: ProofType;
-  /** doc_type -> file name. All five are required: the account and the
+  /** doc_type -> file name. All of them are required: the account and the
    *  documents it was opened against are written together, so nobody can
    *  exist here without something for an administrator to verify. */
   documents: Record<string, string>;

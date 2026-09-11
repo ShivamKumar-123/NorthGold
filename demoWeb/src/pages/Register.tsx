@@ -76,7 +76,7 @@ export default function RegisterForm() {
     setError('');
 
     if (!allAttached) {
-      setError('Attach all five documents to open your account.');
+      setError('Attach every document to open your account.');
       return;
     }
 
@@ -152,7 +152,6 @@ export default function RegisterForm() {
                   value={form.first_name}
                   onChange={(e) => set('first_name', e.target.value)}
                   className="input"
-                  placeholder="Priya"
                 />
               </div>
               <div>
@@ -162,7 +161,6 @@ export default function RegisterForm() {
                   value={form.last_name}
                   onChange={(e) => set('last_name', e.target.value)}
                   className="input"
-                  placeholder="Sharma"
                 />
               </div>
             </div>
@@ -177,7 +175,6 @@ export default function RegisterForm() {
                 value={form.email}
                 onChange={(e) => set('email', e.target.value)}
                 className="input"
-                placeholder="you@example.com"
               />
             </div>
 
@@ -189,7 +186,6 @@ export default function RegisterForm() {
                   value={form.phone}
                   onChange={(e) => set('phone', e.target.value)}
                   className="input"
-                  placeholder="+91 98765 43210"
                 />
               </div>
               <div>
@@ -199,7 +195,6 @@ export default function RegisterForm() {
                   value={form.country}
                   onChange={(e) => set('country', e.target.value)}
                   className="input"
-                  placeholder="India"
                 />
               </div>
             </div>
@@ -216,7 +211,6 @@ export default function RegisterForm() {
                   value={form.password}
                   onChange={(e) => set('password', e.target.value)}
                   className="input"
-                  placeholder="At least 8 characters"
                 />
               </div>
               <div>
@@ -229,7 +223,6 @@ export default function RegisterForm() {
                   value={form.confirm}
                   onChange={(e) => set('confirm', e.target.value)}
                   className="input"
-                  placeholder="Repeat password"
                 />
               </div>
             </div>
@@ -242,7 +235,6 @@ export default function RegisterForm() {
                 onChange={(e) => set('referral_code', e.target.value.toUpperCase())}
                 readOnly={Boolean(refFromLink)}
                 className={`input font-mono ${refFromLink ? 'cursor-not-allowed opacity-70' : ''}`}
-                placeholder="Optional"
               />
               <p className="mt-1 text-xs text-text-dim">
                 Optional. An unknown code is ignored rather than blocking your signup.
@@ -262,7 +254,7 @@ export default function RegisterForm() {
                 <ShieldCheck size={16} className="text-accent" /> Identity verification
               </p>
               <p className="mt-1 text-xs leading-relaxed text-text-muted">
-                All five are required. An administrator reviews each one, and
+                All of them are required. An administrator reviews each one, and
                 your account shows as verified once they have all been approved.
               </p>
             </div>
@@ -313,11 +305,6 @@ export default function RegisterForm() {
                 </div>
               ))}
             </div>
-
-            <p className="text-xs text-text-dim">
-              {attached} of {KYC_DOC_TYPES.length} attached. Only the file name is
-              stored in this demo — there is no server here to hold the bytes.
-            </p>
 
             <div className="flex gap-3" data-auth="field">
               <button

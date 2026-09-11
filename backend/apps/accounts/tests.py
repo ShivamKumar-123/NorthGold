@@ -1,7 +1,7 @@
 """Registration now opens an account and its KYC file in one move.
 
 The rule under test is that the two cannot come apart: a signup missing any of
-the five documents creates nothing at all, and a successful one leaves the
+the documents creates nothing at all, and a successful one leaves the
 review queue already holding everything an administrator needs.
 """
 import shutil
@@ -71,7 +71,7 @@ class RegistrationKYCTests(TestCase):
         self.assertFalse(User.objects.filter(email=DETAILS["email"]).exists())
         self.assertEqual(KYCDocument.objects.count(), 0)
 
-    def test_a_complete_signup_files_all_five_documents(self):
+    def test_a_complete_signup_files_every_document(self):
         res = self.client.post(self.url, full_signup(), format="multipart")
 
         self.assertEqual(res.status_code, 201)

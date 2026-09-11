@@ -18,7 +18,7 @@ const PROOF_LABELS = Object.fromEntries(PROOF_TYPES.map((p) => [p.value, p.label
  * The identity verification desk.
  *
  * Documents arrive here the moment an account is opened — signup will not
- * complete without all five — so this queue is the gate between "registered"
+ * complete without all of them — so this queue is the gate between "registered"
  * and "verified". Each document is decided on its own; the member's account
  * only reads as approved once every one of theirs has been.
  */

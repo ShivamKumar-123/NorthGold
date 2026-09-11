@@ -15,7 +15,7 @@ import { Alert, Spinner } from '@/components/ui';
  * Signup, in two steps: who you are, then proof of it.
  *
  * The documents are not optional and there is no "do this later" — the API
- * refuses a registration that is missing any of the five — so the queue an
+ * refuses a registration that is missing any of them — so the queue an
  * administrator works from is never empty for a member who is already able to
  * deposit.
  */
@@ -78,7 +78,7 @@ function RegisterForm() {
     setError('');
 
     if (!allAttached) {
-      setError('Attach all five documents to open your account.');
+      setError('Attach every document to open your account.');
       return;
     }
 
@@ -100,7 +100,7 @@ function RegisterForm() {
       const message = err instanceof ApiError ? err.message : 'Registration failed. Please try again.';
       setError(message);
       // A rejected email or password is a step-one problem, and leaving
-      // someone staring at five file pickers gives them nothing to fix. Only
+      // someone staring at the file pickers gives them nothing to fix. Only
       // send them back when the complaint is not about the documents.
       if (!KYC_DOC_TYPES.some((d) => message.startsWith(d.value))) setStep(1);
     } finally {
@@ -156,7 +156,6 @@ function RegisterForm() {
                   value={form.first_name}
                   onChange={(e) => set('first_name', e.target.value)}
                   className="input"
-                  placeholder="Priya"
                 />
               </div>
               <div>
@@ -166,7 +165,6 @@ function RegisterForm() {
                   value={form.last_name}
                   onChange={(e) => set('last_name', e.target.value)}
                   className="input"
-                  placeholder="Sharma"
                 />
               </div>
             </div>
@@ -181,7 +179,6 @@ function RegisterForm() {
                 value={form.email}
                 onChange={(e) => set('email', e.target.value)}
                 className="input"
-                placeholder="you@example.com"
               />
             </div>
 
@@ -193,7 +190,6 @@ function RegisterForm() {
                   value={form.phone}
                   onChange={(e) => set('phone', e.target.value)}
                   className="input"
-                  placeholder="+91 98765 43210"
                 />
               </div>
               <div>
@@ -203,7 +199,6 @@ function RegisterForm() {
                   value={form.country}
                   onChange={(e) => set('country', e.target.value)}
                   className="input"
-                  placeholder="India"
                 />
               </div>
             </div>
@@ -220,7 +215,6 @@ function RegisterForm() {
                   value={form.password}
                   onChange={(e) => set('password', e.target.value)}
                   className="input"
-                  placeholder="At least 8 characters"
                 />
               </div>
               <div>
@@ -233,7 +227,6 @@ function RegisterForm() {
                   value={form.confirm}
                   onChange={(e) => set('confirm', e.target.value)}
                   className="input"
-                  placeholder="Repeat password"
                 />
               </div>
             </div>
@@ -246,7 +239,6 @@ function RegisterForm() {
                 onChange={(e) => set('referral_code', e.target.value.toUpperCase())}
                 readOnly={Boolean(refFromLink)}
                 className={`input font-mono ${refFromLink ? 'cursor-not-allowed opacity-70' : ''}`}
-                placeholder="Optional"
               />
               <p className="mt-1 text-xs text-text-dim">
                 Optional. An unknown code is ignored rather than blocking your signup.
@@ -266,7 +258,7 @@ function RegisterForm() {
                 <ShieldCheck size={16} className="text-accent" /> Identity verification
               </p>
               <p className="mt-1 text-xs leading-relaxed text-text-muted">
-                All five are required. An administrator reviews each one, and
+                All of them are required. An administrator reviews each one, and
                 your account shows as verified once they have all been approved.
               </p>
             </div>
@@ -317,11 +309,6 @@ function RegisterForm() {
                 </div>
               ))}
             </div>
-
-            <p className="text-xs text-text-dim">
-              {attached} of {KYC_DOC_TYPES.length} attached. JPEG, PNG, WebP or
-              PDF, up to 5 MB each.
-            </p>
 
             <div className="flex gap-3" data-auth="field">
               <button

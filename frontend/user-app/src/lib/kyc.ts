@@ -10,8 +10,6 @@ export const KYC_DOC_TYPES = [
   { value: 'id_front', label: 'ID — front' },
   { value: 'id_back', label: 'ID — back' },
   { value: 'selfie', label: 'Selfie with ID' },
-  { value: 'address_proof', label: 'Proof of address' },
-  { value: 'bank_proof', label: 'Bank proof' },
 ];
 
 /** Which identity document the ID pages are. `doc_type` says it is the front

@@ -45,7 +45,7 @@ const TAB_LABEL: Record<string, string> = {
  * The identity verification desk.
  *
  * Documents arrive the moment an account is opened — registration will not
- * complete without all five — so this queue is the gate between "registered"
+ * complete without all of them — so this queue is the gate between "registered"
  * and "verified". Each document is decided on its own; a member only reads as
  * approved once every one of theirs has been.
  */
@@ -106,7 +106,7 @@ export default function KycPage() {
         <h1 className="text-2xl font-semibold sm:text-3xl">Identity verification</h1>
         <p className="mt-1 text-sm text-text-muted">
           Documents attached at signup. A member counts as verified only once
-          every one of their five has been approved.
+          every one of theirs has been approved.
         </p>
       </header>
 

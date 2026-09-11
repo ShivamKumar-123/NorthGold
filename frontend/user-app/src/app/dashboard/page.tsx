@@ -109,7 +109,7 @@ export default function DashboardPage() {
       {error && <div className="mt-5"><Alert kind="error" onDismiss={() => setError('')}>{error}</Alert></div>}
 
       {/* Identity verification, always on show — not only while something is
-          wrong. Someone who has just uploaded five documents wants to watch
+          wrong. Someone who has just uploaded their documents wants to watch
           them clear, and hiding the panel the moment they are approved leaves
           no way to check what the desk actually holds. */}
       <section className="card mt-5 p-5 sm:p-6">

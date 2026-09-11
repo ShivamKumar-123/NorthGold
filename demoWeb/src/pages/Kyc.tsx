@@ -11,7 +11,7 @@ import type { KycDoc, ProofType } from '@/lib/types';
  * Identity verification, on its own page.
  *
  * It used to be a panel wedged between personal details and the password form
- * on the profile screen, which put a five-document review queue in the same
+ * on the profile screen, which put a document review queue in the same
  * breath as changing a phone number. It is its own step in opening an account,
  * so it gets its own page — and enough room to say, per document, what the
  * desk is holding and what is still needed.
@@ -75,7 +75,7 @@ export default function KycPage() {
           <ShieldCheck size={22} className="text-accent" /> Identity verification
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          The five documents your account was opened with, and where each one has got to.
+          The documents your account was opened with, and where each one has got to.
         </p>
       </header>
 
@@ -98,7 +98,7 @@ export default function KycPage() {
           </div>
         </div>
 
-        {/* One bar, five segments — the same shape as the list below it. */}
+        {/* One bar, one segment per document — the same shape as the list below. */}
         <div className="mt-4 flex gap-1.5" aria-hidden>
           {KYC_DOC_TYPES.map((t) => {
             const status = latest(t.value)?.status;
@@ -130,7 +130,7 @@ export default function KycPage() {
         </p>
       </section>
 
-      {/* ── The five documents ───────────────────────────────────────── */}
+      {/* ── The documents ────────────────────────────────────────────── */}
       <div className="mt-6 space-y-3">
         {KYC_DOC_TYPES.map((type) => {
           const doc = latest(type.value);

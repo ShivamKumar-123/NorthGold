@@ -60,8 +60,8 @@ docker compose up -d --build
 | API + docs | http://localhost:8000/api/docs/ |
 | Health | http://localhost:8000/api/health/ |
 
-`docker compose up` runs migrations and seeds four ROI plans, five MLM levels,
-three issuers, five instruments and four payment channels. Create the first
+`docker compose up` runs migrations and seeds three ROI plans, three referral
+slabs, three issuers, five instruments and four payment channels. Create the first
 administrator:
 
 ```bash
@@ -96,7 +96,7 @@ celery -A config beat   -l info --scheduler django_celery_beat.schedulers:Databa
 ## Opening an account
 
 Registration is one request, not two. The signup form collects the member's
-details and **all five identity documents** — ID front, ID back, selfie, proof
+details and **all three identity documents** — ID front, ID back, selfie, proof
 of address and bank proof — and the API refuses a signup missing any of them.
 The account and its documents are written in the same transaction, so nobody
 can exist on the platform without something for an administrator to verify them

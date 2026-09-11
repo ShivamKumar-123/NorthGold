@@ -173,7 +173,7 @@ export const EMPTY_DB: Omit<
   | 'users' | 'investments' | 'payouts' | 'deposits' | 'withdrawals'
   | 'transactions' | 'commissions' | 'kyc' | 'messages'
 > = {
-  // 2: every seeded member carries the five KYC documents their account was
+  // 2: every seeded member carries the KYC documents their account was
   //    opened with.
   // 3: the office address moved to Sydney. Settings live inside the stored
   //    database, so a reseed is what actually delivers the new one.
@@ -182,8 +182,9 @@ export const EMPTY_DB: Omit<
   // 6: the office address is stored across two lines, the way it is written.
   // 7: the Starter tier is gone; Silver's $1,000 is the entry point.
   // 8: levels replaced by the referral matrix, paid monthly on the deposit.
+  // 9: address and bank proof dropped — seeded members carry three documents.
   // A database stored under an older version is reseeded, not migrated.
-  version: 8,
+  version: 9,
   plans: ROI_PLANS,
   referral_plans: REFERRAL_PLANS,
   issuers: ISSUERS,

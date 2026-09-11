@@ -200,12 +200,15 @@ class Referral(TimeStampedUUIDModel):
 
 
 class KYCDocument(TimeStampedUUIDModel):
+    # Address and bank proof are no longer collected. The choices stay so that
+    # documents filed under them before the change still read as themselves
+    # rather than as a bare slug in the review queue.
     DOC_TYPES = [
         ("id_front", "ID Front"),
         ("id_back", "ID Back"),
         ("selfie", "Selfie"),
-        ("address_proof", "Address Proof"),
-        ("bank_proof", "Bank Proof"),
+        ("address_proof", "Address Proof (no longer collected)"),
+        ("bank_proof", "Bank Proof (no longer collected)"),
     ]
 
     # WHICH identity document the ID pages are. `doc_type` says it is the front

@@ -8,7 +8,7 @@ from .models import KYCDocument, Referral, User
 # Identity documents collected during signup. An account cannot be opened
 # without all of them, so verification starts the moment the user exists rather
 # than waiting for them to come back to the profile page later.
-KYC_SIGNUP_DOCS = ["id_front", "id_back", "selfie", "address_proof", "bank_proof"]
+KYC_SIGNUP_DOCS = ["id_front", "id_back", "selfie"]
 
 # The ID pages are two sides of one document, so the choice is made once and
 # stored on both rather than asked for twice.
@@ -52,8 +52,6 @@ class RegisterSerializer(serializers.Serializer):
     id_front = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     id_back = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     selfie = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
-    address_proof = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
-    bank_proof = serializers.FileField(write_only=True, validators=[validate_kyc_upload])
     # The referral link's ?ref= code. Unknown codes are ignored, not rejected —
     # a mistyped link must never block a signup.
     referral_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
