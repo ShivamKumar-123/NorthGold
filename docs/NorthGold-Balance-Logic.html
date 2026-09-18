@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>NorthGold — Where Your Money Sits</title>
+<style>
+  /* Print-first. The product is gold on black; a printed document is not —
+     a dark page wastes toner and reads badly on paper, so this inverts to ink
+     on white and keeps the gold as an accent. */
+  @page { size: A4; margin: 16mm 15mm 14mm 15mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --gold: #A87516;
+    --gold-bright: #D9A62E;
+    --ink: #16150f;
+    --muted: #5b574c;
+    --rule: #e4dfd3;
+    --wash: #faf8f3;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0;
+    font: 10.2pt/1.52 "Segoe UI", -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+  }
+
+  h1, h2, h3, h4 { line-height: 1.2; margin: 0; font-weight: 650; }
+  h2 { font-size: 16pt; margin: 0 0 3.5mm; padding-bottom: 2.2mm; border-bottom: 2px solid var(--gold); }
+  h3 { font-size: 11.8pt; margin: 5.5mm 0 2mm; color: var(--gold); }
+  h4 { font-size: 10.4pt; margin: 4mm 0 1.2mm; }
+  h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.3mm; }
+  strong { font-weight: 650; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 3.5mm; font-size: 9.4pt; page-break-inside: avoid; }
+  th, td { text-align: left; padding: 1.9mm 2.4mm; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--wash); font-weight: 650; font-size: 8.8pt; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .page { page-break-after: always; }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* ── Cover ─────────────────────────────────────────────────────────── */
+  .cover {
+    height: 297mm; padding: 34mm 24mm 20mm;
+    background: #0b0b0a; color: #f3efe4;
+    display: flex; flex-direction: column;
+  }
+  .cover .mark { width: 26mm; height: 26mm; margin-bottom: 12mm; }
+  .cover h1 { font-size: 34pt; letter-spacing: -0.02em; }
+  .cover h1 span { color: var(--gold-bright); }
+  .cover .sub { margin-top: 6mm; font-size: 12.5pt; color: #b8b2a3; max-width: 122mm; line-height: 1.55; }
+  .cover .rule { width: 40mm; height: 2px; background: linear-gradient(90deg, var(--gold-bright), transparent); margin: 10mm 0; }
+  .cover dl { margin: auto 0 0; display: grid; grid-template-columns: 34mm 1fr; gap: 2.5mm 4mm; font-size: 9.5pt; }
+  .cover dt { color: #7e796d; text-transform: uppercase; letter-spacing: .1em; font-size: 8pt; padding-top: .6mm; }
+  .cover dd { margin: 0; color: #ded8c9; }
+
+  /* ── Callouts ──────────────────────────────────────────────────────── */
+  .note, .warn, .key {
+    padding: 2.8mm 3.6mm; border-radius: 4px; margin: 0 0 3.5mm; font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .note { background: var(--wash); border-left: 3px solid var(--gold); }
+  .warn { background: #fdf4ec; border-left: 3px solid #c2610a; }
+  .key  { background: #f7f9f5; border-left: 3px solid #3f7d3f; }
+  .note strong, .warn strong, .key strong { display: block; margin-bottom: 1mm; }
+
+  .lede { font-size: 11pt; color: var(--muted); margin-bottom: 4mm; }
+  .small { font-size: 9.2pt; color: var(--muted); }
+
+  .toc { list-style: none; padding: 0; }
+  .toc li { display: flex; gap: 3mm; padding: 2mm 0; border-bottom: 1px dotted var(--rule); }
+  .toc .n { color: var(--gold); font-weight: 650; width: 7mm; }
+
+  .flow { counter-reset: step; list-style: none; padding: 0; }
+  .flow li { position: relative; padding-left: 9mm; margin-bottom: 2.6mm; page-break-inside: avoid; }
+  .flow li::before {
+    counter-increment: step; content: counter(step);
+    position: absolute; left: 0; top: .3mm;
+    width: 6mm; height: 6mm; border-radius: 50%;
+    background: var(--gold); color: #fff;
+    font-size: 8pt; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* A worked money example, set apart from the prose. */
+  .example {
+    border: 1px solid var(--rule); border-top: 3px solid var(--gold);
+    border-radius: 4px; padding: 3.4mm; margin: 0 0 3.5mm;
+    background: #fffefb; page-break-inside: avoid;
+  }
+  .example h4 { margin-top: 0; color: var(--gold); }
+  .example table { margin-bottom: 0; font-size: 9.5pt; }
+  .example table tr:last-child td { border-bottom: 0; font-weight: 650; }
+
+  /* ── The four balances, drawn as the four cards on the wallet screen ── */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm; margin: 0 0 4mm; }
+  .card {
+    border: 1px solid var(--rule); border-radius: 5px; padding: 3.2mm 3.6mm;
+    background: #fffefb; page-break-inside: avoid;
+  }
+  .card .cap { font-size: 7.8pt; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .card .fig { font-size: 15pt; font-weight: 650; margin: 1.4mm 0 1.2mm; font-variant-numeric: tabular-nums; }
+  .card .fig.gold { color: var(--gold); }
+  .card p { margin: 0; font-size: 9pt; color: var(--muted); line-height: 1.45; }
+
+  /* Where a figure moves next. */
+  .ledger td:first-child { width: 42mm; }
+  .ledger .to { color: var(--gold); font-weight: 650; }
+
+  .qa { list-style: none; padding: 0; }
+  .qa li { padding: 2.4mm 0; border-bottom: 1px solid var(--rule); page-break-inside: avoid; }
+  .qa b { display: block; margin-bottom: .8mm; }
+  .qa span { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ══ Cover ══════════════════════════════════════════════════════════ -->
+<section class="cover page">
+  <img class="mark" src="../frontend/user-app/public/icons/icon-192.png" alt="" />
+  <h1>NorthGold<br /><span>Where Your Money Sits</span></h1>
+  <div class="rule"></div>
+  <p class="sub">
+    The four balances on the wallet screen, what each one means, and exactly
+    when money moves from one to the next — including why "Available" reads
+    $0.00 the day after a deposit is approved.
+  </p>
+  <dl>
+    <dt>Prepared for</dt><dd>Platform owners, operators and members</dd>
+    <dt>Covers</dt><dd>The wallet screen and the money behind it</dd>
+    <dt>Currency</dt><dd>US Dollar ($)</dd>
+    <dt>Version</dt><dd>1.0</dd>
+  </dl>
+</section>
+
+<!-- ══ Contents ═══════════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li><span class="n">1</span><span>The four balances at a glance</span></li>
+    <li><span class="n">2</span><span>Why "Available" shows $0.00 after a deposit</span></li>
+    <li><span class="n">3</span><span>What moves, and when</span></li>
+    <li><span class="n">4</span><span>A worked example: $20,000 over twelve months</span></li>
+    <li><span class="n">5</span><span>Investing and withdrawing</span></li>
+    <li><span class="n">6</span><span>Questions members ask</span></li>
+  </ol>
+
+  <h3>The one sentence version</h3>
+  <p class="lede">
+    Money on NorthGold is only ever in one of four places, and it moves between
+    them on four events: an administrator approving a deposit, an investment
+    starting, a monthly return falling due, and an investment maturing.
+    Everything in this document is those four movements, explained.
+  </p>
+
+  <div class="note">
+    <strong>A note on the word "balance"</strong>
+    <strong style="font-weight:400;display:inline">Available balance</strong> is
+    the only figure you can spend. The other three describe money that is
+    yours but not yet spendable — either because it is working, or because
+    somebody still has to approve it. That distinction is the whole document.
+  </div>
+</section>
+
+<!-- ══ 1. The four balances ═══════════════════════════════════════════ -->
+<section class="page">
+  <h2>1. The four balances at a glance</h2>
+  <p class="lede">
+    These are the four cards across the top of the wallet screen. The figures
+    below are the ones in the screenshot this document was written to explain.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <p class="cap">Available balance</p>
+      <p class="fig">$0.00</p>
+      <p>Yours to spend right now — you can invest it or withdraw it today. Nothing else on this page can be spent.</p>
+    </div>
+    <div class="card">
+      <p class="cap">Locked in investments</p>
+      <p class="fig gold">$20,000.00</p>
+      <p>Principal working inside a plan. It is yours, it is earning, and it comes back at the end of the term.</p>
+    </div>
+    <div class="card">
+      <p class="cap">Pending deposits</p>
+      <p class="fig">$10,000.00</p>
+      <p>Money you have told us about but which nobody has verified yet. It is <em>not</em> on your account until it is approved.</p>
+    </div>
+    <div class="card">
+      <p class="cap">Pending withdrawals</p>
+      <p class="fig">$0.00</p>
+      <p>Money already taken out of Available and held while the payout is approved. It has left your spendable balance.</p>
+    </div>
+  </div>
+
+  <h3>Which of these is actually "my money"?</h3>
+  <table>
+    <thead>
+      <tr><th>Balance</th><th>Is it yours?</th><th>Can you spend it?</th><th>Is it earning?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Available balance</td><td>Yes</td><td><strong>Yes</strong></td><td>No</td></tr>
+      <tr><td>Locked in investments</td><td>Yes</td><td>No — until it matures</td><td><strong>Yes</strong></td></tr>
+      <tr><td>Pending deposits</td><td>Not yet</td><td>No</td><td>No</td></tr>
+      <tr><td>Pending withdrawals</td><td>Yes</td><td>No — already committed</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <div class="key">
+    <strong>Pending deposits are not added to anything</strong>
+    A pending deposit is a claim, not a credit. It sits in its own card
+    precisely so it is never mistaken for money on the account. Until an
+    administrator matches it against the handover you described, no other
+    figure on the page changes by a cent.
+  </div>
+</section>
+
+<!-- ══ 2. Why Available is zero ═══════════════════════════════════════ -->
+<section class="page">
+  <h2>2. Why "Available" shows $0.00 after a deposit</h2>
+  <p class="lede">
+    This is the single most common question, and it has a one-line answer:
+    the deposit was <strong>automatically invested</strong> the moment it was
+    approved. It did not stay in the wallet, because leaving it there would
+    mean it earned nothing.
+  </p>
+
+  <h3>What happened, step by step</h3>
+  <ol class="flow">
+    <li>You filed a deposit of $20,000 and described the handover. Nothing was credited — it appeared under <strong>Pending deposits</strong>.</li>
+    <li>An administrator checked it against your message and reference, and approved it.</li>
+    <li>$20,000 was credited to your <strong>Available balance</strong>, and a line was written to your statement.</li>
+    <li>Because auto-invest is switched on, the same $20,000 was immediately placed into the plan matching its size. Available went back to <strong>$0.00</strong> and <strong>Locked in investments</strong> became <strong>$20,000.00</strong>.</li>
+    <li>Your return schedule started running from that moment. The first monthly return is due one month later.</li>
+  </ol>
+
+  <p>
+    Steps 3 and 4 happen together, in one movement, which is why you never see
+    the money resting in Available. Both lines appear on your statement, so the
+    trail is complete: a credit of $20,000, then an investment of $20,000.
+  </p>
+
+  <div class="note">
+    <strong>Auto-invest is a setting, not a rule of nature</strong>
+    It is on by default because it is what members want — money that sits in a
+    wallet earns nothing. An administrator can turn it off under
+    <strong>Settings → auto-invest on deposit</strong>. With it off, an approved
+    deposit stays in Available and the member chooses a plan themselves from the
+    <strong>Invest</strong> card on the wallet screen.
+  </div>
+
+  <h3>So when does Available stop being zero?</h3>
+  <p>
+    On the first monthly anniversary of the deposit. Each month's return is paid
+    into <strong>Available balance</strong>, where it is immediately withdrawable.
+    Twelve months later the principal follows it. Section 4 shows exactly what
+    those figures are.
+  </p>
+</section>
+
+<!-- ══ 3. What moves, and when ════════════════════════════════════════ -->
+<section class="page">
+  <h2>3. What moves, and when</h2>
+  <p class="lede">
+    Every movement of money on the platform is one of the rows below. There are
+    no others.
+  </p>
+
+  <table class="ledger">
+    <thead>
+      <tr><th>When this happens</th><th>This is what moves</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>You file a deposit</strong></td>
+        <td>Nothing moves. The amount appears under <span class="to">Pending deposits</span> only.</td>
+      </tr>
+      <tr>
+        <td><strong>An administrator approves it</strong></td>
+        <td>Pending deposits → <span class="to">Available balance</span>. A statement line is written.</td>
+      </tr>
+      <tr>
+        <td><strong>An administrator rejects it</strong></td>
+        <td>It leaves Pending deposits with a reason attached. No balance changes.</td>
+      </tr>
+      <tr>
+        <td><strong>An investment starts</strong><br /><span class="small">automatically, or from the Invest card</span></td>
+        <td>Available balance → <span class="to">Locked in investments</span>.</td>
+      </tr>
+      <tr>
+        <td><strong>A monthly return falls due</strong></td>
+        <td>That month's percentage of the principal is created and paid into <span class="to">Available balance</span>. The locked principal is unchanged.</td>
+      </tr>
+      <tr>
+        <td><strong>Somebody in your network earns</strong></td>
+        <td>Your commission is paid straight into <span class="to">Available balance</span>.</td>
+      </tr>
+      <tr>
+        <td><strong>An investment reaches the end of its term</strong></td>
+        <td>Locked in investments → <span class="to">Available balance</span>. The principal comes back whole.</td>
+      </tr>
+      <tr>
+        <td><strong>You request a withdrawal</strong></td>
+        <td>Available balance → <span class="to">Pending withdrawals</span>. The money is held immediately, before approval.</td>
+      </tr>
+      <tr>
+        <td><strong>A withdrawal is approved</strong></td>
+        <td>It leaves Pending withdrawals and is paid out to you.</td>
+      </tr>
+      <tr>
+        <td><strong>A withdrawal is rejected</strong></td>
+        <td>Pending withdrawals → <span class="to">Available balance</span>. The hold is returned in full.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Two timing details worth knowing</h3>
+  <p>
+    <strong>Months are counted from your deposit, not from the calendar.</strong>
+    If your investment started on the 14th, every return falls due on the 14th.
+    A member who joined on the 31st is paid on the 28th in February — the date
+    is pulled back to the last day of a shorter month rather than spilling into
+    the next one.
+  </p>
+  <p>
+    <strong>Withdrawals are held at the moment you ask, not when they are
+    approved.</strong> If they were only deducted on approval, the same balance
+    could be promised to several requests at once. Asking for a withdrawal
+    therefore reduces your Available balance straight away; if the request is
+    turned down, every cent comes back.
+  </p>
+</section>
+
+<!-- ══ 4. Worked example ══════════════════════════════════════════════ -->
+<section class="page">
+  <h2>4. A worked example: $20,000 over twelve months</h2>
+  <p class="lede">
+    $20,000 falls in the <strong>Gold</strong> slab ($5,000 – $24,999), which
+    runs for twelve months and pays a rate that rises the longer you hold. Here
+    is that investment, month by month, as the two balances actually move.
+  </p>
+
+  <div class="example">
+    <h4>Gold plan · $20,000 principal · 25.00% total return</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th class="num">Rate</th>
+          <th class="num">Paid to Available</th>
+          <th class="num">Available, running</th>
+          <th class="num">Still locked</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td class="num">1.50%</td><td class="num">$300.00</td><td class="num">$300.00</td><td class="num">$20,000</td></tr>
+        <tr><td>2</td><td class="num">1.50%</td><td class="num">$300.00</td><td class="num">$600.00</td><td class="num">$20,000</td></tr>
+        <tr><td>3</td><td class="num">1.75%</td><td class="num">$350.00</td><td class="num">$950.00</td><td class="num">$20,000</td></tr>
+        <tr><td>4</td><td class="num">1.75%</td><td class="num">$350.00</td><td class="num">$1,300.00</td><td class="num">$20,000</td></tr>
+        <tr><td>5</td><td class="num">2.00%</td><td class="num">$400.00</td><td class="num">$1,700.00</td><td class="num">$20,000</td></tr>
+        <tr><td>6</td><td class="num">2.00%</td><td class="num">$400.00</td><td class="num">$2,100.00</td><td class="num">$20,000</td></tr>
+        <tr><td>7</td><td class="num">2.00%</td><td class="num">$400.00</td><td class="num">$2,500.00</td><td class="num">$20,000</td></tr>
+        <tr><td>8</td><td class="num">2.25%</td><td class="num">$450.00</td><td class="num">$2,950.00</td><td class="num">$20,000</td></tr>
+        <tr><td>9</td><td class="num">2.25%</td><td class="num">$450.00</td><td class="num">$3,400.00</td><td class="num">$20,000</td></tr>
+        <tr><td>10</td><td class="num">2.50%</td><td class="num">$500.00</td><td class="num">$3,900.00</td><td class="num">$20,000</td></tr>
+        <tr><td>11</td><td class="num">2.50%</td><td class="num">$500.00</td><td class="num">$4,400.00</td><td class="num">$20,000</td></tr>
+        <tr><td>12</td><td class="num">3.00%</td><td class="num">$600.00</td><td class="num">$5,000.00</td><td class="num">$20,000</td></tr>
+        <tr><td>Maturity</td><td class="num">—</td><td class="num">$20,000.00</td><td class="num">$25,000.00</td><td class="num">$0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The right-hand column is the point: the principal never shrinks while the
+    plan runs. Each month's return is <em>new</em> money calculated on the full
+    $20,000, paid into Available, and free to be withdrawn the same day. At the
+    end of month 12 the principal itself returns, and the member has
+    <strong>$25,000</strong> available against the <strong>$20,000</strong> they
+    put in.
+  </p>
+
+  <div class="key">
+    <strong>Every month's return can be withdrawn as it arrives</strong>
+    Nothing forces a member to leave the monthly return on the platform. It is
+    paid into Available balance, which means it can be withdrawn that day,
+    invested into a second plan, or simply left to accumulate.
+  </div>
+
+  <div class="note">
+    <strong>If you would rather it compounded</strong>
+    An administrator can switch <strong>Settings → where returns are credited</strong>
+    from <em>wallet</em> to <em>principal</em>. Returns are then added to the
+    locked principal instead of the wallet, so the next month's percentage is
+    calculated on a larger base. The trade-off is that nothing is withdrawable
+    until maturity.
+  </div>
+
+  <p class="small">
+    Rates are the ones configured under <strong>Admin → ROI plans</strong> at the
+    time of writing. Each investment freezes its own schedule when it starts, so
+    changing a plan later never alters an investment that is already running.
+  </p>
+</section>
+
+<!-- ══ 5. Investing and withdrawing ═══════════════════════════════════ -->
+<section class="page">
+  <h2>5. Investing and withdrawing</h2>
+  <p class="lede">
+    Both actions draw from the same figure — Available balance — and both are on
+    the wallet screen, directly beneath it.
+  </p>
+
+  <h3>The Invest card</h3>
+  <p>
+    Moves Available balance into a plan. Enter an amount and the matching plan
+    is selected for you from its size, with the full month-by-month schedule
+    shown before you commit. The schedule is fixed at that moment and cannot be
+    changed afterwards, by anyone. The first return is due one month later.
+  </p>
+
+  <h3>The Withdraw card</h3>
+  <p>
+    Moves Available balance out to you. The amount is held the moment you ask,
+    and an administrator confirms the payout. If the request is turned down, the
+    hold is released back to Available in full, with the reason attached.
+  </p>
+
+  <div class="warn">
+    <strong>When both cards are greyed out</strong>
+    They are disabled whenever Available balance is $0.00, because there is
+    nothing to act on — and the card says which of the two reasons applies:
+    money still locked in investments, or no verified deposit yet. Locked
+    principal cannot be invested again or withdrawn early; it is released at
+    maturity.
+  </div>
+
+  <h3>Deposit sits apart, at the top of the page</h3>
+  <p>
+    Deposit is in the page header rather than beside these two because it is a
+    different kind of action: it brings money in from outside and needs an
+    administrator before it counts. Invest and Withdraw only move money that is
+    already on the platform.
+  </p>
+
+  <h3>The statement is the record</h3>
+  <p>
+    Every movement described in this document writes one line to
+    <strong>All transactions</strong>, carrying the balance that resulted from
+    it. Adding the lines up always reproduces the balance shown on the card —
+    that is checked automatically, and it means any figure on the wallet screen
+    can be traced back to the events that produced it.
+  </p>
+</section>
+
+<!-- ══ 6. Questions ═══════════════════════════════════════════════════ -->
+<section class="page">
+  <h2>6. Questions members ask</h2>
+
+  <ul class="qa">
+    <li>
+      <b>I deposited $20,000 and my balance says $0.00. Where is my money?</b>
+      <span>
+        In "Locked in investments", earning. It was placed into a plan the
+        moment the deposit was approved. See section 2.
+      </span>
+    </li>
+    <li>
+      <b>My deposit is approved but the total looks wrong.</b>
+      <span>
+        Check whether some of it is still under "Pending deposits". Only
+        approved deposits move onto the account; a second, unverified deposit
+        sits in its own card until an administrator gets to it.
+      </span>
+    </li>
+    <li>
+      <b>Can I take my principal out early?</b>
+      <span>
+        Not by default. Locked principal is returned when the term completes.
+        Plans can be configured to allow early exit with a penalty, but that is
+        off unless an administrator switches it on for that plan.
+      </span>
+    </li>
+    <li>
+      <b>When exactly is my monthly return paid?</b>
+      <span>
+        On each monthly anniversary of that investment's own start date, not on
+        a fixed day of the month. The platform checks hourly and pays whatever
+        has fallen due, so a return is never missed or paid twice.
+      </span>
+    </li>
+    <li>
+      <b>I asked for a withdrawal and my balance dropped before it was approved.</b>
+      <span>
+        That is deliberate. The amount is held at the moment of the request so
+        the same balance cannot be promised twice. If the request is rejected,
+        it returns in full.
+      </span>
+    </li>
+    <li>
+      <b>Do referral earnings go into the same place?</b>
+      <span>
+        Yes — commission is paid into Available balance, withdrawable
+        immediately, exactly like a monthly return.
+      </span>
+    </li>
+    <li>
+      <b>Why is my figure a cent lower than my own calculation?</b>
+      <span>
+        Every payout is rounded down to the cent rather than to the nearest
+        cent. Across twelve months and five referral levels, rounding up would
+        pay out more than the published schedule promises.
+      </span>
+    </li>
+  </ul>
+
+  <div class="note" style="margin-top:6mm">
+    <strong>Still not adding up?</strong>
+    Open <strong>Wallet → All transactions</strong>. Every line carries the
+    balance that resulted from it, so the movement that caused an unexpected
+    figure is always visible there.
+  </div>
+
+  <p class="small" style="margin-top:8mm">
+    NorthGold · Grosvenor Place, Level 15, 2205 George St, Sydney NSW 2000,
+    Australia. Capital is at risk. Returns shown are the contracted schedule for
+    each plan and are not a guarantee of future performance.
+  </p>
+</section>
+
+</body>
+</html>
