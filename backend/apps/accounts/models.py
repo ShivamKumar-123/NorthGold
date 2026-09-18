@@ -206,7 +206,7 @@ class KYCDocument(TimeStampedUUIDModel):
     DOC_TYPES = [
         ("id_front", "ID Front"),
         ("id_back", "ID Back"),
-        ("selfie", "Selfie"),
+        ("selfie", "Selfie (no longer collected)"),
         ("address_proof", "Address Proof (no longer collected)"),
         ("bank_proof", "Bank Proof (no longer collected)"),
     ]

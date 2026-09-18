@@ -74,9 +74,9 @@ def register_user(*, email, password, first_name="", last_name="", phone="",
             continue
         KYCDocument.objects.create(
             user=user, doc_type=doc_type, file=file_obj, status="submitted",
-            # Only the two ID pages carry it: a selfie is not an Aadhaar, and a
-            # bank statement is not a PAN card.
-            proof_type=proof_type if doc_type in ("id_front", "id_back") else "",
+            # Both documents are sides of the same ID, so the choice made
+            # once at signup is stored on each of them.
+            proof_type=proof_type,
         )
     if kyc_files:
         # Straight to `submitted`: the queue has something in it from the very
@@ -278,7 +278,7 @@ def submit_kyc(user, doc_type, file_obj, proof_type=""):
     doc = KYCDocument.objects.create(
         user=user, doc_type=doc_type, file=file_obj,
         # Only the ID pages carry it; a selfie is not an Aadhaar.
-        proof_type=proof_type if doc_type in ("id_front", "id_back") else "",
+        proof_type=proof_type,
     )
     if user.kyc_status in ("pending", "rejected"):
         user.kyc_status = "submitted"

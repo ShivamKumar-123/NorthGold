@@ -183,8 +183,9 @@ export const EMPTY_DB: Omit<
   // 7: the Starter tier is gone; Silver's $1,000 is the entry point.
   // 8: levels replaced by the referral matrix, paid monthly on the deposit.
   // 9: address and bank proof dropped — seeded members carry three documents.
+  // 10: the selfie went too — an account is opened on the two ID pages alone.
   // A database stored under an older version is reseeded, not migrated.
-  version: 9,
+  version: 10,
   plans: ROI_PLANS,
   referral_plans: REFERRAL_PLANS,
   issuers: ISSUERS,

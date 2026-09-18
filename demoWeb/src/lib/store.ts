@@ -218,7 +218,7 @@ function seedInto(db: DB): DB {
         id: uid('kyc'),
         user_id: user.id,
         doc_type: doc.value,
-        proof_type: ID_DOC_TYPES.includes(doc.value) ? ('aadhaar' as const) : ('' as const),
+        proof_type: 'aadhaar' as const,
         file_name: `${person.key}-${doc.value}.jpg`,
         status: user.kyc_status === 'approved' ? 'approved' : 'pending',
         rejection_reason: '',
@@ -410,13 +410,9 @@ export const PROOF_TYPES: Array<{ value: ProofType; label: string }> = [
   { value: 'national_id', label: 'National ID' },
 ];
 
-/** The two pages that carry a proof type. A selfie is not an Aadhaar. */
-export const ID_DOC_TYPES = ['id_front', 'id_back'];
-
 export const KYC_DOC_TYPES = [
   { value: 'id_front', label: 'ID — front' },
   { value: 'id_back', label: 'ID — back' },
-  { value: 'selfie', label: 'Selfie with ID' },
 ] as const;
 
 export function register(input: {
@@ -480,7 +476,7 @@ export function register(input: {
       id: uid('kyc'),
       user_id: user.id,
       doc_type: doc.value,
-      proof_type: ID_DOC_TYPES.includes(doc.value) ? input.proof_type : '',
+      proof_type: input.proof_type,
       file_name: input.documents[doc.value].trim(),
       status: 'pending',
       rejection_reason: '',
@@ -984,7 +980,7 @@ export function uploadKyc(
     user_id: userId,
     doc_type: docType,
     // Only the ID pages carry it, whatever the caller passed.
-    proof_type: ID_DOC_TYPES.includes(docType) ? proofType : '',
+    proof_type: proofType,
     file_name: fileName,
     status: 'pending',
     rejection_reason: '',

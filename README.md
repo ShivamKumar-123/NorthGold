@@ -96,7 +96,7 @@ celery -A config beat   -l info --scheduler django_celery_beat.schedulers:Databa
 ## Opening an account
 
 Registration is one request, not two. The signup form collects the member's
-details and **all three identity documents** — ID front, ID back, selfie, proof
+details and **all two identity documents** — ID front, ID back, selfie, proof
 of address and bank proof — and the API refuses a signup missing any of them.
 The account and its documents are written in the same transaction, so nobody
 can exist on the platform without something for an administrator to verify them

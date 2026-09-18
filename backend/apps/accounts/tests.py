@@ -61,7 +61,7 @@ class RegistrationKYCTests(TestCase):
 
     def test_a_missing_document_creates_no_account_at_all(self):
         payload = full_signup()
-        payload.pop("selfie")
+        payload.pop("id_back")
 
         res = self.client.post(self.url, payload, format="multipart")
 
@@ -85,13 +85,9 @@ class RegistrationKYCTests(TestCase):
         )
         self.assertTrue(all(d.status == "submitted" for d in docs))
 
-        # The choice rides on the two ID pages and nothing else.
-        self.assertEqual(
-            sorted(docs.filter(proof_type="aadhaar").values_list("doc_type", flat=True)),
-            ["id_back", "id_front"],
-        )
-        self.assertTrue(all(d.proof_type == "" for d in docs.exclude(
-            doc_type__in=["id_front", "id_back"])))
+        # Both documents are sides of one ID, so the choice made once at
+        # signup is stored on each of them.
+        self.assertTrue(all(d.proof_type == "aadhaar" for d in docs))
 
     def test_signup_without_a_proof_type_is_refused(self):
         payload = full_signup()

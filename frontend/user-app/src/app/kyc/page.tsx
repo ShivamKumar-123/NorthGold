@@ -7,7 +7,7 @@ import { Alert, PageLoader, StatusBadge } from '@/components/ui';
 import { ApiError, api, dateTime } from '@/lib/api';
 import { useAuth, useRequireAuth } from '@/lib/auth';
 import {
-  ID_DOC_TYPES, KYC_DOC_TYPES, PROOF_TYPES, type KycDoc, type KycOverview, type ProofType,
+  KYC_DOC_TYPES, PROOF_TYPES, type KycDoc, type KycOverview, type ProofType,
 } from '@/lib/kyc';
 
 /**
@@ -76,7 +76,7 @@ export default function KycPage() {
     try {
       const form = new FormData();
       form.append('doc_type', docType);
-      if (ID_DOC_TYPES.includes(docType)) form.append('proof_type', proofType);
+      form.append('proof_type', proofType);
       form.append('file', file);
       await api.postForm('/auth/kyc/', form);
       setPending((p) => ({ ...p, [docType]: null }));
@@ -184,23 +184,21 @@ export default function KycPage() {
 
               {needsUpload && (
                 <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4">
-                  {ID_DOC_TYPES.includes(type.value) && (
-                    <div className="min-w-[160px]">
-                      <label className="label" htmlFor={`proof_${type.value}`}>
-                        Which ID
-                      </label>
-                      <select
-                        id={`proof_${type.value}`}
-                        value={proofType}
-                        onChange={(e) => setProofType(e.target.value as ProofType)}
-                        className="input"
-                      >
-                        {PROOF_TYPES.map((t) => (
-                          <option key={t.value} value={t.value}>{t.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div className="min-w-[160px]">
+                    <label className="label" htmlFor={`proof_${type.value}`}>
+                      Which ID
+                    </label>
+                    <select
+                      id={`proof_${type.value}`}
+                      value={proofType}
+                      onChange={(e) => setProofType(e.target.value as ProofType)}
+                      className="input"
+                    >
+                      {PROOF_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="min-w-[220px] flex-1">
                     <label className="label" htmlFor={`file_${type.value}`}>
                       {doc ? 'Replace this document' : 'Upload this document'}
