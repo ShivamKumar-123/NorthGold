@@ -1,6 +1,4 @@
-import {
-  ADMIN, DEMO_PASSWORD, DEMO_PEOPLE, EMPTY_DB, INSTRUMENTS,
-} from './seed';
+import { ADMIN, EMPTY_DB, INSTRUMENTS } from './seed';
 import type {
   Commission, DB, Deposit, Investment, KycDoc, ReferralPlan, RoiPayout, RoiPlan,
   ProofType, SupportMessage, Transaction, TreeNode, User, UserStatus, Withdrawal,
@@ -160,6 +158,14 @@ export function resetDemo() {
 function seedInto(db: DB): DB {
   const now = Date.now();
 
+  // The administrator, and nothing else.
+  //
+  // This used to seed seven members with deposits, payouts and commission
+  // replayed through the real code paths. That made every screen demonstrable
+  // on first load, but it also meant anyone opening the demo saw invented
+  // people and invented money. What stays is configuration — plans, referral
+  // slabs, issuers, instruments, settings — because those are the platform,
+  // not somebody's data.
   db.users.push({
     id: 'user_admin',
     email: ADMIN.email,
@@ -179,138 +185,8 @@ function seedInto(db: DB): DB {
     tree_depth: 0,
     wallet_balance: 0,
     invested_balance: 0,
-    created_at: new Date(now - 400 * 86400_000).toISOString(),
+    created_at: new Date(now).toISOString(),
   });
-
-  const byKey = new Map<string, User>();
-  DEMO_PEOPLE.forEach((person, i) => {
-    const sponsor = person.sponsor ? byKey.get(person.sponsor) ?? null : null;
-    const user: User = {
-      id: `user_${person.key}`,
-      email: person.email,
-      password: DEMO_PASSWORD,
-      first_name: person.first,
-      last_name: person.last,
-      phone: `+91 90000 0000${i}`,
-      country: 'India',
-      state: 'Maharashtra',
-      city: 'Mumbai',
-      address: '',
-      is_staff: false,
-      status: 'active',
-      kyc_status: i < 4 ? 'approved' : 'pending',
-      referral_code: referralCode(),
-      sponsor_id: sponsor?.id ?? null,
-      tree_depth: sponsor ? sponsor.tree_depth + 1 : 0,
-      wallet_balance: 0,
-      invested_balance: 0,
-      created_at: new Date(now - (person.monthsAgo * 30 + 10) * 86400_000).toISOString(),
-    };
-    db.users.push(user);
-    byKey.set(person.key, user);
-
-    // Every account here was opened the way the signup form now opens one, so
-    // each member carries the same documents. Their state follows the
-    // member's own: the approved ones are approved throughout, and the rest
-    // are still sitting in the queue for somebody to work through.
-    for (const doc of KYC_DOC_TYPES) {
-      db.kyc.push({
-        id: uid('kyc'),
-        user_id: user.id,
-        doc_type: doc.value,
-        proof_type: 'aadhaar' as const,
-        file_name: `${person.key}-${doc.value}.jpg`,
-        status: user.kyc_status === 'approved' ? 'approved' : 'pending',
-        rejection_reason: '',
-        reviewed_at: user.kyc_status === 'approved' ? user.created_at : null,
-        created_at: user.created_at,
-      });
-    }
-  });
-
-  // Replay each member's deposit at the date they actually joined, then let
-  // the payout engine catch every month that has since fallen due.
-  DEMO_PEOPLE.forEach((person) => {
-    const user = byKey.get(person.key)!;
-    const at = addMonths(new Date().toISOString(), -person.monthsAgo);
-    const deposit: Deposit = {
-      id: uid('dep'),
-      user_id: user.id,
-      amount: person.deposit,
-      method: 'cash',
-      reference: `RCPT${Math.floor(100000 + Math.random() * 899999)}`,
-      user_message: `Handed $${person.deposit.toLocaleString('en-US')} in cash at the head office counter.`,
-      status: 'pending',
-      admin_note: '',
-      created_at: at,
-      reviewed_at: null,
-    };
-    db.deposits.push(deposit);
-    approveDepositIn(db, deposit.id, 'Verified against counter receipt.', at);
-  });
-
-  runDuePayoutsIn(db);
-
-  // A couple of live queue items so the admin screens have something to do.
-  const sneha = byKey.get('sneha')!;
-  db.deposits.push({
-    id: uid('dep'),
-    user_id: sneha.id,
-    amount: 2500,
-    method: 'cash',
-    reference: 'RCPT774120',
-    user_message: 'Handed $2,500 to Rakesh at the Andheri counter on Tuesday, receipt 774120.',
-    status: 'pending',
-    admin_note: '',
-    created_at: new Date(now - 2 * 86400_000).toISOString(),
-    reviewed_at: null,
-  });
-
-  // Priya, not one of the smaller accounts: after auto-investing their
-  // deposit, most members hold only a few hundred rupees in returns, and a
-  // withdrawal larger than the balance would (correctly) be refused — leaving
-  // the admin queue empty and the screen looking broken.
-  const priya = byKey.get('priya')!;
-  if (priya.wallet_balance >= 1500) {
-    requestWithdrawalIn(db, priya.id, 1500,
-      'I will collect from the head office counter on Friday afternoon.');
-  }
-
-  // Two support threads: one already answered, one still waiting. An inbox
-  // that opens empty says nothing about how it behaves once it is not.
-  const thread = (key: string, lines: Array<['user' | 'admin', string, number]>) => {
-    const owner = byKey.get(key);
-    if (!owner) return;
-    for (const [sender, body, hoursAgo] of lines) {
-      db.messages.push({
-        id: uid('msg'),
-        user_id: owner.id,
-        sender,
-        author_name: sender === 'admin' ? 'Admin Desk' : '',
-        body,
-        // The member's last line is deliberately unread, so the inbox opens
-        // with a badge on it.
-        read_at: sender === 'admin' ? new Date(now - hoursAgo * 3600_000).toISOString() : null,
-        created_at: new Date(now - hoursAgo * 3600_000).toISOString(),
-        reply_to: null,
-        reactions: {},
-        starred_by: [],
-        edited_at: null,
-        forwarded: false,
-      });
-    }
-  };
-
-  thread('arjun', [
-    ['user', 'Hello, I handed over $8,000 at the counter this morning. How long does verification usually take?', 52],
-    ['admin', 'Thanks Arjun — we verify against the receipt number, usually the same working day. Yours is already approved.', 50],
-    ['user', 'Perfect, I can see it. Thank you!', 49],
-  ]);
-  thread('neha', [
-    ['user', 'When exactly does my second monthly return land? I deposited on the 12th.', 6],
-    ['admin', 'On the 12th of each month — the schedule runs from your own deposit date, not the calendar month.', 5],
-    ['user', 'Understood. One more thing — can I withdraw the return as soon as it arrives?', 2],
-  ]);
 
   return db;
 }
@@ -1086,6 +962,51 @@ export function setUserStatus(userId: string, status: UserStatus) {
   if (!user) throw new Error('No such account.');
   if (user.is_staff) throw new Error('An administrator account cannot be blocked or closed here.');
   user.status = status;
+  save();
+}
+
+/**
+ * Erase a member and everything the store hangs off them. Irreversible.
+ *
+ * Closing an account (`setUserStatus(id, 'archived')`) is the ordinary way and
+ * keeps the books; this is the other one. Two details are deliberate: the
+ * people they introduced survive with no sponsor rather than being deleted
+ * along with them, and the commission they GENERATED for their sponsor goes —
+ * but the sponsor's own transaction rows stay, so the money that reached their
+ * wallet still has a line explaining it on their statement.
+ */
+export function deleteUserCompletely(userId: string) {
+  const db = load();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) throw new Error('No such account.');
+  if (user.is_staff) throw new Error('An administrator account cannot be deleted here.');
+
+  const investmentIds = new Set(
+    db.investments.filter((i) => i.user_id === userId).map((i) => i.id),
+  );
+
+  db.deposits = db.deposits.filter((d) => d.user_id !== userId);
+  db.withdrawals = db.withdrawals.filter((w) => w.user_id !== userId);
+  db.investments = db.investments.filter((i) => i.user_id !== userId);
+  db.payouts = db.payouts.filter(
+    (p) => p.user_id !== userId && !investmentIds.has(p.investment_id),
+  );
+  db.transactions = db.transactions.filter((t) => t.user_id !== userId);
+  db.kyc = db.kyc.filter((k) => k.user_id !== userId);
+  db.messages = db.messages.filter((m) => m.user_id !== userId);
+  db.commissions = db.commissions.filter(
+    (c) => c.earner_id !== userId && c.from_user_id !== userId,
+  );
+
+  // The people they introduced keep their accounts and lose their sponsor.
+  for (const other of db.users) {
+    if (other.sponsor_id === userId) {
+      other.sponsor_id = null;
+      other.tree_depth = 0;
+    }
+  }
+
+  db.users = db.users.filter((u) => u.id !== userId);
   save();
 }
 

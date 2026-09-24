@@ -2,15 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Archive, Ban, CheckCircle2, KeyRound, MinusCircle, MoreVertical, PencilLine,
-  PlusCircle, Search, ShieldCheck, Users as UsersIcon,
+  PlusCircle, Search, ShieldCheck, Trash2, Users as UsersIcon,
 } from 'lucide-react';
 
 import NetworkTree from '@/components/NetworkTree';
 import { Alert, ConfirmDialog, EmptyState, Modal, StatCard, StatusBadge } from '@/components/ui';
 import { dateTime, money, shortDate } from '@/lib/format';
 import {
-  adminAdjustBalance, adminSetBalance, adminSetPassword, downlineTree, getUsers,
-  memberDetail, pendingKyc, setUserStatus, subscribe,
+  adminAdjustBalance, adminSetBalance, adminSetPassword, deleteUserCompletely,
+  downlineTree, getUsers, memberDetail, pendingKyc, setUserStatus, subscribe,
 } from '@/lib/store';
 import type { User, UserStatus } from '@/lib/types';
 
@@ -32,6 +32,7 @@ export default function AdminUsers() {
   const [action, setAction] = useState<Action>(null);
   const [target, setTarget] = useState<User | null>(null);
   const [closing, setClosing] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState<User | null>(null);
   const [message, setMessage] = useState('');
   const [, tick] = useState(0);
 
@@ -194,6 +195,9 @@ export default function AdminUsers() {
                               <Item icon={<Archive size={14} />} label="Close account" tone="danger"
                                     onClick={() => { setClosing(u); setMenuFor(null); }} />
                             )}
+                            <div className="my-1 border-t border-white/[0.07]" />
+                            <Item icon={<Trash2 size={14} />} label="Delete permanently" tone="danger"
+                                  onClick={() => { setDeleting(u); setMenuFor(null); }} />
                           </div>
                         )}
                       </div>
@@ -215,6 +219,12 @@ export default function AdminUsers() {
         onDone={(note) => { setAction(null); setMessage(note); }}
       />
 
+
+      <DeleteDialog
+        user={deleting}
+        onClose={() => setDeleting(null)}
+        onDone={(note) => { setDeleting(null); setExpanded(null); setMessage(note); }}
+      />
       <ConfirmDialog
         open={Boolean(closing)}
         title="Close this account?"
@@ -483,5 +493,99 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
       <dt className="text-text-dim">{label}</dt>
       <dd className={`text-right ${mono ? 'font-mono text-accent' : 'text-text'}`}>{value}</dd>
     </div>
+  );
+}
+
+
+/**
+ * Deleting an account for good.
+ *
+ * Typing the email is the point. Every other action on this menu is one click
+ * because every other action can be undone; this one cannot, and the row it is
+ * pointed at is whichever one the mouse happened to be over. Making somebody
+ * spell out the address is the cheapest way to be sure they meant that member
+ * and not the one above.
+ */
+function DeleteDialog({
+  user,
+  onClose,
+  onDone,
+}: {
+  user: User | null;
+  onClose: () => void;
+  onDone: (note: string) => void;
+}) {
+  const [typed, setTyped] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setTyped('');
+    setError('');
+  }, [user]);
+
+  if (!user) return null;
+
+  const detail = memberDetail(user.id);
+  const matches = typed.trim().toLowerCase() === user.email.toLowerCase();
+
+  function confirm() {
+    if (!matches) return;
+    try {
+      deleteUserCompletely(user!.id);
+      onDone(`${user!.email} and all of their data were deleted.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete that account.');
+    }
+  }
+
+  return (
+    <Modal open title="Delete this account permanently?" onClose={onClose} width="max-w-md">
+      {error && <div className="mb-4"><Alert kind="error">{error}</Alert></div>}
+
+      <p className="text-sm leading-relaxed text-text-muted">
+        Everything below is removed and cannot be recovered.
+      </p>
+
+      {detail && (
+        <ul className="mt-3 space-y-1 rounded-xl border border-danger/25 bg-danger/[0.06] p-3 text-xs text-text-muted">
+          <li>Wallet {money(user.wallet_balance)} · principal {money(user.invested_balance)}</li>
+          <li>{detail.recent.length ? 'Every transaction, deposit and withdrawal' : 'No money movements yet'}</li>
+          <li>{detail.active_investments} active investment{detail.active_investments === 1 ? '' : 's'} and their payouts</li>
+          <li>{detail.kyc.length} identity document{detail.kyc.length === 1 ? '' : 's'}</li>
+          <li>{detail.messages} support message{detail.messages === 1 ? '' : 's'}</li>
+          <li>
+            Commission they earned, and the commission they generated for their
+            sponsor
+          </li>
+        </ul>
+      )}
+
+      <p className="mt-3 text-xs leading-relaxed text-text-dim">
+        The {detail?.network.direct ?? 0} member
+        {(detail?.network.direct ?? 0) === 1 ? '' : 's'} they introduced keep
+        their accounts and lose their sponsor. Closing the account instead keeps
+        every record and can be undone.
+      </p>
+
+      <div className="mt-4">
+        <label className="label" htmlFor="confirm-email">
+          Type <span className="font-mono text-accent">{user.email}</span> to confirm
+        </label>
+        <input
+          id="confirm-email"
+          value={typed}
+          autoFocus
+          onChange={(e) => setTyped(e.target.value)}
+          className="input"
+        />
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-ghost">Cancel</button>
+        <button onClick={confirm} disabled={!matches} className="btn-danger disabled:opacity-40">
+          Delete permanently
+        </button>
+      </div>
+    </Modal>
   );
 }

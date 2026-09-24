@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 import AuthLayout from '@/components/AuthLayout';
-import { DEMO_PASSWORD, DEMO_PEOPLE } from '@/lib/seed';
 import { useAuth } from '@/lib/auth';
 import { Alert, Spinner } from '@/components/ui';
 
@@ -58,20 +57,14 @@ export default function LoginForm() {
         </>
       }
     >
-      <button
-        type="button"
-        onClick={() => {
-          setEmail(DEMO_PEOPLE[0].email);
-          setPassword(DEMO_PASSWORD);
-        }}
-        className="mb-5 w-full rounded-xl border border-accent/30 bg-accent/[0.07] p-3 text-left text-xs leading-relaxed text-text-muted transition hover:border-accent/50"
-      >
-        <strong className="text-text">Demo account</strong> — click to fill.
-        <br />
-        <span className="font-mono text-[11px] text-accent">{DEMO_PEOPLE[0].email}</span>
-        {' · '}
-        <span className="font-mono text-[11px] text-accent">{DEMO_PASSWORD}</span>
-      </button>
+      {/* There is no demo member to fill in any more — the database starts
+          with the administrator alone. Offering credentials that fail is worse
+          than offering none, so this points at the thing that does work. */}
+      <p className="mb-5 rounded-xl border border-accent/30 bg-accent/[0.07] p-3 text-xs leading-relaxed text-text-muted">
+        <strong className="text-text">No demo member exists.</strong> Open an
+        account to create one — it takes a moment and everything works from
+        there.
+      </p>
 
       <form onSubmit={onSubmit} className="space-y-4">
         {error && <Alert kind="error">{error}</Alert>}

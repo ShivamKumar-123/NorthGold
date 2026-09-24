@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Archive, Ban, CheckCircle2, KeyRound, MinusCircle, MoreVertical, PencilLine,
-  PlusCircle, Search, Users,
+  PlusCircle, Search, Trash2, Users,
 } from 'lucide-react';
 
 import { Alert, EmptyState, Modal, PageLoader, StatusBadge } from '@/components/ui';
@@ -30,6 +30,7 @@ export default function UsersPage() {
   const [action, setAction] = useState<Action>(null);
   const [target, setTarget] = useState<User | null>(null);
   const [closing, setClosing] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState<User | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -222,6 +223,9 @@ export default function UsersPage() {
                               <Item icon={<Archive size={14} />} label="Close account" tone="danger"
                                     onClick={() => { setClosing(u); setMenuFor(null); }} />
                             )}
+                            <div className="my-1 border-t border-white/[0.07]" />
+                            <Item icon={<Trash2 size={14} />} label="Delete permanently" tone="danger"
+                                  onClick={() => { setDeleting(u); setMenuFor(null); }} />
                           </div>
                         )}
                       </div>
@@ -239,6 +243,13 @@ export default function UsersPage() {
         user={target}
         onClose={() => setAction(null)}
         onDone={(note) => { setAction(null); setNotice(note); void load(); }}
+      />
+
+      <DeleteDialog
+        user={deleting}
+        onClose={() => setDeleting(null)}
+        onDone={(note) => { setDeleting(null); setNotice(note); void load(); }}
+        onError={(msg) => { setDeleting(null); setError(msg); }}
       />
 
       <Modal
@@ -460,6 +471,99 @@ function MoneyDialog({
           </button>
         </div>
       </form>
+    </Modal>
+  );
+}
+
+
+/**
+ * Deleting an account for good.
+ *
+ * Typing the email is the point. Every other action on this menu is one click
+ * because every other action can be undone; this one cannot, and the row it is
+ * pointed at is whichever one the mouse happened to be over. Making somebody
+ * spell out the address is the cheapest way to be sure they meant that member
+ * and not the one above.
+ */
+function DeleteDialog({
+  user,
+  onClose,
+  onDone,
+  onError,
+}: {
+  user: User | null;
+  onClose: () => void;
+  onDone: (note: string) => void;
+  onError: (message: string) => void;
+}) {
+  const [typed, setTyped] = useState('');
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    setTyped('');
+  }, [user]);
+
+  if (!user) return null;
+
+  const matches = typed.trim().toLowerCase() === user.email.toLowerCase();
+
+  async function confirm() {
+    if (!matches || working) return;
+    setWorking(true);
+    try {
+      await api.del(`/auth/admin/users/${user!.id}/`);
+      onDone(`${user!.email} and all of their data were deleted.`);
+    } catch (err) {
+      onError(err instanceof ApiError ? err.message : 'Could not delete that account.');
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  return (
+    <Modal open title="Delete this account permanently?" onClose={onClose} width="max-w-md">
+      <p className="text-sm leading-relaxed text-text-muted">
+        Everything below is removed and cannot be recovered.
+      </p>
+
+      <ul className="mt-3 space-y-1 rounded-xl border border-danger/25 bg-danger/[0.06] p-3 text-xs text-text-muted">
+        <li>Wallet {money(user.wallet_balance)} · principal {money(user.invested_balance)}</li>
+        <li>Every transaction, deposit and withdrawal</li>
+        <li>Every investment and the payouts made against it</li>
+        <li>Identity documents and support messages</li>
+        <li>Commission they earned, and the commission they generated for their sponsor</li>
+      </ul>
+
+      <p className="mt-3 text-xs leading-relaxed text-text-dim">
+        The {user.direct_referral_count} member
+        {user.direct_referral_count === 1 ? '' : 's'} they introduced keep their
+        accounts and lose their sponsor. Closing the account instead keeps every
+        record and can be undone.
+      </p>
+
+      <div className="mt-4">
+        <label className="label" htmlFor="confirm-email">
+          Type <span className="font-mono text-accent">{user.email}</span> to confirm
+        </label>
+        <input
+          id="confirm-email"
+          value={typed}
+          autoFocus
+          onChange={(e) => setTyped(e.target.value)}
+          className="input"
+        />
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <button onClick={onClose} className="btn-ghost">Cancel</button>
+        <button
+          onClick={() => void confirm()}
+          disabled={!matches || working}
+          className="btn-danger disabled:opacity-40"
+        >
+          {working ? 'Deleting…' : 'Delete permanently'}
+        </button>
+      </div>
     </Modal>
   );
 }

@@ -15,19 +15,21 @@ npm run preview    # serve the built app on :4173
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Member | `priya@northgold.demo` | `demo1234` |
 | Admin | `admin@northgold.demo` | `admin123` |
 
-Both sign-in screens carry a "click to fill" button, so nobody has to find this
-file first. Every seeded member uses `demo1234`:
-`priya`, `arjun`, `rahul`, `sneha`, `neha`, `vikram`, `anita` — all
-`@northgold.demo`. The admin panel is at `/admin`.
+That is the only account. The admin sign-in screen carries a "click to fill"
+button, so nobody has to find this file first. The admin panel is at `/admin`.
+
+**There are no seeded members.** The database opens with the administrator and
+the platform's configuration — plans, referral slabs, issuers, instruments,
+settings — and nothing else. Open an account from the member site to create
+one; deposit, approve it from the panel, and every screen fills in from there.
 
 **The administrator is not a member.** It has no wallet, no deposits and no
-network of its own, so signing in as the admin and opening a member screen would
-show nothing but zeros — which is why a staff account is sent to the panel
-instead. To see a member's money either open their row in **Users & network**,
-or sign in as them.
+network of its own, so signing in as the admin and opening a member screen
+would show nothing but zeros — which is why a staff account is sent to the
+panel instead. To see a member's money either open their row in **Users &
+network**, or sign in as them.
 
 **Reset the data** from the admin sidebar or Settings. That reseeds from
 scratch, which is also what happens automatically if the stored shape is from
@@ -35,10 +37,12 @@ an older version.
 
 ## What actually runs here
 
-`src/lib/store.ts` is the backend. It is not a set of canned fixtures — the
-seed **replays real actions** (deposit → approve → auto-invest → cascade
-commission → run every payout that has since fallen due), so the ledger adds up
-and every screen agrees with every other screen.
+`src/lib/store.ts` is the backend. Nothing here is a canned fixture: the
+database starts empty and fills the way a real one does — you open an account,
+file a deposit, approve it from the panel, and the auto-invest, the monthly
+payouts and the sponsor's commission all follow from the same code paths the
+Django build runs. That is why the ledger adds up and every screen agrees with
+every other screen.
 
 - **Slab-matched plans.** An amount picks exactly one tier; the top one is
   open-ended.

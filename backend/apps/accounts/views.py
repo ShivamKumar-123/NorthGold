@@ -16,7 +16,10 @@ from .serializers import (
     ProfileUpdateSerializer, ReferralSerializer, RegisterSerializer,
     TokenPairSerializer, UserSerializer,
 )
-from .services import build_downline_tree, downline_summary, register_user, submit_kyc
+from .services import (
+    build_downline_tree, delete_user_completely, downline_summary, register_user,
+    submit_kyc,
+)
 
 
 def issue_tokens(user):
@@ -289,6 +292,39 @@ class AdminUserDetailView(APIView):
                     new_values={k: getattr(user, k) for k in before},
                     ip_address=client_ip(request))
         return Response(AdminUserSerializer(user).data)
+
+    def delete(self, request, user_id):
+        """Erase an account and everything attached to it. Irreversible.
+
+        Archiving (`status: archived`) is the ordinary way to close an account
+        and keeps the books intact; this is the other thing, for accounts that
+        have to genuinely disappear. The guards are the ones that stop the
+        panel being used against itself: nobody deletes the account they are
+        signed in with, and only a super-admin may delete another administrator.
+        """
+        user = User.objects.filter(id=user_id).first()
+        if user is None:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        if user.id == request.user.id:
+            return Response(
+                {"detail": "You cannot delete the account you are signed in with."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if user.is_admin and request.user.role != "superadmin":
+            return Response(
+                {"detail": "Only a super-admin can delete another administrator."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Written BEFORE the row goes, and with the email spelled out: once the
+        # account is gone its id means nothing to anybody reading the log.
+        snapshot = {"email": user.email, "name": user.full_name,
+                    "wallet_balance": str(user.wallet_balance),
+                    "invested_balance": str(user.invested_balance)}
+        counts = delete_user_completely(user)
+        write_audit(request.user, "delete_user", entity_type="user", entity_id=user_id,
+                    old_values=snapshot, new_values=counts, ip_address=client_ip(request))
+        return Response({"deleted": snapshot["email"], "removed": counts})
 
 
 class AdminSetPasswordView(APIView):

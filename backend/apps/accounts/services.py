@@ -95,6 +95,61 @@ def register_user(*, email, password, first_name="", last_name="", phone="",
     return user
 
 
+@transaction.atomic
+def delete_user_completely(target):
+    """Erase a member and everything the database hangs off them.
+
+    The cascade does most of the work — deposits, withdrawals, investments,
+    payouts, transactions, KYC documents, support messages and notifications
+    all carry `on_delete=CASCADE`. Two things it does NOT take are deliberate:
+    a downline's `sponsor` is `SET_NULL`, so the people they introduced survive
+    with no sponsor rather than being deleted along with them; and an audit log
+    keeps its rows with a null actor, because a record of who approved what
+    must outlive the account that approved it.
+
+    One consequence is worth being explicit about. `Commission.source_user` is
+    also CASCADE, so commission rows this member GENERATED for their sponsor go
+    too. The sponsor keeps the money — the `Transaction` that credited their
+    wallet belongs to them and survives — but their lifetime commission figure
+    is denormalised and would silently stop matching the rows behind it. So it
+    is recomputed here for everyone affected.
+    """
+    from apps.mlm.models import Commission
+
+    counts = {
+        "deposits": target.deposits.count(),
+        "withdrawals": target.withdrawals.count(),
+        "investments": target.investments.count(),
+        "payouts": target.roi_payouts.count(),
+        "transactions": target.transactions.count(),
+        "kyc_documents": target.kyc_documents.count(),
+        "commissions_earned": Commission.objects.filter(earner=target).count(),
+        "commissions_generated": Commission.objects.filter(source_user=target).count(),
+        "direct_referrals_orphaned": User.objects.filter(sponsor=target).count(),
+    }
+
+    # Captured before the delete: afterwards there is nothing left to ask.
+    sponsors_to_fix = list(
+        Commission.objects.filter(source_user=target)
+        .exclude(earner=target)
+        .values_list("earner_id", flat=True)
+        .distinct()
+    )
+
+    target.delete()
+
+    for earner_id in sponsors_to_fix:
+        earner = User.objects.filter(id=earner_id).first()
+        if earner is None:
+            continue
+        earner.total_commission_earned = Commission.objects.filter(
+            earner=earner, status="paid",
+        ).aggregate(t=Sum("amount"))["t"] or Decimal("0")
+        earner.save(update_fields=["total_commission_earned", "updated_at"])
+
+    return counts
+
+
 # ─── Downline traversal ───────────────────────────────────────────────────
 
 def _as_uuid(value):

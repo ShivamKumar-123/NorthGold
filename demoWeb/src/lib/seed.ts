@@ -138,35 +138,12 @@ export const SETTINGS: Settings = {
   referral_enabled: true,
 };
 
-/** Demo accounts, so the tree and the queues are not empty on first load. */
-export const DEMO_PEOPLE: Array<{
-  key: string;
-  email: string;
-  first: string;
-  last: string;
-  sponsor: string | null;
-  deposit: number;
-  /** Months in the past the deposit was made — drives how many payouts exist. */
-  monthsAgo: number;
-}> = [
-  { key: 'priya', email: 'priya@northgold.demo', first: 'Priya', last: 'Sharma', sponsor: null, deposit: 30000, monthsAgo: 5 },
-  { key: 'arjun', email: 'arjun@northgold.demo', first: 'Arjun', last: 'Mehta', sponsor: 'priya', deposit: 8000, monthsAgo: 4 },
-  { key: 'rahul', email: 'rahul@northgold.demo', first: 'Rahul', last: 'Iyer', sponsor: 'priya', deposit: 4000, monthsAgo: 3 },
-  { key: 'sneha', email: 'sneha@northgold.demo', first: 'Sneha', last: 'Kapoor', sponsor: 'priya', deposit: 1500, monthsAgo: 3 },
-  { key: 'neha', email: 'neha@northgold.demo', first: 'Neha', last: 'Verma', sponsor: 'arjun', deposit: 26000, monthsAgo: 2 },
-  { key: 'vikram', email: 'vikram@northgold.demo', first: 'Vikram', last: 'Rao', sponsor: 'neha', deposit: 5500, monthsAgo: 1 },
-  { key: 'anita', email: 'anita@northgold.demo', first: 'Anita', last: 'Desai', sponsor: 'rahul', deposit: 1200, monthsAgo: 1 },
-];
-
 export const ADMIN: Pick<User, 'email' | 'password' | 'first_name' | 'last_name'> = {
   email: 'admin@northgold.demo',
   password: 'admin123',
   first_name: 'Admin',
   last_name: 'Desk',
 };
-
-/** One password for every demo account — this is a sandbox, not a product. */
-export const DEMO_PASSWORD = 'demo1234';
 
 export const EMPTY_DB: Omit<
   DB,
@@ -184,8 +161,10 @@ export const EMPTY_DB: Omit<
   // 8: levels replaced by the referral matrix, paid monthly on the deposit.
   // 9: address and bank proof dropped — seeded members carry three documents.
   // 10: the selfie went too — an account is opened on the two ID pages alone.
+  // 11: the seeded members are gone. The database starts with the
+  //     administrator and the platform's configuration, nothing else.
   // A database stored under an older version is reseeded, not migrated.
-  version: 10,
+  version: 11,
   plans: ROI_PLANS,
   referral_plans: REFERRAL_PLANS,
   issuers: ISSUERS,
